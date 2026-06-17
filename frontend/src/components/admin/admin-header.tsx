@@ -1,48 +1,37 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { ExternalLink } from "lucide-react";
-import { useAuthStore } from "@/stores/app";
-
-function titleFromPath(pathname: string): string {
-  const segments = pathname.replace("/admin", "").split("/").filter(Boolean);
-  if (segments.length === 0) return "Dashboard";
-  return segments
-    .map((s) => s.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()))
-    .join(" · ");
-}
+import { ExternalLink, PanelLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useAdminSidebarStore } from "@/stores/admin-sidebar";
 
 export function AdminHeader() {
-  const pathname = usePathname();
-  const user = useAuthStore((s) => s.user);
-  const title = titleFromPath(pathname);
+  const toggleCollapsed = useAdminSidebarStore((s) => s.toggleCollapsed);
+  const collapsed = useAdminSidebarStore((s) => s.collapsed);
 
   return (
-    <header
-      className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-app-border bg-app-bg/90 px-8 backdrop-blur"
-      style={{ height: "var(--app-topbar-height)" }}
-    >
-      <div>
-        <p className="text-xs font-medium uppercase tracking-wider text-app-muted">Admin</p>
-        <h2 className="text-sm font-semibold text-app-text">{title}</h2>
-      </div>
-      <div className="flex items-center gap-4">
-        <Link
-          href="/"
-          target="_blank"
-          className="inline-flex items-center gap-1.5 text-xs text-app-muted transition-colors hover:text-accent-soft"
+    <header className="app-shell-x z-40 flex h-[var(--app-topbar-height)] shrink-0 items-center justify-between border-b border-app-border glass">
+      <div className="flex items-center gap-2">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-9 w-9 p-0 text-app-muted hover:text-app-text lg:hidden"
+          onClick={toggleCollapsed}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
-          View site
-          <ExternalLink className="h-3.5 w-3.5" />
-        </Link>
-        {user && (
-          <div className="hidden text-right sm:block">
-            <p className="text-sm font-medium text-app-text">{user.name}</p>
-            <p className="text-xs text-app-muted">{user.email}</p>
-          </div>
-        )}
+          <PanelLeft className="h-4 w-4" />
+        </Button>
+        <span className="text-sm font-medium text-app-muted">Evoke Admin</span>
       </div>
+      <Link
+        href="/"
+        target="_blank"
+        className="inline-flex items-center gap-1.5 rounded-lg border border-app-border bg-app-surface/80 px-3 py-1.5 text-xs text-app-muted transition-all hover:border-accent/30 hover:text-accent-soft"
+      >
+        View site
+        <ExternalLink className="h-3 w-3" />
+      </Link>
     </header>
   );
 }

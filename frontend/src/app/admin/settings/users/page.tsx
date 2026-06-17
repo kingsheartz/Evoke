@@ -59,7 +59,7 @@ export default function UsersSettingsPage() {
   };
 
   return (
-    <div>
+    <div className="app-page">
       <PageHeader
         title="User Management"
         description="Manage staff and customer accounts"
@@ -74,7 +74,7 @@ export default function UsersSettingsPage() {
         }
       />
       {showForm && (
-        <Card className="mb-6">
+        <Card>
           <CardHeader><CardTitle>New User</CardTitle></CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2"><Label>Name</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
@@ -96,11 +96,11 @@ export default function UsersSettingsPage() {
       )}
       <Card>
         <CardHeader><CardTitle>All Users</CardTitle></CardHeader>
-        <CardContent>
+        <CardContent flush>
           {users.length === 0 ? (
-            <TableEmpty message="No users found." />
+            <TableEmpty inset message="No users found." />
           ) : (
-            <DataTable>
+            <DataTable inset>
               <thead>
                 <tr>
                   <th>Name</th>

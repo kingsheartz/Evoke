@@ -22,7 +22,7 @@ export default function ShopProductsPage() {
   }, [token]);
 
   return (
-    <div>
+    <div className="app-page">
       <PageHeader
         title="Products"
         description="Manage sports shop inventory"
@@ -34,13 +34,13 @@ export default function ShopProductsPage() {
       />
       <Card>
         <CardHeader><CardTitle>All Products</CardTitle></CardHeader>
-        <CardContent>
+        <CardContent flush>
           {loading ? (
-            <TableLoading message="Loading products..." />
+            <TableLoading inset />
           ) : products.length === 0 ? (
-            <TableEmpty message="No products yet. Add your first product." />
+            <TableEmpty inset message="No products yet. Add your first product." />
           ) : (
-            <DataTable>
+            <DataTable inset>
               <thead>
                 <tr>
                   <th>Name</th>

@@ -34,7 +34,7 @@ export default function ModulesSettingsPage() {
   };
 
   return (
-    <div>
+    <div className="app-page">
       <PageHeader
         title="Module Settings"
         description="Enable or disable business verticals"
@@ -45,7 +45,7 @@ export default function ModulesSettingsPage() {
           {modules.map((mod) => (
             <div
               key={mod.id}
-              className="flex items-center justify-between gap-4 rounded-xl border border-app-border bg-app-surface-muted p-4"
+              className="flex items-center justify-between gap-4 rounded-xl border border-app-border bg-app-surface/80 p-4 ring-1 ring-app-border"
             >
               <div className="min-w-0">
                 <p className="font-medium text-app-text">{mod.name}</p>

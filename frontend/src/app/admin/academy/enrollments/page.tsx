@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DataTable, TableEmpty } from "@/components/ui/data-table";
+import { PageHeader } from "@/components/ui/page-header";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { apiClient, type Enrollment } from "@/lib/api";
 import { useAuthStore } from "@/stores/app";
 
@@ -18,39 +21,39 @@ export default function EnrollmentsPage() {
   }, [token]);
 
   return (
-    <div>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-zinc-900">Enrollments</h1>
-        <p className="mt-1 text-zinc-500">Student course enrollments</p>
-      </div>
+    <div className="app-page">
+      <PageHeader
+        title="Enrollments"
+        description="Student course enrollments across the academy"
+      />
       <Card>
         <CardHeader>
           <CardTitle>All Enrollments</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent flush>
           {enrollments.length === 0 ? (
-            <p className="text-sm text-zinc-500">No enrollments yet.</p>
+            <TableEmpty inset message="No enrollments yet." />
           ) : (
-            <table className="w-full text-left text-sm">
+            <DataTable inset>
               <thead>
-                <tr className="border-b border-zinc-100 text-zinc-500">
-                  <th className="pb-3 pr-4">Student</th>
-                  <th className="pb-3 pr-4">Course</th>
-                  <th className="pb-3 pr-4">Status</th>
-                  <th className="pb-3">Payment</th>
+                <tr>
+                  <th>Student</th>
+                  <th>Course</th>
+                  <th>Status</th>
+                  <th>Payment</th>
                 </tr>
               </thead>
               <tbody>
                 {enrollments.map((e) => (
-                  <tr key={e.id} className="border-b border-zinc-50">
-                    <td className="py-3 pr-4">{e.user?.name ?? "—"}</td>
-                    <td className="py-3 pr-4">{e.batch?.course?.title ?? "—"}</td>
-                    <td className="py-3 pr-4 capitalize">{e.status}</td>
-                    <td className="py-3 capitalize">{e.payment_status}</td>
+                  <tr key={e.id}>
+                    <td className="font-medium text-app-text">{e.user?.name ?? "—"}</td>
+                    <td>{e.batch?.course?.title ?? "—"}</td>
+                    <td><StatusBadge status={e.status} /></td>
+                    <td><StatusBadge status={e.payment_status} /></td>
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </DataTable>
           )}
         </CardContent>
       </Card>

@@ -1,14 +1,7 @@
+"use client";
+
 import * as React from "react";
 import { cn } from "@/lib/utils";
-
-export interface SwitchProps {
-  checked: boolean;
-  onCheckedChange: (checked: boolean) => void;
-  disabled?: boolean;
-  id?: string;
-  "aria-label"?: string;
-  className?: string;
-}
 
 export function Switch({
   checked,
@@ -17,7 +10,14 @@ export function Switch({
   id,
   "aria-label": ariaLabel,
   className,
-}: SwitchProps) {
+}: {
+  checked: boolean;
+  onCheckedChange: (checked: boolean) => void;
+  disabled?: boolean;
+  id?: string;
+  "aria-label"?: string;
+  className?: string;
+}) {
   return (
     <button
       id={id}
@@ -28,14 +28,14 @@ export function Switch({
       disabled={disabled}
       onClick={() => onCheckedChange(!checked)}
       className={cn(
-        "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-        checked ? "bg-emerald-500" : "bg-zinc-300",
+        "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-app-bg disabled:cursor-not-allowed disabled:opacity-50",
+        checked ? "bg-accent shadow-[0_0_12px_-2px_rgba(93,93,255,0.5)]" : "bg-app-surface-muted",
         className,
       )}
     >
       <span
         className={cn(
-          "pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transition-transform",
+          "pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-md transition-transform duration-200",
           checked ? "translate-x-5" : "translate-x-0.5",
         )}
       />

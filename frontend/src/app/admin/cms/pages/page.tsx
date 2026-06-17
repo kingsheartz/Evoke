@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Pencil, Plus } from "lucide-react";
+import { ExternalLink, Pencil, Plus } from "lucide-react";
 import { ActionButton } from "@/components/ui/action-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, TableEmpty } from "@/components/ui/data-table";
@@ -21,7 +21,7 @@ export default function CmsPagesListPage() {
   }, [token]);
 
   return (
-    <div>
+    <div className="app-page">
       <PageHeader
         title="CMS Pages"
         description="Build landing pages, blogs, and promotions"
@@ -33,25 +33,40 @@ export default function CmsPagesListPage() {
       />
       <Card>
         <CardHeader><CardTitle>All Pages</CardTitle></CardHeader>
-        <CardContent>
+        <CardContent flush>
           {pages.length === 0 ? (
-            <TableEmpty message="No pages yet. Create your first page." />
+            <TableEmpty inset message="No pages yet. Create your first page." />
           ) : (
-            <DataTable>
+            <DataTable inset>
               <thead>
                 <tr>
                   <th>Title</th>
                   <th>Type</th>
                   <th>Status</th>
+                  <th>Public</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {pages.map((p) => (
                   <tr key={p.id}>
-                    <td className="font-medium">{p.title}</td>
-                    <td className="capitalize">{p.type}</td>
+                    <td className="font-medium text-app-text">{p.title}</td>
+                    <td className="capitalize text-app-muted">{p.type}</td>
                     <td><StatusBadge status={p.status} /></td>
+                    <td>
+                      {p.status === "published" ? (
+                        <Link
+                          href={`/p/${p.slug}`}
+                          target="_blank"
+                          className="inline-flex items-center gap-1 text-xs font-medium text-accent-soft hover:text-accent"
+                        >
+                          View
+                          <ExternalLink className="h-3 w-3" />
+                        </Link>
+                      ) : (
+                        <span className="text-xs text-app-muted">Draft</span>
+                      )}
+                    </td>
                     <td>
                       <ActionButton asChild variant="outline" size="sm" icon={Pencil}>
                         <Link href={`/admin/cms/pages/${p.id}`}>Edit</Link>

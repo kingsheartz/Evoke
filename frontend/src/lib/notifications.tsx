@@ -6,7 +6,6 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -56,30 +55,8 @@ function ToastItem({
   item: NotificationItem;
   onDismiss: (id: string) => void;
 }) {
-  const onDismissRef = useRef(onDismiss);
-  onDismissRef.current = onDismiss;
-  const [progress, setProgress] = useState(100);
   const style = VARIANT_STYLES[item.variant];
   const Icon = style.icon;
-
-  useEffect(() => {
-    const start = performance.now();
-    let frame = 0;
-
-    const tick = (now: number) => {
-      const elapsed = now - start;
-      const remaining = Math.max(0, 100 - (elapsed / item.duration) * 100);
-      setProgress(remaining);
-      if (remaining > 0) {
-        frame = requestAnimationFrame(tick);
-      } else {
-        onDismissRef.current(item.id);
-      }
-    };
-
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
-  }, [item.id, item.duration]);
 
   return (
     <div
@@ -103,8 +80,9 @@ function ToastItem({
       </div>
       <div className="h-[3px] w-full bg-black/5">
         <div
-          className="h-full bg-current opacity-70 transition-[width] duration-75 ease-linear"
-          style={{ width: `${progress}%` }}
+          className="toast-progress h-full bg-current opacity-70"
+          style={{ animationDuration: `${item.duration}ms` }}
+          onAnimationEnd={() => onDismiss(item.id)}
         />
       </div>
     </div>

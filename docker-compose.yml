@@ -23,8 +23,9 @@ services:
       - INTERNAL_API_URL=http://backend:8000/api/v1
     volumes:
       - ./frontend:/app
+      # Keep node_modules inside the container (Linux binaries). Do NOT mount
+      # /app/.next — a separate .next volume causes stale UI after code changes.
       - /app/node_modules
-      - /app/.next
     depends_on:
       - backend
     networks:

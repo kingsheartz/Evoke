@@ -68,6 +68,18 @@ export const apiClient = {
       body: JSON.stringify({ email, password }),
     }),
 
+  register: (payload: RegisterPayload) =>
+    api<{ data: AuthResponse }>("/auth/register", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
+  forgotPassword: (email: string) =>
+    api<{ message: string }>("/auth/forgot-password", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    }),
+
   me: (token: string) =>
     api<{ data: User }>("/auth/me", { token }),
 
@@ -164,6 +176,8 @@ export const apiClient = {
     api<{ message: string }>(`/admin/users/${id}`, { method: "DELETE", token }),
 
   // CMS Pages
+  getPublicPage: (slug: string) =>
+    api<{ data: CmsPage }>(`/cms/pages/${encodeURIComponent(slug)}`),
   getAdminPages: (token: string) =>
     api<Paginated<CmsPage>>(`/cms/admin/pages`, { token }),
   getAdminPage: (token: string, id: number) =>
@@ -205,6 +219,7 @@ export interface HomepageUpdatePayload {
   hero_cta_text?: string;
   hero_cta_url?: string;
   entry_cards?: EntryCard[];
+  meta?: Record<string, unknown>;
 }
 
 export interface EntryCard {
@@ -234,8 +249,17 @@ export interface User {
   id: number;
   name: string;
   email: string;
+  phone?: string | null;
   roles?: { name: string }[];
   permissions?: { name: string }[];
+}
+
+export interface RegisterPayload {
+  name: string;
+  email: string;
+  phone?: string;
+  password: string;
+  password_confirmation: string;
 }
 
 export interface AuthResponse {
@@ -247,7 +271,7 @@ export interface NavItem {
   label: string;
   href?: string;
   icon?: string;
-  children?: { label: string; href: string }[];
+  children?: { label: string; href: string; icon?: string }[];
   visible?: boolean;
 }
 
@@ -471,4 +495,16 @@ export function hasAdminAccess(roles: string[], permissions: string[]): boolean 
   if (roles.some((r) => adminRoles.includes(r))) return true;
   const adminPerms = permissions.filter((p) => !p.endsWith(".use") && p !== "ai.chat.use");
   return adminPerms.length > 0;
+}
+
+export function getUserRoles(user: User): string[] {
+  return user.roles?.map((r) => r.name) ?? [];
+}
+
+export function getUserPermissions(user: User): string[] {
+  return user.permissions?.map((p) => p.name) ?? [];
+}
+
+export function isCustomerUser(roles: string[]): boolean {
+  return roles.includes("customer") && !hasAdminAccess(roles, []);
 }

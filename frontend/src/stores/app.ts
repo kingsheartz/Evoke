@@ -22,7 +22,13 @@ export const useAuthStore = create<AuthState>()(
       roles: [],
       permissions: [],
       navigation: [],
-      setAuth: (user, token) => set({ user, token }),
+      setAuth: (user, token) =>
+        set({
+          user,
+          token,
+          roles: user.roles?.map((r) => r.name) ?? [],
+          permissions: user.permissions?.map((p) => p.name) ?? [],
+        }),
       setContext: (context) =>
         set({
           user: context.user,

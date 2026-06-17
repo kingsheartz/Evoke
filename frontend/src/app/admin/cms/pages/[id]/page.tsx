@@ -1,12 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useParams } from "next/navigation";
+import { ExternalLink } from "lucide-react";
+import { Button } from "@/components/ui/button";import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
+import { PageHeader } from "@/components/ui/page-header";
+import { AdminBackLink } from "@/components/admin/admin-form-primitives";
+import { PageLoading } from "@/components/ui/page-loading";
 import { PageSectionBuilder } from "@/components/cms/page-section-builder";
 import { apiClient, type CmsPage, type PageSection } from "@/lib/api";
 import { useAuthStore } from "@/stores/app";
@@ -37,27 +41,48 @@ export default function EditCmsPage() {
     setMessage("Page saved.");
   };
 
-  if (!page) return <p className="text-sm text-zinc-500">Loading...</p>;
+  if (!page) return <PageLoading label="Loading page..." />;
 
   return (
-    <div className="space-y-8">
-      <div>
-        <Link href="/admin/cms/pages" className="text-sm text-zinc-500">← Back to pages</Link>
-        <h1 className="mt-2 text-3xl font-bold">Page Builder</h1>
-        <p className="text-sm text-zinc-500">{page.slug}</p>
-      </div>
+    <div className="app-page">
+      <PageHeader
+        title="Page Builder"
+        description={`Slug: ${page.slug}`}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            {status === "published" && (
+              <Button variant="outline" size="sm" asChild>
+                <Link href={`/p/${page.slug}`} target="_blank">
+                  Preview page
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </Link>
+              </Button>
+            )}
+            <AdminBackLink href="/admin/cms/pages">← Back to pages</AdminBackLink>
+          </div>
+        }
+      />
       <Card>
         <CardHeader><CardTitle>Page Settings</CardTitle></CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2"><Label>Title</Label><Input value={title} onChange={(e) => setTitle(e.target.value)} /></div>
-          <div className="space-y-2">
+        <CardContent className="grid gap-5 md:grid-cols-2">
+          <div className="form-field"><Label>Title</Label><Input value={title} onChange={(e) => setTitle(e.target.value)} /></div>
+          <div className="form-field">
             <Label>Status</Label>
-            <select value={status} onChange={(e) => setStatus(e.target.value)} className="flex h-10 w-full rounded-lg border border-zinc-200 px-3 text-sm">
-              <option value="draft">Draft</option><option value="published">Published</option>
-            </select>
+            <Select value={status} onChange={(e) => setStatus(e.target.value)}>
+              <option value="draft">Draft</option>
+              <option value="published">Published</option>
+            </Select>
           </div>
-          {message && <p className="text-sm text-emerald-600 md:col-span-2">{message}</p>}
-          <div className="md:col-span-2"><Button onClick={save}>Save Page</Button></div>
+          {message && <p className="text-sm text-status-success md:col-span-2">{message}</p>}
+          {status === "published" && (
+            <p className="text-sm text-app-muted md:col-span-2">
+              Public URL:{" "}
+              <Link href={`/p/${page.slug}`} target="_blank" className="font-medium text-accent-soft hover:text-accent">
+                /p/{page.slug}
+              </Link>
+            </p>
+          )}
+          <div className="md:col-span-2 pt-1"><Button onClick={save}>Save Page</Button></div>
         </CardContent>
       </Card>
       <PageSectionBuilder pageId={id} sections={sections} onChange={setSections} />

@@ -28,8 +28,9 @@ export default function AcademyCoursesPage() {
   return (
     <PermissionGate
       permission="academy.courses.manage"
-      fallback={<p className="text-red-600">You do not have permission to manage courses.</p>}
+      fallback={<p className="text-status-error">You do not have permission to manage courses.</p>}
     >
+      <div className="app-page">
       <PageHeader
         title="Academy Courses"
         description="Create and manage training programs"
@@ -44,13 +45,13 @@ export default function AcademyCoursesPage() {
         <CardHeader>
           <CardTitle>All Courses</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent flush>
           {loading ? (
-            <TableLoading message="Loading courses..." />
+            <TableLoading inset />
           ) : courses.length === 0 ? (
-            <TableEmpty message="No courses yet. Create your first course." />
+            <TableEmpty inset message="No courses yet. Create your first course." />
           ) : (
-            <DataTable>
+            <DataTable inset>
               <thead>
                 <tr>
                   <th>Title</th>
@@ -79,6 +80,7 @@ export default function AcademyCoursesPage() {
           )}
         </CardContent>
       </Card>
+      </div>
     </PermissionGate>
   );
 }

@@ -21,7 +21,7 @@ export default function TourPackagesPage() {
   }, [token]);
 
   return (
-    <div>
+    <div className="app-page">
       <PageHeader
         title="Tour Packages"
         description="Manage travel packages and itineraries"
@@ -33,11 +33,11 @@ export default function TourPackagesPage() {
       />
       <Card>
         <CardHeader><CardTitle>All Packages</CardTitle></CardHeader>
-        <CardContent>
+        <CardContent flush>
           {packages.length === 0 ? (
-            <TableEmpty message="No packages yet. Add your first package." />
+            <TableEmpty inset message="No packages yet. Add your first package." />
           ) : (
-            <DataTable>
+            <DataTable inset>
               <thead>
                 <tr>
                   <th>Title</th>

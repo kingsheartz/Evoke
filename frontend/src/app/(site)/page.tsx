@@ -1,6 +1,22 @@
-import { EntryCards } from "@/components/home/entry-cards";
+import dynamic from "next/dynamic";
 import { HeroSection } from "@/components/home/hero-section";
+import { HomepageExtraSections } from "@/components/home/homepage-extra-sections";
+import { PageLoading } from "@/components/ui/page-loading";
 import { apiClient } from "@/lib/api";
+import { defaultHomepageFallback } from "@/lib/homepage-defaults";
+import { parseHomepageMeta } from "@/lib/homepage-meta";
+
+const StatsBar = dynamic(() =>
+  import("@/components/home/stats-bar").then((m) => ({ default: m.StatsBar })),
+);
+
+const EntryCards = dynamic(() =>
+  import("@/components/home/entry-cards").then((m) => ({ default: m.EntryCards })),
+);
+
+const FeaturesSection = dynamic(() =>
+  import("@/components/home/features-section").then((m) => ({ default: m.FeaturesSection })),
+);
 
 export default async function HomePage() {
   let homepage = null;
@@ -9,58 +25,37 @@ export default async function HomePage() {
     const response = await apiClient.getHomepage();
     homepage = response.data;
   } catch {
-    homepage = {
-      hero: {
-        heading: "Welcome to Evoke",
-        subheading: "Academy · Sports Shop · Tours & Travels",
-        background_type: "gradient",
-        background_url: null,
-        video_url: null,
-        cta_text: "Explore Our World",
-        cta_url: "#divisions",
-      },
-      entry_cards: [
-        {
-          slug: "academy",
-          title: "Evoke Academy",
-          description: "Karate, Yoga, Swimming, Dance & more",
-          icon: "graduation-cap",
-          url: "/academy",
-          gradient: "from-blue-600 to-indigo-700",
-        },
-        {
-          slug: "shop",
-          title: "Sports Shop",
-          description: "Equipment, apparel & fitness accessories",
-          icon: "shopping-bag",
-          url: "/shop",
-          gradient: "from-emerald-600 to-teal-700",
-        },
-        {
-          slug: "tours",
-          title: "Tours & Travels",
-          description: "Domestic, international & adventure packages",
-          icon: "plane",
-          url: "/tours",
-          gradient: "from-orange-600 to-rose-700",
-        },
-      ],
-      meta: {},
-    };
+    homepage = defaultHomepageFallback;
   }
 
   if (!homepage) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <p className="text-app-muted">Loading platform content...</p>
-      </div>
-    );
+    return <PageLoading label="Loading platform content..." />;
   }
+
+  const meta = parseHomepageMeta(homepage.meta);
 
   return (
     <>
       <HeroSection hero={homepage.hero} />
-      <EntryCards cards={homepage.entry_cards} />
+      <div className="deferred-section">
+        <StatsBar items={meta.stats?.items} enabled={meta.stats?.enabled} />
+      </div>
+      <div className="deferred-section">
+        <EntryCards cards={homepage.entry_cards} />
+      </div>
+      <div className="deferred-section">
+        <FeaturesSection
+          eyebrow={meta.features?.eyebrow}
+          heading={meta.features?.heading}
+          items={meta.features?.items}
+          enabled={meta.features?.enabled}
+        />
+      </div>
+      {meta.sections && meta.sections.length > 0 && (
+        <div className="deferred-section">
+          <HomepageExtraSections sections={meta.sections} />
+        </div>
+      )}
     </>
   );
 }

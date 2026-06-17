@@ -1,6 +1,8 @@
 import { AdminAuthGuard } from "@/components/admin/admin-auth-guard";
 import { AdminHeader } from "@/components/admin/admin-header";
+import { AdminScrollLock } from "@/components/admin/admin-scroll-lock";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
+import { AdminContent } from "@/components/layout/app-shell";
 
 export const metadata = {
   title: "Admin",
@@ -9,12 +11,13 @@ export const metadata = {
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <AdminAuthGuard>
-      <div className="flex min-h-screen bg-app-bg">
+      <AdminScrollLock />
+      <div className="admin-shell" data-admin-layout="fixed-sidebar-v2">
         <AdminSidebar />
-        <div className="flex min-w-0 flex-1 flex-col">
+        <div className="admin-main-column">
           <AdminHeader />
-          <main className="relative flex-1 overflow-auto">
-            <div className="mx-auto max-w-6xl p-8">{children}</div>
+          <main className="admin-main">
+            <AdminContent>{children}</AdminContent>
           </main>
         </div>
       </div>

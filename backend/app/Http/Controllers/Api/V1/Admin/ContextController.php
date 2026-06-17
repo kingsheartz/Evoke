@@ -51,10 +51,10 @@ class ContextController extends Controller
         if (in_array('cms', $enabled, true) && ($can('cms.homepage.manage') || $can('cms.pages.manage'))) {
             $cmsChildren = [];
             if ($can('cms.homepage.manage') || $can('cms.pages.manage')) {
-                $cmsChildren[] = ['label' => 'Homepage', 'href' => '/admin/cms/homepage'];
+                $cmsChildren[] = ['label' => 'Homepage', 'href' => '/admin/cms/homepage', 'icon' => 'home'];
             }
             if ($can('cms.pages.manage')) {
-                $cmsChildren[] = ['label' => 'Pages', 'href' => '/admin/cms/pages'];
+                $cmsChildren[] = ['label' => 'Pages', 'href' => '/admin/cms/pages', 'icon' => 'files'];
             }
             $items[] = ['label' => 'CMS', 'icon' => 'file-text', 'children' => $cmsChildren];
         }
@@ -64,8 +64,8 @@ class ContextController extends Controller
                 'label' => 'Academy',
                 'icon' => 'graduation-cap',
                 'children' => [
-                    ['label' => 'Courses', 'href' => '/admin/academy/courses'],
-                    ['label' => 'Enrollments', 'href' => '/admin/academy/enrollments'],
+                    ['label' => 'Courses', 'href' => '/admin/academy/courses', 'icon' => 'book-open'],
+                    ['label' => 'Enrollments', 'href' => '/admin/academy/enrollments', 'icon' => 'clipboard-list'],
                 ],
             ];
         }
@@ -75,8 +75,8 @@ class ContextController extends Controller
                 'label' => 'Sports Shop',
                 'icon' => 'shopping-bag',
                 'children' => [
-                    ['label' => 'Products', 'href' => '/admin/shop/products'],
-                    ['label' => 'Orders', 'href' => '/admin/shop/orders'],
+                    ['label' => 'Products', 'href' => '/admin/shop/products', 'icon' => 'package'],
+                    ['label' => 'Orders', 'href' => '/admin/shop/orders', 'icon' => 'shopping-cart'],
                 ],
             ];
         }
@@ -84,10 +84,10 @@ class ContextController extends Controller
         if (in_array('tours', $enabled, true) && ($can('tours.packages.manage') || $can('tours.bookings.manage'))) {
             $tourChildren = [];
             if ($can('tours.packages.manage')) {
-                $tourChildren[] = ['label' => 'Packages', 'href' => '/admin/tours/packages'];
+                $tourChildren[] = ['label' => 'Packages', 'href' => '/admin/tours/packages', 'icon' => 'map-pin'];
             }
             if ($can('tours.bookings.manage')) {
-                $tourChildren[] = ['label' => 'Bookings', 'href' => '/admin/tours/bookings'];
+                $tourChildren[] = ['label' => 'Bookings', 'href' => '/admin/tours/bookings', 'icon' => 'calendar'];
             }
             $items[] = ['label' => 'Tours & Travels', 'icon' => 'plane', 'children' => $tourChildren];
         }
@@ -97,8 +97,8 @@ class ContextController extends Controller
                 'label' => 'Settings',
                 'icon' => 'settings',
                 'children' => [
-                    ['label' => 'Modules', 'href' => '/admin/settings/modules'],
-                    ['label' => 'Users', 'href' => '/admin/settings/users'],
+                    ['label' => 'Modules', 'href' => '/admin/settings/modules', 'icon' => 'blocks'],
+                    ['label' => 'Users', 'href' => '/admin/settings/users', 'icon' => 'users'],
                 ],
             ];
         }

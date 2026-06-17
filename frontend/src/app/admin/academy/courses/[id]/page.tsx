@@ -3,14 +3,18 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { PageHeader } from "@/components/ui/page-header";
+import { PageLoading } from "@/components/ui/page-loading";
+import { AdminBackLink } from "@/components/admin/admin-form-primitives";
 import { apiClient, type AcademyCategory, type Course } from "@/lib/api";
 import { useAuthStore } from "@/stores/app";
+import { cn } from "@/lib/utils";
 
 interface EditForm {
   title: string;
@@ -62,18 +66,16 @@ export default function EditCoursePage() {
   };
 
   if (!course) {
-    return <p className="text-sm text-zinc-500">Loading course...</p>;
+    return <PageLoading label="Loading course..." />;
   }
 
   return (
-    <div>
-      <div className="mb-8">
-        <Link href="/admin/academy/courses" className="text-sm text-zinc-500 hover:text-zinc-700">
-          ← Back to courses
-        </Link>
-        <h1 className="mt-2 text-3xl font-bold text-zinc-900">Edit Course</h1>
-        <p className="text-sm text-zinc-500">{course.slug}</p>
-      </div>
+    <div className="app-page">
+      <PageHeader
+        title="Edit Course"
+        description={course.slug}
+        actions={<AdminBackLink href="/admin/academy/courses">← Back to courses</AdminBackLink>}
+      />
 
       <Card>
         <CardHeader>
@@ -91,7 +93,7 @@ export default function EditCoursePage() {
             </div>
             <div className="space-y-2">
               <Label>Category</Label>
-              <p className="text-sm text-zinc-600">
+              <p className="text-sm text-app-muted">
                 {categories.find((c) => c.id === course.category_id)?.name ?? "—"}
               </p>
             </div>
@@ -105,18 +107,18 @@ export default function EditCoursePage() {
             </div>
             <div className="space-y-2">
               <Label>Status</Label>
-              <select
-                {...register("status")}
-                className="flex h-10 w-full rounded-lg border border-zinc-200 px-3 text-sm"
-              >
+              <Select {...register("status")}>
                 <option value="draft">Draft</option>
                 <option value="published">Published</option>
                 <option value="archived">Archived</option>
-              </select>
+              </Select>
             </div>
             {message && (
               <p
-                className={`text-sm md:col-span-2 ${message.includes("success") ? "text-emerald-600" : "text-red-600"}`}
+                className={cn(
+                  "text-sm md:col-span-2",
+                  message.includes("success") ? "text-status-success" : "text-status-error",
+                )}
               >
                 {message}
               </p>

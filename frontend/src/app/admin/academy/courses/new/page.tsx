@@ -5,12 +5,14 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { PageHeader } from "@/components/ui/page-header";
+import { AdminBackLink, FormError } from "@/components/admin/admin-form-primitives";
 import { apiClient, type AcademyCategory } from "@/lib/api";
 import { useAuthStore } from "@/stores/app";
 
@@ -56,13 +58,12 @@ export default function NewCoursePage() {
   };
 
   return (
-    <div>
-      <div className="mb-8">
-        <Link href="/admin/academy/courses" className="text-sm text-zinc-500 hover:text-zinc-700">
-          ← Back to courses
-        </Link>
-        <h1 className="mt-2 text-3xl font-bold text-zinc-900">New Course</h1>
-      </div>
+    <div className="app-page">
+      <PageHeader
+        title="New Course"
+        description="Create a new academy course"
+        actions={<AdminBackLink href="/admin/academy/courses">← Back to courses</AdminBackLink>}
+      />
 
       <Card>
         <CardHeader>
@@ -73,7 +74,7 @@ export default function NewCoursePage() {
             <div className="space-y-2 md:col-span-2">
               <Label>Title</Label>
               <Input {...register("title")} />
-              {errors.title && <p className="text-xs text-red-600">{errors.title.message}</p>}
+              <FormError message={errors.title?.message} />
             </div>
             <div className="space-y-2 md:col-span-2">
               <Label>Description</Label>
@@ -81,20 +82,15 @@ export default function NewCoursePage() {
             </div>
             <div className="space-y-2">
               <Label>Category</Label>
-              <select
-                {...register("category_id", { valueAsNumber: true })}
-                className="flex h-10 w-full rounded-lg border border-zinc-200 px-3 text-sm"
-              >
+              <Select {...register("category_id", { valueAsNumber: true })}>
                 <option value={0}>Select category</option>
                 {categories.map((cat) => (
                   <option key={cat.id} value={cat.id}>
                     {cat.name}
                   </option>
                 ))}
-              </select>
-              {errors.category_id && (
-                <p className="text-xs text-red-600">{errors.category_id.message}</p>
-              )}
+              </Select>
+              <FormError message={errors.category_id?.message} />
             </div>
             <div className="space-y-2">
               <Label>Duration</Label>
@@ -105,10 +101,10 @@ export default function NewCoursePage() {
               <Input type="number" step="0.01" {...register("fees")} />
             </div>
             <div className="flex items-center gap-2 md:col-span-2">
-              <input type="checkbox" id="requires_approval" {...register("requires_approval")} />
+              <input type="checkbox" id="requires_approval" className="form-checkbox" {...register("requires_approval")} />
               <Label htmlFor="requires_approval">Requires admin approval for enrollment</Label>
             </div>
-            {error && <p className="text-sm text-red-600 md:col-span-2">{error}</p>}
+            <FormError message={error} />
             <div className="md:col-span-2">
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? "Creating..." : "Create Course"}

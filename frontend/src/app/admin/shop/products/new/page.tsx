@@ -5,12 +5,14 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { PageHeader } from "@/components/ui/page-header";
+import { AdminBackLink, FormError } from "@/components/admin/admin-form-primitives";
 import { apiClient, type ShopCategory } from "@/lib/api";
 import { useAuthStore } from "@/stores/app";
 
@@ -48,9 +50,11 @@ export default function NewProductPage() {
   };
 
   return (
-    <div>
-      <Link href="/admin/shop/products" className="text-sm text-zinc-500">← Back</Link>
-      <h1 className="mt-2 mb-8 text-3xl font-bold">New Product</h1>
+    <div className="app-page">
+      <PageHeader
+        title="New Product"
+        actions={<AdminBackLink href="/admin/shop/products">← Back to products</AdminBackLink>}
+      />
       <Card>
         <CardHeader><CardTitle>Product Details</CardTitle></CardHeader>
         <CardContent>
@@ -59,15 +63,15 @@ export default function NewProductPage() {
             <div className="space-y-2 md:col-span-2"><Label>Description</Label><Textarea {...register("description")} /></div>
             <div className="space-y-2">
               <Label>Category</Label>
-              <select {...register("category_id", { valueAsNumber: true })} className="flex h-10 w-full rounded-lg border border-zinc-200 px-3 text-sm">
+              <Select {...register("category_id", { valueAsNumber: true })}>
                 <option value={0}>Select</option>
                 {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
+              </Select>
             </div>
             <div className="space-y-2"><Label>SKU</Label><Input {...register("sku")} /></div>
             <div className="space-y-2"><Label>Price (₹)</Label><Input type="number" step="0.01" {...register("price", { valueAsNumber: true })} /></div>
             <div className="space-y-2"><Label>Stock</Label><Input type="number" {...register("stock", { valueAsNumber: true })} /></div>
-            {error && <p className="text-sm text-red-600 md:col-span-2">{error}</p>}
+            <FormError message={error} className="text-sm md:col-span-2" />
             <div className="md:col-span-2"><Button type="submit" disabled={isSubmitting}>Create Product</Button></div>
           </form>
         </CardContent>

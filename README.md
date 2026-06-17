@@ -75,6 +75,26 @@ cp frontend/.env.example frontend/.env.local
 docker compose up -d --build
 ```
 
+**Development guide (commands, Docker UI fixes, troubleshooting):** see [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)
+
+**Windows quick helpers:**
+
+```powershell
+.\scripts\dev.ps1 up              # start stack
+.\scripts\dev.ps1 reset-frontend  # fix stale UI when changes don't appear
+.\scripts\dev.ps1 verify-ui       # confirm new theme is being served
+```
+
+```cmd
+scripts\dev.cmd up
+scripts\dev.cmd reset-frontend
+```
+
+```bash
+./scripts/dev.sh up
+./scripts/dev.sh reset-frontend
+```
+
 Services:
 
 | Service | URL |
@@ -176,6 +196,8 @@ Modules can be enabled/disabled per vertical via the `business_modules` table (a
 
 ## Development Notes
 
+- **Full dev guide:** [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) — daily commands, Docker `.next` cache issue, UI verification.
+- **UI not updating in Docker?** The frontend used a separate `.next` volume that served stale builds. This is fixed in `docker-compose.yml`; if you still see the old UI, run `.\scripts\dev.ps1 reset-frontend` and hard-refresh (`Ctrl+Shift+R`).
 - **No hardcoded content** — Homepage, pages, and all business entities are database-driven and admin-configurable.
 - **Multi-branch ready** — `branches` table and `branch_id` on users/courses support future expansion.
 - **Microservice extraction** — Modules are isolated by namespace and can be extracted later if needed.

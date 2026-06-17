@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { PageLoading } from "@/components/ui/page-loading";
 import { apiClient } from "@/lib/api";
 import { useAuthStore } from "@/stores/app";
 
 export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { token, setContext, user } = useAuthStore();
+  const { token, setContext, user, navigation } = useAuthStore();
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -15,6 +16,11 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
       if (!token) {
         router.replace("/login?redirect=/admin");
         return;
+      }
+
+      const hasCachedContext = Boolean(user && navigation.length > 0);
+      if (hasCachedContext) {
+        setReady(true);
       }
 
       try {
@@ -28,14 +34,10 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
     }
 
     load();
-  }, [token, router, setContext]);
+  }, [token, router, setContext, user, navigation.length]);
 
   if (!ready || !user) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-zinc-50">
-        <p className="text-sm text-zinc-500">Loading admin panel...</p>
-      </div>
-    );
+    return <PageLoading label="Loading admin panel..." fullScreen />;
   }
 
   return <>{children}</>;

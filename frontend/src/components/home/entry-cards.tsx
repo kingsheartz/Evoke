@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { GraduationCap, Plane, ShoppingBag } from "lucide-react";
+import { ArrowUpRight, GraduationCap, Plane, ShoppingBag } from "lucide-react";
 import type { EntryCard } from "@/lib/api";
+import { PageContainer } from "@/components/layout/app-shell";
 import { cn } from "@/lib/utils";
 
 const iconMap = {
@@ -9,46 +10,84 @@ const iconMap = {
   plane: Plane,
 } as const;
 
+const bentoLayout: Record<string, string> = {
+  academy: "md:col-span-2 md:row-span-2",
+  shop: "md:col-span-1",
+  tours: "md:col-span-1",
+};
+
+const accentGradients: Record<string, string> = {
+  academy: "from-violet-600/80 via-indigo-600/60 to-blue-700/80",
+  shop: "from-emerald-600/80 via-teal-600/60 to-cyan-700/80",
+  tours: "from-orange-600/80 via-rose-600/60 to-pink-700/80",
+};
+
 interface EntryCardsProps {
   cards: EntryCard[];
 }
 
 export function EntryCards({ cards }: EntryCardsProps) {
   return (
-    <section id="divisions" className="mx-auto w-full max-w-6xl px-6 py-20">
-      <div className="mb-12 text-center">
-        <h2 className="text-3xl font-extrabold tracking-tighter text-app-text">
-          Explore Evoke
+    <section id="divisions" className="relative w-full py-24">
+      <PageContainer>
+      <div className="mb-14 text-center">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent-soft">Our Divisions</p>
+        <h2 className="mt-3 font-display text-4xl font-extrabold tracking-tighter text-app-text md:text-5xl">
+          Three worlds. <span className="text-accent-soft">One experience.</span>
         </h2>
-        <p className="mt-3 text-lg text-app-muted">
-          Three divisions. One premium experience.
+        <p className="mx-auto mt-4 max-w-lg text-base text-app-muted">
+          Academy training, premium sports gear, and curated travel — unified under one premium brand.
         </p>
       </div>
-      <div className="grid gap-6 md:grid-cols-3">
-        {cards.map((card) => {
+
+      <div className="grid auto-rows-[minmax(180px,auto)] gap-4 md:grid-cols-3 md:grid-rows-2">
+        {cards.map((card, i) => {
           const Icon = iconMap[card.icon as keyof typeof iconMap] ?? GraduationCap;
+          const layout = bentoLayout[card.slug] ?? "";
+          const gradient = accentGradients[card.slug] ?? card.gradient;
+
           return (
             <Link
               key={card.slug}
               href={card.url}
               className={cn(
-                "group relative overflow-hidden rounded-2xl bg-gradient-to-br p-8 text-white shadow-xl transition-transform hover:-translate-y-1 hover:shadow-2xl",
-                card.gradient,
+                "group relative overflow-hidden rounded-2xl glass-card p-8 transition-all duration-500 hover:-translate-y-1",
+                layout,
+                i === 0 && "animate-fade-up",
+                i === 1 && "animate-fade-up-delay-1",
+                i === 2 && "animate-fade-up-delay-2",
               )}
             >
-              <div className="absolute inset-0 bg-black/10 transition-opacity group-hover:bg-black/0" />
-              <div className="relative">
-                <Icon className="mb-4 h-10 w-10" />
-                <h3 className="text-2xl font-bold">{card.title}</h3>
-                <p className="mt-2 text-sm text-white/90">{card.description}</p>
-                <span className="mt-6 inline-block text-sm font-medium underline-offset-4 group-hover:underline">
-                  Explore →
-                </span>
+              <div
+                className={cn(
+                  "absolute inset-0 bg-gradient-to-br opacity-60 transition-opacity duration-500 group-hover:opacity-80",
+                  gradient,
+                )}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-app-bg via-app-bg/50 to-app-bg/20" />
+
+              <div className="relative flex h-full flex-col">
+                <div className="mb-auto flex items-start justify-between">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/20 backdrop-blur-sm">
+                    <Icon className="h-6 w-6 text-white" />
+                  </div>
+                  <ArrowUpRight className="h-5 w-5 text-white/80 transition-all duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-white" />
+                </div>
+
+                <div className="mt-8">
+                  <h3 className="font-display text-2xl font-bold text-white md:text-3xl">{card.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-white/90">{card.description}</p>
+                  <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-white/90 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                    Explore division
+                    <ArrowUpRight className="h-3.5 w-3.5" />
+                  </span>
+                </div>
               </div>
             </Link>
           );
         })}
       </div>
+      </PageContainer>
     </section>
   );
 }

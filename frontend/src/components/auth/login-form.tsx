@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -66,32 +67,39 @@ export function LoginForm() {
   };
 
   return (
-    <Card className="w-full max-w-md">
+    <Card variant="glass" className="relative w-full max-w-md overflow-hidden">
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
       <CardHeader>
         <CardTitle>Admin Sign In</CardTitle>
-        <p className="text-sm text-app-muted">Sign in to manage Evoke Platform</p>
+        <p className="text-sm text-app-muted">Sign in to manage the Evoke platform</p>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" suppressHydrationWarning>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" suppressHydrationWarning>
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input id="email" type="email" autoComplete="email" suppressHydrationWarning {...register("email")} />
             {errors.email && (
-              <p className="text-xs text-red-600">{errors.email.message}</p>
+              <p className="text-xs text-status-error">{errors.email.message}</p>
             )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
             <Input id="password" type="password" autoComplete="current-password" suppressHydrationWarning {...register("password")} />
             {errors.password && (
-              <p className="text-xs text-red-600">{errors.password.message}</p>
+              <p className="text-xs text-status-error">{errors.password.message}</p>
             )}
           </div>
-          {error && <p className="text-sm text-red-600">{error}</p>}
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
+          {error && <p className="rounded-lg bg-status-error/10 px-3 py-2 text-sm text-status-error ring-1 ring-status-error/20">{error}</p>}
+          <Button type="submit" variant="glow" className="w-full" disabled={isSubmitting}>
             {isSubmitting ? "Signing in..." : "Sign in"}
           </Button>
         </form>
+        <p className="mt-6 text-center text-xs text-app-muted">
+          Customer account?{" "}
+          <Link href="/sign-in" className="text-accent-soft hover:text-accent">
+            Sign in here
+          </Link>
+        </p>
       </CardContent>
     </Card>
   );
