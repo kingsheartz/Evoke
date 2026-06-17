@@ -1,27 +1,42 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  roles: { name: string }[];
-}
+import type { AdminContext, NavItem, User } from "@/lib/api";
 
 interface AuthState {
   user: User | null;
   token: string | null;
+  roles: string[];
+  permissions: string[];
+  navigation: NavItem[];
   setAuth: (user: User, token: string) => void;
+  setContext: (context: AdminContext) => void;
   logout: () => void;
+  hasPermission: (permission: string | string[]) => boolean;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null,
       token: null,
+      roles: [],
+      permissions: [],
+      navigation: [],
       setAuth: (user, token) => set({ user, token }),
-      logout: () => set({ user: null, token: null }),
+      setContext: (context) =>
+        set({
+          user: context.user,
+          roles: context.roles,
+          permissions: context.permissions,
+          navigation: context.navigation,
+        }),
+      logout: () =>
+        set({ user: null, token: null, roles: [], permissions: [], navigation: [] }),
+      hasPermission: (permission) => {
+        const perms = get().permissions;
+        const list = Array.isArray(permission) ? permission : [permission];
+        return list.some((p) => perms.includes(p));
+      },
     }),
     { name: "evoke-auth" },
   ),

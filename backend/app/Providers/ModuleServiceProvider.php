@@ -9,7 +9,7 @@ class ModuleServiceProvider extends ServiceProvider
 {
     public function boot(): void
     {
-        $modules = ['Academy', 'Shop', 'Tours', 'CMS', 'Notifications'];
+        $modules = ['Academy', 'Shop', 'Tours', 'CMS', 'Notifications', 'Admin'];
 
         foreach ($modules as $module) {
             $routePath = base_path("app/Modules/{$module}/routes.php");

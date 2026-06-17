@@ -20,6 +20,8 @@ Route::prefix('shop')->middleware(['module.enabled:shop'])->group(function () {
     });
 
     Route::middleware(['auth:sanctum', 'permission:shop.products.manage'])->group(function () {
+        Route::get('/admin/products', [ProductController::class, 'adminIndex']);
+        Route::get('/admin/products/{product}', [ProductController::class, 'adminShow']);
         Route::post('/products', [ProductController::class, 'store']);
         Route::put('/products/{product}', [ProductController::class, 'update']);
     });

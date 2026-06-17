@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Tours\ItineraryController;
 use App\Http\Controllers\Api\V1\Tours\PackageController;
 use App\Http\Controllers\Api\V1\Tours\BookingController;
 use App\Http\Controllers\Api\V1\Tours\EnquiryController;
@@ -17,7 +18,13 @@ Route::prefix('tours')->middleware(['module.enabled:tours'])->group(function () 
     Route::post('/enquiries', [EnquiryController::class, 'store']);
 
     Route::middleware(['auth:sanctum', 'permission:tours.packages.manage'])->group(function () {
+        Route::get('/admin/packages', [PackageController::class, 'adminIndex']);
+        Route::get('/admin/packages/{package}', [PackageController::class, 'adminShow']);
         Route::post('/packages', [PackageController::class, 'store']);
         Route::put('/packages/{package}', [PackageController::class, 'update']);
+        Route::get('/admin/packages/{package}/itinerary', [ItineraryController::class, 'index']);
+        Route::post('/admin/packages/{package}/itinerary', [ItineraryController::class, 'store']);
+        Route::put('/admin/packages/{package}/itinerary/{day}', [ItineraryController::class, 'update']);
+        Route::delete('/admin/packages/{package}/itinerary/{day}', [ItineraryController::class, 'destroy']);
     });
 });

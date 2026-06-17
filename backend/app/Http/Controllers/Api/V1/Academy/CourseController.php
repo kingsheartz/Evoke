@@ -29,6 +29,23 @@ class CourseController extends Controller
         return response()->json($courses);
     }
 
+    public function adminIndex(Request $request): JsonResponse
+    {
+        $courses = Course::query()
+            ->with(['category', 'batches'])
+            ->when($request->status, fn ($q, $status) => $q->where('status', $status))
+            ->when($request->search, fn ($q, $search) => $q->where('title', 'ilike', "%{$search}%"))
+            ->latest()
+            ->paginate($request->integer('per_page', 20));
+
+        return response()->json($courses);
+    }
+
+    public function adminShow(Course $course): JsonResponse
+    {
+        return response()->json(['data' => $course->load(['category', 'batches.trainer'])]);
+    }
+
     public function show(string $slug): JsonResponse
     {
         $course = Course::where('slug', $slug)

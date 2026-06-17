@@ -19,6 +19,8 @@ class DatabaseSeeder extends Seeder
             BusinessModuleSeeder::class,
             HomepageSeeder::class,
             NotificationTemplateSeeder::class,
+            AcademyCategorySeeder::class,
+            ShopCategorySeeder::class,
         ]);
 
         $branch = Branch::create([

@@ -12,6 +12,23 @@ use Illuminate\Support\Str;
 
 class PackageController extends Controller
 {
+    public function adminIndex(Request $request): JsonResponse
+    {
+        $packages = Package::query()
+            ->with('itineraryDays')
+            ->when($request->type, fn ($q, $type) => $q->where('type', $type))
+            ->when($request->search, fn ($q, $s) => $q->where('title', 'ilike', "%{$s}%"))
+            ->latest()
+            ->paginate($request->integer('per_page', 20));
+
+        return response()->json($packages);
+    }
+
+    public function adminShow(Package $package): JsonResponse
+    {
+        return response()->json(['data' => $package->load('itineraryDays')]);
+    }
+
     public function index(Request $request): JsonResponse
     {
         $packages = Package::query()

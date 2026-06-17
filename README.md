@@ -81,6 +81,7 @@ Services:
 |---------|-----|
 | Frontend | http://localhost:3000 |
 | API | http://localhost:8000/api/v1 |
+| Nginx (proxy) | http://localhost:8080 |
 | AI Service | http://localhost:8001 |
 | PostgreSQL | localhost:5432 |
 | Redis | localhost:6379 |

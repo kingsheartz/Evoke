@@ -10,6 +10,23 @@ use Illuminate\Support\Str;
 
 class PageController extends Controller
 {
+    public function adminIndex(Request $request): JsonResponse
+    {
+        $pages = Page::query()
+            ->with('sections')
+            ->when($request->type, fn ($q, $type) => $q->where('type', $type))
+            ->when($request->status, fn ($q, $status) => $q->where('status', $status))
+            ->latest()
+            ->paginate($request->integer('per_page', 20));
+
+        return response()->json($pages);
+    }
+
+    public function adminShow(Page $page): JsonResponse
+    {
+        return response()->json(['data' => $page->load(['sections' => fn ($q) => $q->orderBy('sort_order')])]);
+    }
+
     public function index(Request $request): JsonResponse
     {
         $pages = Page::query()

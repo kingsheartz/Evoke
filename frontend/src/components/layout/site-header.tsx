@@ -21,10 +21,7 @@ export function SiteHeader() {
         </nav>
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="sm" asChild>
-            <Link href="/login">Sign in</Link>
-          </Button>
-          <Button size="sm" asChild>
-            <Link href="/register">Get Started</Link>
+            <Link href="/login">Admin</Link>
           </Button>
         </div>
       </div>

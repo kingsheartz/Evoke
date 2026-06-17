@@ -1,0 +1,11 @@
+/vendor
+/node_modules
+.env
+.env.*
+!.env.example
+/storage/*.key
+/bootstrap/cache/*.php
+!.gitignore
+.phpunit.result.cache
+.idea
+.vscode

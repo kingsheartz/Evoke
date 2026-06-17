@@ -61,7 +61,7 @@ class RolePermissionSeeder extends Seeder
             'academy-manager' => [
                 'academy.categories.manage', 'academy.courses.manage', 'academy.trainers.manage',
                 'academy.batches.manage', 'academy.enrollments.manage', 'academy.attendance.manage',
-                'academy.certificates.manage', 'analytics.view',
+                'academy.certificates.manage', 'analytics.view', 'cms.homepage.manage',
             ],
             'shop-manager' => [
                 'shop.products.manage', 'shop.orders.manage', 'shop.inventory.manage',

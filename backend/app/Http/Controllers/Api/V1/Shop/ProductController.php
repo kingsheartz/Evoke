@@ -18,6 +18,22 @@ class ProductController extends Controller
         return response()->json(['data' => Category::where('is_active', true)->orderBy('sort_order')->get()]);
     }
 
+    public function adminIndex(Request $request): JsonResponse
+    {
+        $products = Product::query()
+            ->with('category')
+            ->when($request->search, fn ($q, $s) => $q->where('name', 'ilike', "%{$s}%"))
+            ->latest()
+            ->paginate($request->integer('per_page', 20));
+
+        return response()->json($products);
+    }
+
+    public function adminShow(Product $product): JsonResponse
+    {
+        return response()->json(['data' => $product->load(['category', 'variants'])]);
+    }
+
     public function index(Request $request): JsonResponse
     {
         $products = Product::query()

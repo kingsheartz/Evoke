@@ -15,6 +15,8 @@ Route::prefix('academy')->middleware(['module.enabled:academy'])->group(function
     });
 
     Route::middleware(['auth:sanctum', 'permission:academy.courses.manage'])->group(function () {
+        Route::get('/admin/courses', [CourseController::class, 'adminIndex']);
+        Route::get('/admin/courses/{course}', [CourseController::class, 'adminShow']);
         Route::post('/courses', [CourseController::class, 'store']);
         Route::put('/courses/{course}', [CourseController::class, 'update']);
     });
