@@ -1,4 +1,15 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
+function getApiUrl(): string {
+  // Browser must use localhost — "backend" only resolves inside Docker network
+  if (typeof window !== "undefined") {
+    return process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
+  }
+  // Server-side rendering inside Docker can use internal hostname
+  return (
+    process.env.INTERNAL_API_URL ??
+    process.env.NEXT_PUBLIC_API_URL ??
+    "http://localhost:8000/api/v1"
+  );
+}
 
 export class ApiError extends Error {
   constructor(
@@ -16,7 +27,7 @@ type ApiOptions = RequestInit & {
 
 export async function api<T>(endpoint: string, options: ApiOptions = {}): Promise<T> {
   const { token, cache, ...init } = options;
-  const url = `${API_URL}${endpoint}`;
+  const url = `${getApiUrl()}${endpoint}`;
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",

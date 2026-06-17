@@ -66,17 +66,17 @@ export function LoginForm() {
         <p className="text-sm text-zinc-500">Sign in to manage Evoke Platform</p>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" suppressHydrationWarning>
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" {...register("email")} />
+            <Input id="email" type="email" autoComplete="email" suppressHydrationWarning {...register("email")} />
             {errors.email && (
               <p className="text-xs text-red-600">{errors.email.message}</p>
             )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" {...register("password")} />
+            <Input id="password" type="password" autoComplete="current-password" suppressHydrationWarning {...register("password")} />
             {errors.password && (
               <p className="text-xs text-red-600">{errors.password.message}</p>
             )}
