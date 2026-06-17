@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { apiClient, hasAdminAccess } from "@/lib/api";
+import { useNotifications } from "@/lib/notifications";
 import { useAuthStore } from "@/stores/app";
 
 const schema = z.object({
@@ -23,6 +24,7 @@ export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { setAuth, setContext } = useAuthStore();
+  const { error: notifyError } = useNotifications();
   const [error, setError] = useState<string | null>(null);
 
   const {
@@ -44,7 +46,9 @@ export function LoginForm() {
       const permissions = auth.user.permissions?.map((p) => p.name) ?? [];
 
       if (!hasAdminAccess(roles, permissions)) {
-        setError("You do not have admin access.");
+        const message = "You do not have admin access.";
+        setError(message);
+        notifyError(message);
         useAuthStore.getState().logout();
         return;
       }
@@ -55,7 +59,9 @@ export function LoginForm() {
       const redirect = searchParams.get("redirect") ?? "/admin";
       router.push(redirect);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Login failed");
+      const message = e instanceof Error ? e.message : "Login failed";
+      setError(message);
+      notifyError(message);
     }
   };
 
@@ -63,7 +69,7 @@ export function LoginForm() {
     <Card className="w-full max-w-md">
       <CardHeader>
         <CardTitle>Admin Sign In</CardTitle>
-        <p className="text-sm text-zinc-500">Sign in to manage Evoke Platform</p>
+        <p className="text-sm text-app-muted">Sign in to manage Evoke Platform</p>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" suppressHydrationWarning>

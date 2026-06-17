@@ -41,7 +41,7 @@ function SortableSection({
   const content = section.content as { heading?: string; body?: string };
 
   return (
-    <div ref={setNodeRef} style={style} className="rounded-lg border border-zinc-200 bg-white p-4">
+    <div ref={setNodeRef} style={style} className="rounded-lg border border-app-border bg-app-surface p-4">
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <button type="button" className="cursor-grab text-zinc-400" {...attributes} {...listeners}>

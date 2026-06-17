@@ -2,9 +2,12 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Pencil, Plus } from "lucide-react";
+import { ActionButton } from "@/components/ui/action-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DataTable, TableEmpty } from "@/components/ui/data-table";
+import { PageHeader } from "@/components/ui/page-header";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { apiClient, type CmsPage } from "@/lib/api";
 import { useAuthStore } from "@/stores/app";
 
@@ -19,27 +22,45 @@ export default function CmsPagesListPage() {
 
   return (
     <div>
-      <div className="mb-8 flex items-center justify-between">
-        <div><h1 className="text-3xl font-bold">CMS Pages</h1><p className="mt-1 text-zinc-500">Build landing pages, blogs, and promotions</p></div>
-        <Button asChild><Link href="/admin/cms/pages/new"><Plus className="mr-2 h-4 w-4" />New Page</Link></Button>
-      </div>
+      <PageHeader
+        title="CMS Pages"
+        description="Build landing pages, blogs, and promotions"
+        actions={
+          <ActionButton asChild icon={Plus}>
+            <Link href="/admin/cms/pages/new">New Page</Link>
+          </ActionButton>
+        }
+      />
       <Card>
         <CardHeader><CardTitle>All Pages</CardTitle></CardHeader>
         <CardContent>
-          {pages.length === 0 ? <p className="text-sm text-zinc-500">No pages yet.</p> : (
-            <table className="w-full text-left text-sm">
-              <thead><tr className="border-b text-zinc-500"><th className="pb-3 pr-4">Title</th><th className="pb-3 pr-4">Type</th><th className="pb-3 pr-4">Status</th><th className="pb-3">Actions</th></tr></thead>
+          {pages.length === 0 ? (
+            <TableEmpty message="No pages yet. Create your first page." />
+          ) : (
+            <DataTable>
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Type</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
               <tbody>
                 {pages.map((p) => (
-                  <tr key={p.id} className="border-b border-zinc-50">
-                    <td className="py-3 pr-4 font-medium">{p.title}</td>
-                    <td className="py-3 pr-4 capitalize">{p.type}</td>
-                    <td className="py-3 pr-4"><span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs capitalize">{p.status}</span></td>
-                    <td className="py-3"><Link href={`/admin/cms/pages/${p.id}`} className="text-indigo-600 hover:underline">Edit</Link></td>
+                  <tr key={p.id}>
+                    <td className="font-medium">{p.title}</td>
+                    <td className="capitalize">{p.type}</td>
+                    <td><StatusBadge status={p.status} /></td>
+                    <td>
+                      <ActionButton asChild variant="outline" size="sm" icon={Pencil}>
+                        <Link href={`/admin/cms/pages/${p.id}`}>Edit</Link>
+                      </ActionButton>
+                    </td>
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </DataTable>
           )}
         </CardContent>
       </Card>

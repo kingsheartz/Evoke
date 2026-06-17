@@ -3,14 +3,17 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { LoginForm } from "@/components/auth/login-form";
+import { PageIllustration } from "@/components/layout/page-illustration";
 
 export default function LoginPage() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-50 px-4">
-      <Link href="/" className="mb-8 text-xl font-bold text-zinc-900">
+    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-app-bg px-4 pt-20">
+      <PageIllustration />
+      <Link href="/" className="relative mb-8 text-2xl font-bold tracking-tight text-app-text">
         Evoke
       </Link>
-      <Suspense fallback={<p className="text-sm text-zinc-500">Loading...</p>}>
+      <p className="relative mb-6 text-sm text-app-muted">Administration portal</p>
+      <Suspense fallback={<p className="text-sm text-app-muted">Loading...</p>}>
         <LoginForm />
       </Suspense>
     </div>

@@ -1,26 +1,159 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #151719;
+  --foreground: #d9e3ea;
+  --surface: #25282c;
+  --surface-muted: #33363a;
+  --border: #33363a;
+  --border-strong: #55595f;
+  --primary: #5d5dff;
+  --primary-hover: #4b4acf;
+  --muted: #9ba9b4;
+  --muted-foreground: #707d86;
+  --app-topbar-height: 3.5rem;
+  --z-notification: 99999;
+  --color-success: #34d399;
+  --color-success-bg: rgba(16, 185, 129, 0.15);
+  --color-warning: #fbbf24;
+  --color-warning-bg: rgba(245, 158, 11, 0.15);
+  --color-error: #f87171;
+  --color-error-bg: rgba(248, 113, 113, 0.15);
+  --color-info: #60a5fa;
+  --color-info-bg: rgba(96, 165, 250, 0.15);
+  --color-neutral: #9ba9b4;
+  --color-neutral-bg: rgba(155, 169, 180, 0.12);
+  --illustration-color: #5d5dff;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-app-bg: #151719;
+  --color-app-surface: #25282c;
+  --color-app-surface-muted: #33363a;
+  --color-app-border: #33363a;
+  --color-app-text: #d9e3ea;
+  --color-app-muted: #9ba9b4;
+  --color-accent: #5d5dff;
+  --color-accent-hover: #4b4acf;
+  --color-accent-soft: #8d8dff;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+/* Kings-style form controls */
+select.form-select,
+.form-select {
+  appearance: none;
+  background-color: transparent;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239BA9B4' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  padding-right: 2.25rem;
+  color-scheme: dark;
+}
+
+input[type="checkbox"].form-checkbox {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--primary);
+  border-radius: 0.25rem;
+}
+
+/* Data tables */
+.table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.data-table {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table thead th {
+  font-weight: 500;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  padding: 0.75rem 1rem 0.75rem 0;
+  white-space: nowrap;
+}
+
+.data-table thead th:last-child {
+  padding-right: 0;
+}
+
+.data-table tbody td {
+  padding: 0.875rem 1rem 0.875rem 0;
+  border-bottom: 1px solid var(--surface-muted);
+  vertical-align: middle;
+}
+
+.data-table tbody td:last-child {
+  padding-right: 0;
+}
+
+.data-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* Dashboard equal-height cards */
+.dashboard-split {
+  display: grid;
+  gap: 1.5rem;
+  align-items: stretch;
+}
+
+@media (min-width: 1024px) {
+  .dashboard-split {
+    grid-template-columns: 2fr 1fr;
+  }
+}
+
+.dashboard-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.dashboard-card-body {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Purple glow pulse (kings-style decorative) */
+@keyframes kings-pulse {
+  0% {
+    opacity: 0;
+    transform: scale(0.1);
+  }
+  40%,
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2);
+  }
+}
+
+.kings-pulse {
+  animation: kings-pulse 8s linear infinite;
+  transform-origin: center;
+}
+
+.kings-pulse-delay-1 {
+  animation-delay: -2s;
+}
+
+.kings-pulse-delay-2 {
+  animation-delay: -4s;
 }

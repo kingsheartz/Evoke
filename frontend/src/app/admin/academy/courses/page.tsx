@@ -2,10 +2,13 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Pencil, Plus } from "lucide-react";
 import { PermissionGate } from "@/components/admin/permission-gate";
+import { ActionButton } from "@/components/ui/action-button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DataTable, TableEmpty, TableLoading } from "@/components/ui/data-table";
+import { PageHeader } from "@/components/ui/page-header";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { apiClient, type Course } from "@/lib/api";
 import { useAuthStore } from "@/stores/app";
 
@@ -27,18 +30,15 @@ export default function AcademyCoursesPage() {
       permission="academy.courses.manage"
       fallback={<p className="text-red-600">You do not have permission to manage courses.</p>}
     >
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-zinc-900">Academy Courses</h1>
-          <p className="mt-1 text-zinc-500">Create and manage training programs</p>
-        </div>
-        <Button asChild>
-          <Link href="/admin/academy/courses/new">
-            <Plus className="mr-2 h-4 w-4" />
-            Add Course
-          </Link>
-        </Button>
-      </div>
+      <PageHeader
+        title="Academy Courses"
+        description="Create and manage training programs"
+        actions={
+          <ActionButton asChild icon={Plus}>
+            <Link href="/admin/academy/courses/new">Add Course</Link>
+          </ActionButton>
+        }
+      />
 
       <Card>
         <CardHeader>
@@ -46,45 +46,36 @@ export default function AcademyCoursesPage() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <p className="text-sm text-zinc-500">Loading courses...</p>
+            <TableLoading message="Loading courses..." />
           ) : courses.length === 0 ? (
-            <p className="text-sm text-zinc-500">No courses yet. Create your first course.</p>
+            <TableEmpty message="No courses yet. Create your first course." />
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead>
-                  <tr className="border-b border-zinc-100 text-zinc-500">
-                    <th className="pb-3 pr-4 font-medium">Title</th>
-                    <th className="pb-3 pr-4 font-medium">Category</th>
-                    <th className="pb-3 pr-4 font-medium">Fees</th>
-                    <th className="pb-3 pr-4 font-medium">Status</th>
-                    <th className="pb-3 font-medium">Actions</th>
+            <DataTable>
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Category</th>
+                  <th>Fees</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {courses.map((course) => (
+                  <tr key={course.id}>
+                    <td className="font-medium">{course.title}</td>
+                    <td>{course.category?.name ?? "—"}</td>
+                    <td>₹{course.fees}</td>
+                    <td><StatusBadge status={course.status} /></td>
+                    <td>
+                      <ActionButton asChild variant="outline" size="sm" icon={Pencil}>
+                        <Link href={`/admin/academy/courses/${course.id}`}>Edit</Link>
+                      </ActionButton>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {courses.map((course) => (
-                    <tr key={course.id} className="border-b border-zinc-50">
-                      <td className="py-3 pr-4 font-medium">{course.title}</td>
-                      <td className="py-3 pr-4">{course.category?.name ?? "—"}</td>
-                      <td className="py-3 pr-4">₹{course.fees}</td>
-                      <td className="py-3 pr-4">
-                        <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs capitalize">
-                          {course.status}
-                        </span>
-                      </td>
-                      <td className="py-3">
-                        <Link
-                          href={`/admin/academy/courses/${course.id}`}
-                          className="text-sm font-medium text-indigo-600 hover:underline"
-                        >
-                          Edit
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+            </DataTable>
           )}
         </CardContent>
       </Card>

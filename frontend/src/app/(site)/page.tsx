@@ -52,7 +52,7 @@ export default async function HomePage() {
   if (!homepage) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <p className="text-zinc-500">Loading platform content...</p>
+        <p className="text-app-muted">Loading platform content...</p>
       </div>
     );
   }

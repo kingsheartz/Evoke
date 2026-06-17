@@ -27,7 +27,7 @@ const iconMap = {
 
 export function AdminSidebar() {
   const pathname = usePathname();
-  const { user, token, navigation, logout } = useAuthStore();
+  const { token, navigation, logout } = useAuthStore();
 
   const handleLogout = async () => {
     if (token) {
@@ -42,14 +42,12 @@ export function AdminSidebar() {
   };
 
   return (
-    <aside className="flex h-screen w-64 flex-col border-r border-zinc-200 bg-zinc-950 text-white">
-      <div className="border-b border-zinc-800 px-6 py-5">
-        <Link href="/admin" className="text-lg font-bold tracking-tight">
+    <aside className="flex h-screen w-64 flex-col border-r border-app-border bg-[#101214] text-app-text">
+      <div className="border-b border-app-border px-6 py-5">
+        <Link href="/admin" className="text-lg font-bold tracking-tight text-app-text">
           Evoke Admin
         </Link>
-        {user && (
-          <p className="mt-1 truncate text-xs text-zinc-400">{user.email}</p>
-        )}
+        <p className="mt-1 text-xs text-app-muted">Platform control center</p>
       </div>
 
       <nav className="flex-1 overflow-y-auto px-3 py-4">
@@ -61,7 +59,7 @@ export function AdminSidebar() {
           if (item.children?.length) {
             return (
               <div key={item.label} className="mb-4">
-                <div className="mb-2 flex items-center gap-2 px-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">
+                <div className="mb-2 flex items-center gap-2 px-3 text-xs font-semibold uppercase tracking-wider text-app-muted">
                   <Icon className="h-4 w-4" />
                   {item.label}
                 </div>
@@ -71,8 +69,8 @@ export function AdminSidebar() {
                       <Link
                         href={child.href}
                         className={cn(
-                          "block rounded-lg px-3 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white",
-                          pathname === child.href && "bg-zinc-800 text-white",
+                          "block rounded-lg px-3 py-2 text-sm text-app-muted transition-colors hover:bg-app-surface hover:text-app-text",
+                          pathname === child.href && "bg-app-surface text-accent-soft",
                         )}
                       >
                         {child.label}
@@ -91,8 +89,8 @@ export function AdminSidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "mb-1 flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white",
-                pathname === item.href && "bg-zinc-800 text-white",
+                "mb-1 flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-app-muted transition-colors hover:bg-app-surface hover:text-app-text",
+                pathname === item.href && "bg-app-surface text-accent-soft",
               )}
             >
               <Icon className="h-4 w-4" />
@@ -102,11 +100,11 @@ export function AdminSidebar() {
         })}
       </nav>
 
-      <div className="border-t border-zinc-800 p-4">
+      <div className="border-t border-app-border p-4">
         <Button
           variant="ghost"
           size="sm"
-          className="w-full justify-start text-zinc-400 hover:bg-zinc-800 hover:text-white"
+          className="w-full justify-start text-app-muted hover:bg-app-surface hover:text-app-text"
           onClick={handleLogout}
         >
           <LogOut className="mr-2 h-4 w-4" />
@@ -114,7 +112,7 @@ export function AdminSidebar() {
         </Button>
         <Link
           href="/"
-          className="mt-2 block px-3 text-xs text-zinc-500 hover:text-zinc-300"
+          className="mt-2 block px-3 text-xs text-app-muted hover:text-accent-soft"
         >
           ← View public site
         </Link>

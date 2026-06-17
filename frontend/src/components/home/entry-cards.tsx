@@ -17,10 +17,10 @@ export function EntryCards({ cards }: EntryCardsProps) {
   return (
     <section id="divisions" className="mx-auto w-full max-w-6xl px-6 py-20">
       <div className="mb-12 text-center">
-        <h2 className="text-3xl font-bold tracking-tight text-zinc-900">
+        <h2 className="text-3xl font-extrabold tracking-tighter text-app-text">
           Explore Evoke
         </h2>
-        <p className="mt-3 text-lg text-zinc-600">
+        <p className="mt-3 text-lg text-app-muted">
           Three divisions. One premium experience.
         </p>
       </div>
