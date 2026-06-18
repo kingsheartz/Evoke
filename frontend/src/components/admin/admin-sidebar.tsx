@@ -102,10 +102,8 @@ function NavLink({
     <Link
       href={href}
       className={cn(
-        "accent-rail group/link relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all duration-200",
-        active
-          ? "accent-rail-active font-medium text-accent-soft"
-          : "text-app-muted hover:bg-white/[0.06] hover:text-app-text",
+        "admin-nav-link group/link relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all duration-200",
+        active ? "admin-nav-link--active" : "text-app-muted hover:text-app-text",
       )}
     >
       <Icon className="h-4 w-4 shrink-0" />
@@ -205,7 +203,7 @@ export function AdminSidebar() {
             {collapsed ? (
               <Link
                 href="/admin"
-                className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10 font-display text-sm font-bold text-accent-soft ring-1 ring-accent/20"
+                className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10 font-display text-sm font-bold text-accent ring-1 ring-accent/25"
                 title="Dashboard"
                 aria-label="Dashboard"
               >
@@ -274,10 +272,8 @@ export function AdminSidebar() {
                               onFocus={(e) => showFlyout(e.currentTarget, tip)}
                               onBlur={hideFlyout}
                               className={cn(
-                                "accent-rail group/link relative flex items-center justify-center rounded-lg px-2 py-2.5 text-sm transition-all duration-200",
-                                active
-                                  ? "accent-rail-collapsed-active bg-accent/10 font-medium text-accent-soft"
-                                  : "text-app-muted hover:bg-white/[0.06] hover:text-app-text",
+                                "admin-nav-link group/link relative flex items-center justify-center rounded-lg px-2 py-2.5 text-sm transition-all duration-200",
+                                active ? "admin-nav-link--active" : "text-app-muted hover:text-app-text",
                               )}
                             >
                               <ChildIcon className="h-5 w-5 shrink-0" />
@@ -313,10 +309,8 @@ export function AdminSidebar() {
                     onFocus={(e) => showFlyout(e.currentTarget, item.label)}
                     onBlur={hideFlyout}
                     className={cn(
-                      "accent-rail relative flex items-center justify-center rounded-lg px-2 py-2.5 text-sm transition-all duration-200",
-                      pathname === item.href
-                        ? "accent-rail-collapsed-active bg-accent/10 font-medium text-accent-soft"
-                        : "text-app-muted hover:bg-white/[0.06] hover:text-app-text",
+                      "admin-nav-link relative flex items-center justify-center rounded-lg px-2 py-2.5 text-sm transition-all duration-200",
+                      pathname === item.href ? "admin-nav-link--active" : "text-app-muted hover:text-app-text",
                     )}
                   >
                     <Icon className="h-5 w-5 shrink-0" />
@@ -334,16 +328,16 @@ export function AdminSidebar() {
           })}
         </nav>
 
-        <div className="admin-sidebar-footer shrink-0 border-t border-app-border bg-[#0a0b0d] p-3 pb-8">
+        <div className="admin-sidebar-footer shrink-0 border-t border-app-border p-3 pb-8">
           {user && (
             <div
               className={cn(
-                "mb-3 rounded-xl bg-app-surface/80 ring-1 ring-app-border",
+                "mb-3 rounded-xl bg-app-surface ring-1 ring-app-border",
                 collapsed ? "flex justify-center p-2" : "flex items-center gap-3 px-3 py-2.5",
               )}
               title={collapsed ? `${user.name} (${user.email})` : undefined}
             >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent/15 text-sm font-semibold text-accent-soft ring-1 ring-accent/25">
+              <div className="admin-avatar-badge flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold">
                 {userInitial}
               </div>
               {!collapsed && (
@@ -358,7 +352,7 @@ export function AdminSidebar() {
             variant="ghost"
             size="sm"
             className={cn(
-              "text-app-muted hover:bg-white/[0.06] hover:text-app-text",
+              "text-app-muted hover:bg-app-surface-muted hover:text-app-text",
               collapsed ? "mx-auto h-9 w-9 justify-center p-0" : "w-full justify-start",
             )}
             onClick={handleLogout}

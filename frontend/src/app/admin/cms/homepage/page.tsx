@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import { useForm, useFieldArray, useWatch, Controller } from "react-hook-form";
 import Link from "next/link";
-import { ExternalLink, Plus, Trash2 } from "lucide-react";
+import { ExternalLink, Plus, Save, Trash2 } from "lucide-react";
 import { HomepageSectionsEditor } from "@/components/cms/homepage-sections-editor";
 import { GradientPicker } from "@/components/admin/gradient-picker";
+import { ActionButton } from "@/components/ui/action-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -16,6 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { PageHeader } from "@/components/ui/page-header";
 import { PermissionGate } from "@/components/admin/permission-gate";
 import { PageLoading } from "@/components/ui/page-loading";
+import { useUnsavedChangesWarning } from "@/hooks/use-unsaved-changes";
 import { apiClient, type EntryCard, type HomepageData } from "@/lib/api";
 import { DEFAULT_HERO_VIDEO } from "@/lib/homepage-defaults";
 import {
@@ -97,7 +99,7 @@ export default function HomepageEditorPage() {
   const { success, error: notifyError } = useNotifications();
   const [loading, setLoading] = useState(true);
 
-  const { register, control, handleSubmit, reset, setValue, watch } = useForm<HomepageForm>({
+  const { register, control, handleSubmit, reset, setValue, watch, formState: { isDirty, isSubmitting } } = useForm<HomepageForm>({
     defaultValues: {
       hero_background_type: "video",
       hero_video_url: DEFAULT_HERO_VIDEO,
@@ -126,10 +128,13 @@ export default function HomepageEditorPage() {
     });
   }, [reset]);
 
+  useUnsavedChangesWarning(isDirty);
+
   const onSubmit = async (data: HomepageForm) => {
     if (!token) return;
     try {
       await apiClient.updateHomepage(token, toPayload(data));
+      reset(data);
       success("Homepage saved. Hard refresh the public site to preview.");
     } catch (e) {
       notifyError(e instanceof Error ? e.message : "Failed to save homepage.");
@@ -148,19 +153,35 @@ export default function HomepageEditorPage() {
       <div className="app-page">
         <PageHeader
           title="Homepage Editor"
-          description="Hero, stats, division cards, features, and extra CMS sections for the public homepage."
+          description={
+            isDirty
+              ? "Unsaved changes — save to publish updates."
+              : "Hero, stats, division cards, features, and extra CMS sections for the public homepage."
+          }
           badge="CMS"
           actions={
-            <Button variant="outline" size="sm" asChild>
-              <Link href="/" target="_blank">
-                Preview site
-                <ExternalLink className="h-3.5 w-3.5" />
-              </Link>
-            </Button>
+            <div className="flex flex-wrap items-center gap-2">
+              <ActionButton
+                icon={Save}
+                type="submit"
+                form="homepage-form"
+                loading={isSubmitting}
+                disabled={!isDirty && !isSubmitting}
+                data-admin-primary-save="true"
+              >
+                Save homepage
+              </ActionButton>
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/" target="_blank">
+                  Preview site
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </Link>
+              </Button>
+            </div>
           }
         />
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form id="homepage-form" onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>Hero Section</CardTitle>
@@ -364,10 +385,6 @@ export default function HomepageEditorPage() {
               />
             </CardContent>
           </Card>
-
-          <Button type="submit" variant="glow">
-            Save Homepage
-          </Button>
         </form>
       </div>
     </PermissionGate>

@@ -3,9 +3,10 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useForm, useFieldArray, useWatch, Controller } from "react-hook-form";
-import { ExternalLink, Plus, Trash2 } from "lucide-react";
+import { ExternalLink, Plus, Save, Trash2 } from "lucide-react";
 import { HomepageSectionsEditor } from "@/components/cms/homepage-sections-editor";
 import { GradientPicker } from "@/components/admin/gradient-picker";
+import { ActionButton } from "@/components/ui/action-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -16,6 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { PageHeader } from "@/components/ui/page-header";
 import { PermissionGate } from "@/components/admin/permission-gate";
 import { PageLoading } from "@/components/ui/page-loading";
+import { useUnsavedChangesWarning } from "@/hooks/use-unsaved-changes";
 import { invalidateDivisionNavCache } from "@/hooks/use-division-nav";
 import {
   apiClient,
@@ -77,7 +79,7 @@ export default function DivisionPagesEditorPage() {
   const [newSlug, setNewSlug] = useState("");
   const [newNavLabel, setNewNavLabel] = useState("");
 
-  const { register, control, handleSubmit, reset, setValue } = useForm<DivisionForm>();
+  const { register, control, handleSubmit, reset, setValue, formState: { isDirty, isSubmitting } } = useForm<DivisionForm>();
   const sections = useWatch({ control, name: "sections" }) ?? [];
   const showInNav = useWatch({ control, name: "show_in_nav" });
 
@@ -113,6 +115,8 @@ export default function DivisionPagesEditorPage() {
 
   const current = divisions.find((d) => d.slug === selectedSlug);
 
+  useUnsavedChangesWarning(isDirty);
+
   const onSubmit = handleSubmit(async (data) => {
     if (!token || !selectedSlug) return;
     try {
@@ -132,6 +136,7 @@ export default function DivisionPagesEditorPage() {
       });
       invalidateDivisionNavCache();
       await loadDivisions();
+      reset(data);
       success("Division saved.");
     } catch {
       notifyError("Could not save division.");
@@ -195,16 +200,34 @@ export default function DivisionPagesEditorPage() {
         <PageHeader
           title="Division pages"
           badge="CMS"
-          description="Add divisions, edit landing pages, and control header navigation."
+          description={
+            isDirty
+              ? "Unsaved changes — save to publish updates."
+              : "Add divisions, edit landing pages, and control header navigation."
+          }
           actions={
-            current && (
-              <Button variant="outline" size="sm" asChild>
-                <Link href={current.public_path ?? `/${current.slug}`} target="_blank">
-                  Preview
-                  <ExternalLink className="h-3.5 w-3.5" />
-                </Link>
-              </Button>
-            )
+            <div className="flex flex-wrap items-center gap-2">
+              {selectedSlug && (
+                <ActionButton
+                  icon={Save}
+                  type="submit"
+                  form="division-form"
+                  loading={isSubmitting}
+                  disabled={!isDirty && !isSubmitting}
+                  data-admin-primary-save="true"
+                >
+                  Save division
+                </ActionButton>
+              )}
+              {current && (
+                <Button variant="outline" size="sm" asChild>
+                  <Link href={current.public_path ?? `/${current.slug}`} target="_blank">
+                    Preview
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </Link>
+                </Button>
+              )}
+            </div>
           }
         />
 
@@ -277,7 +300,7 @@ export default function DivisionPagesEditorPage() {
               </CardContent>
             </Card>
           ) : (
-            <form onSubmit={onSubmit} className="space-y-6">
+            <form id="division-form" onSubmit={onSubmit} className="space-y-6">
               <Card>
                 <CardHeader className="flex flex-row items-start justify-between gap-4">
                   <div>
@@ -440,10 +463,6 @@ export default function DivisionPagesEditorPage() {
                   />
                 </CardContent>
               </Card>
-
-              <Button type="submit" size="lg">
-                Save division
-              </Button>
             </form>
           )}
         </div>

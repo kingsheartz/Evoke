@@ -7,7 +7,7 @@ import { AdminHotkeysHelper } from "@/components/admin/admin-hotkeys-helper";
 import { AdminIntroTour } from "@/components/admin/admin-tour";
 import { useNotifications } from "@/lib/notifications";
 import { apiClient, type Advertisement } from "@/lib/api";
-import { eventMatchesHotkey, useAdminPreferencesStore } from "@/stores/admin-preferences";
+import { eventMatchesHotkey, selectEffectiveHotkeys, useAdminPreferencesStore } from "@/stores/admin-preferences";
 import { useAdminSidebarStore } from "@/stores/admin-sidebar";
 import { useAuthStore } from "@/stores/app";
 import { applyThemePreferences } from "@/stores/theme";
@@ -16,7 +16,7 @@ export function AdminShellExtras() {
   const pathname = usePathname();
   const token = useAuthStore((s) => s.token);
   const mergeFromServer = useAdminPreferencesStore((s) => s.mergeFromServer);
-  const hotkeys = useAdminPreferencesStore((s) => s.hotkeys);
+  const hotkeys = useAdminPreferencesStore(selectEffectiveHotkeys);
   const resetTour = useAdminPreferencesStore((s) => s.resetTour);
   const toggleSidebar = useAdminSidebarStore((s) => s.toggleCollapsed);
   const { info } = useNotifications();

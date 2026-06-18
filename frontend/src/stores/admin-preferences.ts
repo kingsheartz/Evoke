@@ -76,12 +76,21 @@ export const DEFAULT_ADMIN_PREFERENCES: AdminPreferences = {
 
 type AdminPreferencesState = AdminPreferences & {
   hydrated: boolean;
+  preview: {
+    notifications: AdminPreferences["notifications"] | null;
+    hotkeys: AdminHotkeys | null;
+  };
   setPreferences: (prefs: Partial<AdminPreferences>) => void;
   setNotifications: (patch: Partial<AdminPreferences["notifications"]>) => void;
   setHotkey: (key: AdminHotkeyKey, combo: string) => void;
   setTour: (patch: Partial<AdminPreferences["tour"]>) => void;
   resetTour: () => void;
   markTourComplete: () => void;
+  setPreferencesPreview: (preview: {
+    notifications?: AdminPreferences["notifications"];
+    hotkeys?: AdminHotkeys;
+  } | null) => void;
+  clearPreferencesPreview: () => void;
   mergeFromServer: (server: {
     notifications?: Partial<AdminPreferences["notifications"]> & { position?: string };
     hotkeys?: Partial<AdminHotkeys>;
@@ -89,11 +98,20 @@ type AdminPreferencesState = AdminPreferences & {
   }) => void;
 };
 
+export function selectEffectiveNotifications(state: AdminPreferencesState) {
+  return state.preview.notifications ?? state.notifications;
+}
+
+export function selectEffectiveHotkeys(state: AdminPreferencesState) {
+  return state.preview.hotkeys ?? state.hotkeys;
+}
+
 export const useAdminPreferencesStore = create<AdminPreferencesState>()(
   persist(
     (set) => ({
       ...DEFAULT_ADMIN_PREFERENCES,
       hydrated: false,
+      preview: { notifications: null, hotkeys: null },
       setPreferences: (prefs) => set((s) => ({ ...s, ...prefs })),
       setNotifications: (patch) =>
         set((s) => ({ notifications: { ...s.notifications, ...patch } })),
@@ -103,6 +121,17 @@ export const useAdminPreferencesStore = create<AdminPreferencesState>()(
       resetTour: () => set((s) => ({ tour: { ...s.tour, completedAt: null } })),
       markTourComplete: () =>
         set((s) => ({ tour: { ...s.tour, completedAt: new Date().toISOString() } })),
+      setPreferencesPreview: (preview) =>
+        set({
+          preview: preview
+            ? {
+                notifications: preview.notifications ?? null,
+                hotkeys: preview.hotkeys ?? null,
+              }
+            : { notifications: null, hotkeys: null },
+        }),
+      clearPreferencesPreview: () =>
+        set({ preview: { notifications: null, hotkeys: null } }),
       mergeFromServer: (server) =>
         set((s) => {
           const n = server.notifications ?? {};

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Bell, Keyboard, Palette, RotateCcw, Save, Sparkles } from "lucide-react";
 import { ThemeSettings } from "@/components/theme/theme-settings";
 import { HotkeyInput } from "@/components/admin/hotkey-input";
@@ -9,16 +9,21 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Select } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsPanel, TabsTrigger } from "@/components/ui/tabs";
+import { useUnsavedChangesWarning } from "@/hooks/use-unsaved-changes";
+import { clearPreferencesPreviewState, usePreferencesPreview } from "@/hooks/use-preferences-preview";
 import { apiClient } from "@/lib/api";
 import { useNotifications } from "@/lib/notifications";
 import {
+  DEFAULT_ADMIN_PREFERENCES,
   formatHotkeyCombo,
   HOTKEY_CATALOG,
   useAdminPreferencesStore,
+  type AdminHotkeyKey,
+  type AdminHotkeys,
   type NotificationPosition,
 } from "@/stores/admin-preferences";
 import { useAuthStore } from "@/stores/app";
-import { applyThemePreferences, getThemePreferences } from "@/stores/theme";
+import { applyThemePreferences, getThemePreferences, type ThemePreferences } from "@/stores/theme";
 import { cn } from "@/lib/utils";
 
 const POSITIONS: { value: NotificationPosition; label: string }[] = [
@@ -29,6 +34,45 @@ const POSITIONS: { value: NotificationPosition; label: string }[] = [
   { value: "bottom-left", label: "Bottom left" },
   { value: "bottom-center", label: "Bottom center" },
 ];
+
+type PreferencesDraft = {
+  notifications: typeof DEFAULT_ADMIN_PREFERENCES.notifications;
+  hotkeys: AdminHotkeys;
+  theme: ThemePreferences;
+};
+
+function buildDraft(server?: {
+  notifications?: Partial<PreferencesDraft["notifications"]> & { position?: string };
+  hotkeys?: Partial<AdminHotkeys>;
+  theme?: Partial<ThemePreferences>;
+} | null): PreferencesDraft {
+  const validPositions: NotificationPosition[] = [
+    "top-right", "top-left", "bottom-right", "bottom-left", "top-center", "bottom-center",
+  ];
+  const position =
+    server?.notifications?.position && validPositions.includes(server.notifications.position as NotificationPosition)
+      ? (server.notifications.position as NotificationPosition)
+      : DEFAULT_ADMIN_PREFERENCES.notifications.position;
+
+  const themeFromServer = server?.theme;
+  const fallbackTheme = getThemePreferences();
+
+  return {
+    notifications: {
+      ...DEFAULT_ADMIN_PREFERENCES.notifications,
+      ...server?.notifications,
+      position,
+    },
+    hotkeys: {
+      ...DEFAULT_ADMIN_PREFERENCES.hotkeys,
+      ...server?.hotkeys,
+    },
+    theme: {
+      mode: themeFromServer?.mode ?? fallbackTheme.mode,
+      accent: themeFromServer?.accent ?? fallbackTheme.accent,
+    },
+  };
+}
 
 function SettingRow({
   label,
@@ -59,35 +103,56 @@ function SettingRow({
 
 export default function PreferencesSettingsPage() {
   const token = useAuthStore((s) => s.token);
-  const { success, error, info } = useNotifications();
-  const notifications = useAdminPreferencesStore((s) => s.notifications);
-  const hotkeys = useAdminPreferencesStore((s) => s.hotkeys);
-  const setNotifications = useAdminPreferencesStore((s) => s.setNotifications);
-  const setHotkey = useAdminPreferencesStore((s) => s.setHotkey);
-  const resetTour = useAdminPreferencesStore((s) => s.resetTour);
+  const { success, error, preview } = useNotifications();
+  const errorRef = useRef(error);
+  errorRef.current = error;
   const mergeFromServer = useAdminPreferencesStore((s) => s.mergeFromServer);
+  const resetTour = useAdminPreferencesStore((s) => s.resetTour);
+  const [draft, setDraft] = useState<PreferencesDraft | null>(null);
+  const [baseline, setBaseline] = useState("");
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!token) return;
-    apiClient.getAdminPreferences(token).then((r) => {
-      if (r.data) {
-        mergeFromServer(r.data);
-        applyThemePreferences(r.data.theme);
-      }
-    }).catch(() => {});
-  }, [token, mergeFromServer]);
+    setLoading(true);
+    apiClient
+      .getAdminPreferences(token)
+      .then((r) => {
+        const next = buildDraft(r.data);
+        setDraft(next);
+        setBaseline(JSON.stringify(next));
+      })
+      .catch(() => errorRef.current("Could not load preferences."))
+      .finally(() => setLoading(false));
+  }, [token]);
+
+  const isDirty = useMemo(
+    () => (draft ? JSON.stringify(draft) !== baseline : false),
+    [draft, baseline],
+  );
+
+  useUnsavedChangesWarning(isDirty);
+  usePreferencesPreview(draft, baseline, isDirty);
+
+  const patchDraft = (patch: Partial<PreferencesDraft>) => {
+    setDraft((current) => (current ? { ...current, ...patch } : current));
+  };
 
   const save = async () => {
-    if (!token) return;
+    if (!token || !draft) return;
     setSaving(true);
     try {
       await apiClient.updateAdminPreferences(token, {
-        notifications,
-        hotkeys,
+        notifications: draft.notifications,
+        hotkeys: draft.hotkeys,
         tour: { autoStart: false },
-        theme: getThemePreferences(),
+        theme: draft.theme,
       });
+      mergeFromServer(draft);
+      applyThemePreferences(draft.theme);
+      clearPreferencesPreviewState();
+      setBaseline(JSON.stringify(draft));
       success("Preferences saved.");
     } catch (e) {
       error(e instanceof Error ? e.message : "Could not save preferences.");
@@ -96,13 +161,31 @@ export default function PreferencesSettingsPage() {
     }
   };
 
+  if (loading || !draft) {
+    return (
+      <div className="app-page">
+        <PageHeader title="Admin Preferences" description="Loading…" />
+      </div>
+    );
+  }
+
   return (
     <div className="app-page">
       <PageHeader
         title="Admin Preferences"
-        description="Theme, notifications, keyboard shortcuts, and intro tour"
+        description={
+          isDirty
+            ? "Previewing unsaved changes — save to keep them, or leave to revert."
+            : "Theme, notifications, keyboard shortcuts, and intro tour."
+        }
         actions={
-          <ActionButton icon={Save} loading={saving} data-admin-primary-save="true" onClick={save}>
+          <ActionButton
+            icon={Save}
+            loading={saving}
+            disabled={!isDirty && !saving}
+            data-admin-primary-save="true"
+            onClick={save}
+          >
             Save preferences
           </ActionButton>
         }
@@ -131,95 +214,130 @@ export default function PreferencesSettingsPage() {
         <TabsPanel>
           <TabsContent value="theme">
             <p className="border-b border-app-border/50 pb-4 text-sm text-app-muted">
-              Choose light or dark mode and an accent color for the admin panel and public site.
-              Changes apply immediately; save to sync across devices.
+              Choose light or dark mode and an accent color. You&apos;ll see changes immediately as a preview;
+              save to keep them (or press{" "}
+              <kbd className="rounded bg-app-surface-muted px-1.5 py-0.5 text-xs">Ctrl+S</kbd>).
             </p>
             <div className="py-4">
-              <ThemeSettings />
+              <ThemeSettings value={draft.theme} onChange={(theme) => patchDraft({ theme })} />
             </div>
           </TabsContent>
 
           <TabsContent value="notifications">
-              <SettingRow label="Enable notifications" description="Show toast messages in the admin panel">
-                <Switch checked={notifications.enabled} onCheckedChange={(v) => setNotifications({ enabled: v })} />
-              </SettingRow>
-              <SettingRow label="Position" description="Where toasts appear on screen">
-                <Select
-                  value={notifications.position}
-                  onChange={(e) => setNotifications({ position: e.target.value as NotificationPosition })}
-                >
-                  {POSITIONS.map((p) => (
-                    <option key={p.value} value={p.value}>{p.label}</option>
-                  ))}
-                </Select>
-              </SettingRow>
-              <SettingRow
-                label="Duration"
-                description={`Auto-dismiss after ${notifications.defaultDurationMs / 1000} seconds`}
+            <SettingRow label="Enable notifications" description="Show toast messages in the admin panel">
+              <Switch
+                checked={draft.notifications.enabled}
+                onCheckedChange={(v) =>
+                  patchDraft({ notifications: { ...draft.notifications, enabled: v } })
+                }
+              />
+            </SettingRow>
+            <SettingRow label="Position" description="Where toasts appear on screen">
+              <Select
+                value={draft.notifications.position}
+                onChange={(e) =>
+                  patchDraft({
+                    notifications: {
+                      ...draft.notifications,
+                      position: e.target.value as NotificationPosition,
+                    },
+                  })
+                }
               >
-                <input
-                  type="range"
-                  min={2}
-                  max={15}
-                  step={1}
-                  value={Math.round(notifications.defaultDurationMs / 1000)}
-                  onChange={(e) => setNotifications({ defaultDurationMs: Number(e.target.value) * 1000 })}
-                  className="w-full accent-accent"
-                />
-              </SettingRow>
-              <SettingRow label="Progress bar" description="Show animated time remaining">
-                <Switch
-                  checked={notifications.showProgressBar}
-                  onCheckedChange={(v) => setNotifications({ showProgressBar: v })}
-                />
-              </SettingRow>
-              <SettingRow label="Countdown" description="Show numeric seconds on each toast">
-                <Switch
-                  checked={notifications.showCountdown}
-                  onCheckedChange={(v) => setNotifications({ showCountdown: v })}
-                />
-              </SettingRow>
-              <div className="py-4">
-                <ActionButton variant="outline" size="sm" onClick={() => info("This is a preview of your notification settings.")}>
-                  Preview notification
-                </ActionButton>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="hotkeys">
-              <p className="border-b border-app-border/50 pb-4 text-sm text-app-muted">
-                Click a field and press keys to record. Press{" "}
-                <span className="font-mono text-accent-soft">{formatHotkeyCombo(hotkeys.hotkeys)}</span> or use
-                Shortcuts in the header to open the helper panel.
-              </p>
-              {HOTKEY_CATALOG.map((item) => (
-                <SettingRow key={item.key} label={item.label} description={item.description}>
-                  <HotkeyInput value={hotkeys[item.key]} onChange={(v) => setHotkey(item.key, v)} />
-                </SettingRow>
-              ))}
-            </TabsContent>
-
-            <TabsContent value="tour">
-              <SettingRow
-                label="Guided walkthrough"
-                description={`Walks through sidebar, settings, and workspace. Press ${formatHotkeyCombo(hotkeys.help)} or use the Tour button in the header.`}
+                {POSITIONS.map((p) => (
+                  <option key={p.value} value={p.value}>{p.label}</option>
+                ))}
+              </Select>
+            </SettingRow>
+            <SettingRow
+              label="Duration"
+              description={`Auto-dismiss after ${draft.notifications.defaultDurationMs / 1000} seconds`}
+            >
+              <input
+                type="range"
+                min={2}
+                max={15}
+                step={1}
+                value={Math.round(draft.notifications.defaultDurationMs / 1000)}
+                onChange={(e) =>
+                  patchDraft({
+                    notifications: {
+                      ...draft.notifications,
+                      defaultDurationMs: Number(e.target.value) * 1000,
+                    },
+                  })
+                }
+                className="w-full accent-accent"
+              />
+            </SettingRow>
+            <SettingRow label="Progress bar" description="Show animated time remaining">
+              <Switch
+                checked={draft.notifications.showProgressBar}
+                onCheckedChange={(v) =>
+                  patchDraft({ notifications: { ...draft.notifications, showProgressBar: v } })
+                }
+              />
+            </SettingRow>
+            <SettingRow label="Countdown" description="Show numeric seconds on each toast">
+              <Switch
+                checked={draft.notifications.showCountdown}
+                onCheckedChange={(v) =>
+                  patchDraft({ notifications: { ...draft.notifications, showCountdown: v } })
+                }
+              />
+            </SettingRow>
+            <div className="py-4">
+              <ActionButton
+                variant="outline"
+                size="sm"
+                onClick={() => preview("This is a preview of your notification settings.")}
               >
-                <ActionButton
-                  variant="outline"
-                  size="sm"
-                  icon={RotateCcw}
-                  className="w-full"
-                  onClick={() => {
-                    resetTour();
-                    window.dispatchEvent(new CustomEvent("evoke-admin-tour-start"));
-                  }}
-                >
-                  Start tour
-                </ActionButton>
+                Preview notification
+              </ActionButton>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="hotkeys">
+            <p className="border-b border-app-border/50 pb-4 text-sm text-app-muted">
+              Click a field and press keys to record. Press{" "}
+              <span className="font-mono text-accent-soft">{formatHotkeyCombo(draft.hotkeys.hotkeys)}</span> or use
+              Shortcuts in the header to open the helper panel.
+            </p>
+            {HOTKEY_CATALOG.map((item) => (
+              <SettingRow key={item.key} label={item.label} description={item.description}>
+                <HotkeyInput
+                  value={draft.hotkeys[item.key]}
+                  onChange={(v) =>
+                    patchDraft({
+                      hotkeys: { ...draft.hotkeys, [item.key as AdminHotkeyKey]: v },
+                    })
+                  }
+                />
               </SettingRow>
-              <p className="py-4 text-sm text-app-muted">
-                The tour never starts automatically. You can replay it anytime from here or the admin header.
-              </p>
+            ))}
+          </TabsContent>
+
+          <TabsContent value="tour">
+            <SettingRow
+              label="Guided walkthrough"
+              description={`Walks through sidebar, settings, and workspace. Press ${formatHotkeyCombo(draft.hotkeys.help)} or use the Tour button in the header.`}
+            >
+              <ActionButton
+                variant="outline"
+                size="sm"
+                icon={RotateCcw}
+                className="w-full"
+                onClick={() => {
+                  resetTour();
+                  window.dispatchEvent(new CustomEvent("evoke-admin-tour-start"));
+                }}
+              >
+                Start tour
+              </ActionButton>
+            </SettingRow>
+            <p className="py-4 text-sm text-app-muted">
+              The tour never starts automatically. You can replay it anytime from here or the admin header.
+            </p>
           </TabsContent>
         </TabsPanel>
       </Tabs>

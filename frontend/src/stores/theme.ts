@@ -51,6 +51,15 @@ export function getThemePreferences(): ThemePreferences {
   return { mode, accent };
 }
 
+/** Visual preview only — does not write to the persisted theme store. */
+export function previewThemeOnDocument(theme?: Partial<ThemePreferences> | null) {
+  if (!theme) return;
+  const current = getThemePreferences();
+  const mode = theme.mode && VALID_MODES.includes(theme.mode) ? theme.mode : current.mode;
+  const accent = theme.accent && VALID_ACCENTS.includes(theme.accent) ? theme.accent : current.accent;
+  applyThemeToDocument(mode, accent);
+}
+
 export function applyThemePreferences(theme?: Partial<ThemePreferences> | null) {
   if (!theme) return;
   const { setMode, setAccent } = useThemeStore.getState();

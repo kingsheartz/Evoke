@@ -1,11 +1,32 @@
 "use client";
 
 import { Moon, Sun } from "lucide-react";
-import { themeOptions, useThemeStore, type ThemeAccent, type ThemeMode } from "@/stores/theme";
+import { themeOptions, useThemeStore, type ThemeAccent, type ThemeMode, type ThemePreferences } from "@/stores/theme";
 import { cn } from "@/lib/utils";
 
-export function ThemeSettings({ className }: { className?: string }) {
-  const { mode, accent, setMode, setAccent } = useThemeStore();
+export function ThemeSettings({
+  className,
+  value,
+  onChange,
+}: {
+  className?: string;
+  value?: ThemePreferences;
+  onChange?: (theme: ThemePreferences) => void;
+}) {
+  const storeMode = useThemeStore((s) => s.mode);
+  const storeAccent = useThemeStore((s) => s.accent);
+  const mode = value?.mode ?? storeMode;
+  const accent = value?.accent ?? storeAccent;
+
+  const setMode = (nextMode: ThemeMode) => {
+    if (onChange) onChange({ mode: nextMode, accent });
+    else useThemeStore.getState().setMode(nextMode);
+  };
+
+  const setAccent = (nextAccent: ThemeAccent) => {
+    if (onChange) onChange({ mode, accent: nextAccent });
+    else useThemeStore.getState().setAccent(nextAccent);
+  };
 
   return (
     <div className={cn("space-y-5", className)}>

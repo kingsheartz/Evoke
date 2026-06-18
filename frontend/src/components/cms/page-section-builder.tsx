@@ -18,7 +18,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Plus, Trash2 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -27,8 +27,6 @@ import { createSectionContent, SectionContentEditor } from "@/components/cms/sec
 import { apiClient, SECTION_TYPES, type PageSection } from "@/lib/api";
 import { isSectionType } from "@/lib/cms-sections";
 import { useAuthStore } from "@/stores/app";
-
-const SAVE_DEBOUNCE_MS = 500;
 
 function SortableSection({
   section,
@@ -69,41 +67,22 @@ export function PageSectionBuilder({
   pageId,
   sections: initial,
   onChange,
+  onDirtyChange,
 }: {
   pageId: number;
   sections: PageSection[];
   onChange: (sections: PageSection[]) => void;
+  onDirtyChange?: (dirty: boolean) => void;
 }) {
   const token = useAuthStore((s) => s.token);
   const [sections, setSections] = useState(initial);
   const [newType, setNewType] = useState("text");
-  const saveTimers = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map());
   const sectionsRef = useRef(sections);
   sectionsRef.current = sections;
 
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
-  );
-
-  useEffect(() => {
-    const timers = saveTimers.current;
-    return () => {
-      timers.forEach((timer) => clearTimeout(timer));
-      timers.clear();
-    };
-  }, []);
-
-  const persistSection = useCallback(
-    async (id: number, content: Record<string, unknown>) => {
-      if (!token) return;
-      try {
-        await apiClient.updatePageSection(token, pageId, id, { content });
-      } catch {
-        // Keep optimistic local state; user can retry by editing again.
-      }
-    },
-    [token, pageId],
   );
 
   const updateSection = useCallback(
@@ -113,19 +92,9 @@ export function PageSectionBuilder({
         onChange(next);
         return next;
       });
-
-      const existing = saveTimers.current.get(id);
-      if (existing) clearTimeout(existing);
-
-      saveTimers.current.set(
-        id,
-        setTimeout(() => {
-          saveTimers.current.delete(id);
-          void persistSection(id, content);
-        }, SAVE_DEBOUNCE_MS),
-      );
+      onDirtyChange?.(true);
     },
-    [onChange, persistSection],
+    [onChange, onDirtyChange],
   );
 
   const addSection = async () => {
@@ -142,11 +111,6 @@ export function PageSectionBuilder({
 
   const deleteSection = async (id: number) => {
     if (!token) return;
-    const pending = saveTimers.current.get(id);
-    if (pending) {
-      clearTimeout(pending);
-      saveTimers.current.delete(id);
-    }
     await apiClient.deletePageSection(token, pageId, id);
     const next = sectionsRef.current.filter((s) => s.id !== id);
     setSections(next);

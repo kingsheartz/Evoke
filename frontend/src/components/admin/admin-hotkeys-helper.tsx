@@ -6,12 +6,13 @@ import { Keyboard, X } from "lucide-react";
 import {
   formatHotkeyCombo,
   HOTKEY_CATALOG,
+  selectEffectiveHotkeys,
   useAdminPreferencesStore,
 } from "@/stores/admin-preferences";
 
 export function AdminHotkeysHelper({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [mounted, setMounted] = useState(false);
-  const hotkeys = useAdminPreferencesStore((s) => s.hotkeys);
+  const hotkeys = useAdminPreferencesStore(selectEffectiveHotkeys);
 
   useEffect(() => setMounted(true), []);
 
@@ -83,7 +84,7 @@ export function AdminHotkeysHelper({ open, onClose }: { open: boolean; onClose: 
 }
 
 export function AdminHotkeysTrigger({ onClick }: { onClick: () => void }) {
-  const hotkeys = useAdminPreferencesStore((s) => s.hotkeys);
+  const hotkeys = useAdminPreferencesStore(selectEffectiveHotkeys);
   return (
     <button
       type="button"
