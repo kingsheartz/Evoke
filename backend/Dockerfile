@@ -2,13 +2,14 @@ FROM php:8.4-fpm-alpine
 
 RUN apk add --no-cache \
     postgresql-dev \
+    mariadb-dev \
     libzip-dev \
     zip \
     unzip \
     git \
     curl \
     oniguruma-dev \
-    && docker-php-ext-install pdo pdo_pgsql zip mbstring bcmath
+    && docker-php-ext-install pdo pdo_pgsql pdo_mysql zip mbstring bcmath
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 

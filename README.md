@@ -47,7 +47,7 @@ backend/app/
 |-------|------------|
 | Frontend | Next.js 15, TypeScript, Tailwind CSS, shadcn/ui patterns, Zustand, React Hook Form, Zod |
 | Backend | Laravel 12, PHP 8.4+, Sanctum, Spatie Permission, Redis queues |
-| Database | PostgreSQL 16 + pgvector |
+| Database | PostgreSQL 16 + pgvector (default); **MySQL 8+ / MariaDB** optional for core platform |
 | AI | FastAPI, Ollama (Qwen3), nomic-embed-text embeddings |
 | Cache/Queue | Redis |
 | Payments | Razorpay |
@@ -217,4 +217,4 @@ cd ai-service && pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8001
 ```
 
-Ensure PostgreSQL with pgvector and Redis are running locally and match `.env` credentials.
+Ensure PostgreSQL with pgvector and Redis are running locally and match `.env` credentials. For **MySQL / XAMPP**, see [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md#mysql--xampp-optional).

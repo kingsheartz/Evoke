@@ -34,7 +34,7 @@ class CourseController extends Controller
         $courses = Course::query()
             ->with(['category', 'batches'])
             ->when($request->status, fn ($q, $status) => $q->where('status', $status))
-            ->when($request->search, fn ($q, $search) => $q->where('title', 'ilike', "%{$search}%"))
+            ->when($request->search, fn ($q, $search) => $q->whereLikeInsensitive('title', "%{$search}%"))
             ->latest()
             ->paginate($request->integer('per_page', 20));
 

@@ -247,7 +247,92 @@ composer install
 php artisan serve
 ```
 
-Requires local PostgreSQL (pgvector) and Redis matching `backend/.env`.
+Requires local PostgreSQL (pgvector) and Redis matching `backend/.env`. For **MySQL / XAMPP**, see [MySQL / XAMPP](#mysql--xampp-optional) below.
+
+---
+
+## MySQL / XAMPP (optional)
+
+The Laravel backend can use **MySQL 8+** or **MariaDB** instead of PostgreSQL for Academy, Shop, Tours, CMS, and auth.
+
+| Feature | PostgreSQL | MySQL |
+|---------|------------|-------|
+| Core platform (admin, CMS, shop, etc.) | Yes | Yes |
+| AI / RAG vector search (`ai-service`) | Yes | No — requires PostgreSQL + pgvector |
+
+### Docker with MySQL profile
+
+**PowerShell:**
+```powershell
+docker compose --profile mysql up -d --build
+```
+
+**CMD:**
+```cmd
+docker compose --profile mysql up -d --build
+```
+
+**WSL:**
+```bash
+docker compose --profile mysql up -d --build
+```
+
+Set in `backend/.env` (and restart backend):
+
+```
+DB_CONNECTION=mysql
+DB_HOST=mysql
+DB_PORT=3306
+DB_DATABASE=evoke
+DB_USERNAME=evoke
+DB_PASSWORD=evoke_secret
+```
+
+Then migrate:
+
+**PowerShell / CMD / WSL:**
+```bash
+docker compose exec backend php artisan migrate --seed
+```
+
+Do **not** start `ai-service` / `ollama` unless you also run PostgreSQL for AI.
+
+### XAMPP (local PHP + MySQL)
+
+1. Start **Apache** and **MySQL** in XAMPP.
+2. Create database `evoke` in phpMyAdmin (utf8mb4_unicode_ci).
+3. Use **PHP 8.4+** (XAMPP bundle or separate install) and **Composer**.
+4. Configure `backend/.env`:
+
+```
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=evoke
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+5. Install Redis locally (or set `CACHE_STORE=file`, `SESSION_DRIVER=file`, `QUEUE_CONNECTION=sync` in `.env` for minimal dev).
+6. Run backend:
+
+```powershell
+cd backend
+composer install
+php artisan key:generate
+php artisan migrate --seed
+php artisan serve
+```
+
+7. Run frontend separately (Node.js required — not served by XAMPP):
+
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
+Open http://localhost:3000 — API at http://localhost:8000/api/v1.
 
 ---
 

@@ -14,7 +14,10 @@ class UserController extends Controller
     public function index(Request $request): JsonResponse
     {
         $users = User::with('roles', 'branch')
-            ->when($request->search, fn ($q, $s) => $q->where('name', 'ilike', "%{$s}%")->orWhere('email', 'ilike', "%{$s}%"))
+            ->when($request->search, fn ($q, $s) => $q->where(function ($q) use ($s) {
+                $q->whereLikeInsensitive('name', "%{$s}%")
+                    ->orWhereLikeInsensitive('email', "%{$s}%");
+            }))
             ->latest()
             ->paginate($request->integer('per_page', 20));
 

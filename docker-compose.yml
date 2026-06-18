@@ -119,6 +119,28 @@ services:
     networks:
       - evoke-network
 
+  # Optional MySQL for XAMPP-style local dev (enable with: docker compose --profile mysql up)
+  mysql:
+    profiles: ["mysql"]
+    image: mysql:8.4
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: evoke
+      MYSQL_USER: evoke
+      MYSQL_PASSWORD: evoke_secret
+      MYSQL_ROOT_PASSWORD: evoke_root
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uevoke", "-pevoke_secret"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - evoke-network
+
   queue-worker:
     build:
       context: ./backend
@@ -171,6 +193,7 @@ services:
 
 volumes:
   postgres_data:
+  mysql_data:
   redis_data:
   ollama_data:
 

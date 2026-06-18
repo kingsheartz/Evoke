@@ -20,8 +20,10 @@ class SearchController extends Controller
         }
 
         $builder = DB::table('search_index')
-            ->where('title', 'ilike', "%{$query}%")
-            ->orWhere('content', 'ilike', "%{$query}%");
+            ->where(function ($q) use ($query) {
+                $q->whereLikeInsensitive('title', "%{$query}%")
+                    ->orWhereLikeInsensitive('content', "%{$query}%");
+            });
 
         if ($module->isNotEmpty()) {
             $builder->where('module', $module);

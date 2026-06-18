@@ -17,7 +17,7 @@ class PackageController extends Controller
         $packages = Package::query()
             ->with('itineraryDays')
             ->when($request->type, fn ($q, $type) => $q->where('type', $type))
-            ->when($request->search, fn ($q, $s) => $q->where('title', 'ilike', "%{$s}%"))
+            ->when($request->search, fn ($q, $s) => $q->whereLikeInsensitive('title', "%{$s}%"))
             ->latest()
             ->paginate($request->integer('per_page', 20));
 

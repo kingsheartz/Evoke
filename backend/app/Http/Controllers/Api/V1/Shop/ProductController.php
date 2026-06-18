@@ -22,7 +22,7 @@ class ProductController extends Controller
     {
         $products = Product::query()
             ->with('category')
-            ->when($request->search, fn ($q, $s) => $q->where('name', 'ilike', "%{$s}%"))
+            ->when($request->search, fn ($q, $s) => $q->whereLikeInsensitive('name', "%{$s}%"))
             ->latest()
             ->paginate($request->integer('per_page', 20));
 

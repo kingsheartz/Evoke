@@ -9,21 +9,31 @@ return new class extends Migration
 {
     public function up(): void
     {
-        DB::statement('CREATE EXTENSION IF NOT EXISTS vector');
+        $isPgsql = Schema::getConnection()->getDriverName() === 'pgsql';
 
-        Schema::create('ai_knowledge_chunks', function (Blueprint $table) {
+        if ($isPgsql) {
+            DB::statement('CREATE EXTENSION IF NOT EXISTS vector');
+        }
+
+        Schema::create('ai_knowledge_chunks', function (Blueprint $table) use ($isPgsql) {
             $table->id();
             $table->string('source_type');
             $table->unsignedBigInteger('source_id');
             $table->string('module');
             $table->text('content');
             $table->json('metadata')->nullable();
+            if (! $isPgsql) {
+                // MySQL / MariaDB: JSON store for embeddings (AI vector search requires PostgreSQL)
+                $table->json('embedding')->nullable();
+            }
             $table->timestamps();
             $table->index(['source_type', 'source_id']);
             $table->index('module');
         });
 
-        DB::statement('ALTER TABLE ai_knowledge_chunks ADD COLUMN embedding vector(768)');
+        if ($isPgsql) {
+            DB::statement('ALTER TABLE ai_knowledge_chunks ADD COLUMN embedding vector(768)');
+        }
 
         Schema::create('analytics_events', function (Blueprint $table) {
             $table->id();
