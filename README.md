@@ -72,10 +72,31 @@ cp frontend/.env.example frontend/.env.local
 ### 2. Start with Docker
 
 ```bash
-docker compose up -d --build
+./scripts/run.sh init
+./scripts/run.sh up core --migrate --seed
 ```
 
-**Development guide (commands, Docker UI fixes, troubleshooting):** see [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)
+Or on Windows:
+
+```powershell
+.\scripts\run.ps1 up core --migrate --seed
+```
+
+```cmd
+scripts\run.cmd up core --migrate --seed
+```
+
+WSL:
+
+```bash
+./scripts/run.sh up core --migrate --seed
+```
+
+**Run guide (stacks, prod mode, progressive setup):** [RUN.md](RUN.md) — use `run.ps1` (PowerShell), `run.cmd` (CMD), or `run.sh` (WSL).
+
+**Development guide (commands, Docker UI fixes, troubleshooting):** [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)
+
+**Deployment (hosting options, ₹800 budget, production checklist):** see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
 
 **Windows quick helpers:**
 

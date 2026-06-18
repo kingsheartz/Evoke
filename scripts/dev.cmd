@@ -46,7 +46,7 @@ echo.
 goto :eof
 
 :up
-docker compose up -d --build
+docker compose --profile pgsql up -d --build
 echo.
 echo Frontend: http://localhost:3000
 echo Admin:    http://localhost:3000/login

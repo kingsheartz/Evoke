@@ -18,26 +18,35 @@ class DatabaseSeeder extends Seeder
             RolePermissionSeeder::class,
             BusinessModuleSeeder::class,
             HomepageSeeder::class,
+            DivisionPageSeeder::class,
+            PlatformSettingsSeeder::class,
             NotificationTemplateSeeder::class,
             AcademyCategorySeeder::class,
             ShopCategorySeeder::class,
         ]);
 
-        $branch = Branch::create([
-            'name' => 'Evoke HQ',
-            'slug' => 'evoke-hq',
-            'city' => 'Mumbai',
-            'country' => 'India',
-            'is_active' => true,
-        ]);
+        $branch = Branch::firstOrCreate(
+            ['slug' => 'evoke-hq'],
+            [
+                'name' => 'Evoke HQ',
+                'city' => 'Mumbai',
+                'country' => 'India',
+                'is_active' => true,
+            ],
+        );
 
-        $superAdmin = User::create([
-            'name' => 'Super Admin',
-            'email' => 'admin@evoke.com',
-            'password' => Hash::make('password'),
-            'branch_id' => $branch->id,
-            'email_verified_at' => now(),
-        ]);
-        $superAdmin->assignRole('super-admin');
+        $superAdmin = User::firstOrCreate(
+            ['email' => 'admin@evoke.com'],
+            [
+                'name' => 'Super Admin',
+                'password' => Hash::make('password'),
+                'branch_id' => $branch->id,
+                'email_verified_at' => now(),
+            ],
+        );
+
+        if (! $superAdmin->hasRole('super-admin')) {
+            $superAdmin->assignRole('super-admin');
+        }
     }
 }

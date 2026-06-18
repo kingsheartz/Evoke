@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,8 @@ import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { PageHeader } from "@/components/ui/page-header";
 import { AdminBackLink, FormError } from "@/components/admin/admin-form-primitives";
-import { apiClient, type AcademyCategory } from "@/lib/api";
+import { CategorySelectField } from "@/components/admin/category-select-field";
+import { apiClient } from "@/lib/api";
 import { useAuthStore } from "@/stores/app";
 
 const schema = z.object({
@@ -30,21 +31,17 @@ type FormData = z.infer<typeof schema>;
 export default function NewCoursePage() {
   const router = useRouter();
   const token = useAuthStore((s) => s.token);
-  const [categories, setCategories] = useState<AcademyCategory[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { fees: 0, requires_approval: false },
+    defaultValues: { category_id: 0, fees: 0, requires_approval: false },
   });
-
-  useEffect(() => {
-    apiClient.getAcademyCategories().then((res) => setCategories(res.data));
-  }, []);
 
   const onSubmit = async (data: FormData) => {
     if (!token) return;
@@ -80,31 +77,31 @@ export default function NewCoursePage() {
               <Label>Description</Label>
               <Textarea {...register("description")} />
             </div>
-            <div className="space-y-2">
-              <Label>Category</Label>
-              <Select {...register("category_id", { valueAsNumber: true })}>
-                <option value={0}>Select category</option>
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
-              </Select>
-              <FormError message={errors.category_id?.message} />
-            </div>
+            <Controller
+              name="category_id"
+              control={control}
+              render={({ field }) => (
+                <CategorySelectField
+                  module="academy"
+                  value={field.value ?? 0}
+                  onChange={field.onChange}
+                  error={errors.category_id?.message}
+                />
+              )}
+            />
             <div className="space-y-2">
               <Label>Duration</Label>
               <Input {...register("duration")} placeholder="e.g. 3 months" />
             </div>
             <div className="space-y-2">
               <Label>Fees (₹)</Label>
-              <Input type="number" step="0.01" {...register("fees")} />
+              <Input type="number" step="0.01" {...register("fees", { valueAsNumber: true })} />
             </div>
             <div className="flex items-center gap-2 md:col-span-2">
               <input type="checkbox" id="requires_approval" className="form-checkbox" {...register("requires_approval")} />
               <Label htmlFor="requires_approval">Requires admin approval for enrollment</Label>
             </div>
-            <FormError message={error} />
+            <FormError message={error} className="md:col-span-2" />
             <div className="md:col-span-2">
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? "Creating..." : "Create Course"}

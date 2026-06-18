@@ -1,42 +1,69 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PageLoading } from "@/components/ui/page-loading";
-import { apiClient } from "@/lib/api";
+import { apiClient, ApiError } from "@/lib/api";
+import { useAuthHydrated } from "@/hooks/use-auth-hydration";
 import { useAuthStore } from "@/stores/app";
 
 export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { token, setContext, user, navigation } = useAuthStore();
+  const hydrated = useAuthHydrated();
+  const token = useAuthStore((s) => s.token);
+  const user = useAuthStore((s) => s.user);
+  const setContext = useAuthStore((s) => s.setContext);
   const [ready, setReady] = useState(false);
+  const fetchedForToken = useRef<string | null>(null);
 
   useEffect(() => {
-    async function load() {
-      if (!token) {
-        router.replace("/login?redirect=/admin");
-        return;
-      }
+    if (!hydrated) return;
 
-      const hasCachedContext = Boolean(user && navigation.length > 0);
-      if (hasCachedContext) {
-        setReady(true);
-      }
+    if (!token) {
+      router.replace("/login?redirect=/admin");
+      return;
+    }
 
+    const cached = useAuthStore.getState();
+    if (cached.user && cached.navigation.length > 0) {
+      setReady(true);
+    }
+
+    if (fetchedForToken.current === token) {
+      return;
+    }
+    fetchedForToken.current = token;
+
+    let cancelled = false;
+
+    (async () => {
       try {
         const { data } = await apiClient.getAdminContext(token);
+        if (cancelled) return;
         setContext(data);
         setReady(true);
-      } catch {
+      } catch (error) {
+        if (cancelled) return;
+        if (error instanceof ApiError && error.status === 401) {
+          useAuthStore.getState().logout();
+          router.replace("/login?redirect=/admin");
+          return;
+        }
+        if (cached.user && cached.navigation.length > 0) {
+          setReady(true);
+          return;
+        }
         useAuthStore.getState().logout();
         router.replace("/login?redirect=/admin");
       }
-    }
+    })();
 
-    load();
-  }, [token, router, setContext, user, navigation.length]);
+    return () => {
+      cancelled = true;
+    };
+  }, [hydrated, token, router, setContext]);
 
-  if (!ready || !user) {
+  if (!hydrated || !ready || !user) {
     return <PageLoading label="Loading admin panel..." fullScreen />;
   }
 

@@ -12,6 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { apiClient, getUserPermissions, getUserRoles, hasAdminAccess } from "@/lib/api";
 import { useNotifications } from "@/lib/notifications";
+import { useClientMounted } from "@/hooks/use-client-mounted";
+import { AuthFormSkeleton } from "@/components/auth/auth-form-skeleton";
 import { useAuthStore } from "@/stores/app";
 
 const schema = z.object({
@@ -27,6 +29,7 @@ export function SignInForm() {
   const { setAuth, setContext } = useAuthStore();
   const { error: notifyError, success: notifySuccess } = useNotifications();
   const [error, setError] = useState<string | null>(null);
+  const mounted = useClientMounted();
 
   const {
     register,
@@ -72,24 +75,28 @@ export function SignInForm() {
         <p className="text-sm text-app-muted">Access your orders, enrollments, and bookings</p>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" suppressHydrationWarning>
+        {!mounted ? (
+          <AuthFormSkeleton />
+        ) : (
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" autoComplete="email" suppressHydrationWarning {...register("email")} />
+            <Input id="email" type="email" autoComplete="email" {...register("email")} />
             {errors.email && <p className="text-xs text-status-error">{errors.email.message}</p>}
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" autoComplete="current-password" suppressHydrationWarning {...register("password")} />
+            <Input id="password" type="password" autoComplete="current-password" {...register("password")} />
             {errors.password && <p className="text-xs text-status-error">{errors.password.message}</p>}
           </div>
           {error && (
             <p className="rounded-lg bg-status-error/10 px-3 py-2 text-sm text-status-error ring-1 ring-status-error/20">{error}</p>
           )}
-          <Button type="submit" variant="glow" className="w-full" disabled={isSubmitting}>
+          <Button type="submit" variant="glow" className="w-full" disabled={isSubmitting} suppressHydrationWarning>
             {isSubmitting ? "Signing in..." : "Sign in"}
           </Button>
         </form>
+        )}
         <p className="mt-6 text-center text-sm text-app-muted">
           New to Evoke?{" "}
           <Link href="/register" className="font-medium text-accent-soft hover:text-accent">

@@ -77,6 +77,7 @@ class ProductController extends Controller
     public function update(Request $request, Product $product): JsonResponse
     {
         $validated = $request->validate([
+            'category_id' => 'sometimes|exists:shop_categories,id',
             'name' => 'sometimes|string|max:255',
             'description' => 'nullable|string',
             'price' => 'sometimes|numeric|min:0',

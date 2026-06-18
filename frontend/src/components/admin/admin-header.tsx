@@ -2,15 +2,27 @@
 
 import Link from "next/link";
 import { ExternalLink, PanelLeft } from "lucide-react";
+import { AdminTourTrigger } from "@/components/admin/admin-tour";
+import { AdminHotkeysTrigger } from "@/components/admin/admin-hotkeys-helper";
 import { Button } from "@/components/ui/button";
 import { useAdminSidebarStore } from "@/stores/admin-sidebar";
+import { useAdminPreferencesStore } from "@/stores/admin-preferences";
 
 export function AdminHeader() {
   const toggleCollapsed = useAdminSidebarStore((s) => s.toggleCollapsed);
   const collapsed = useAdminSidebarStore((s) => s.collapsed);
+  const resetTour = useAdminPreferencesStore((s) => s.resetTour);
+
+  const startTour = () => {
+    resetTour();
+    window.dispatchEvent(new CustomEvent("evoke-admin-tour-start"));
+  };
 
   return (
-    <header className="app-shell-x z-40 flex h-[var(--app-topbar-height)] shrink-0 items-center justify-between border-b border-app-border glass">
+    <header
+      data-tour="header"
+      className="app-shell-x z-40 flex h-[var(--app-topbar-height)] shrink-0 items-center justify-between border-b border-app-border glass"
+    >
       <div className="flex items-center gap-2">
         <Button
           type="button"
@@ -24,14 +36,18 @@ export function AdminHeader() {
         </Button>
         <span className="text-sm font-medium text-app-muted">Evoke Admin</span>
       </div>
-      <Link
-        href="/"
-        target="_blank"
-        className="inline-flex items-center gap-1.5 rounded-lg border border-app-border bg-app-surface/80 px-3 py-1.5 text-xs text-app-muted transition-all hover:border-accent/30 hover:text-accent-soft"
-      >
-        View site
-        <ExternalLink className="h-3 w-3" />
-      </Link>
+      <div className="flex items-center gap-2">
+        <AdminHotkeysTrigger onClick={() => window.dispatchEvent(new CustomEvent("evoke-admin-hotkeys-open"))} />
+        <AdminTourTrigger onClick={startTour} />
+        <Link
+          href="/"
+          target="_blank"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-app-border bg-app-surface/80 px-3 py-1.5 text-xs text-app-muted transition-all hover:border-accent/30 hover:text-accent-soft"
+        >
+          View site
+          <ExternalLink className="h-3 w-3" />
+        </Link>
+      </div>
     </header>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,11 +12,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { PageHeader } from "@/components/ui/page-header";
 import { PageLoading } from "@/components/ui/page-loading";
 import { AdminBackLink } from "@/components/admin/admin-form-primitives";
-import { apiClient, type AcademyCategory, type Course } from "@/lib/api";
+import { CategorySelectField } from "@/components/admin/category-select-field";
+import { apiClient, type Course } from "@/lib/api";
 import { useAuthStore } from "@/stores/app";
 import { cn } from "@/lib/utils";
 
 interface EditForm {
+  category_id: number;
   title: string;
   description: string;
   duration: string;
@@ -30,20 +32,16 @@ export default function EditCoursePage() {
   const token = useAuthStore((s) => s.token);
   const courseId = Number(params.id);
   const [course, setCourse] = useState<Course | null>(null);
-  const [categories, setCategories] = useState<AcademyCategory[]>([]);
   const [message, setMessage] = useState<string | null>(null);
 
-  const { register, handleSubmit, reset } = useForm<EditForm>();
+  const { register, handleSubmit, reset, control } = useForm<EditForm>();
 
   useEffect(() => {
     if (!token || !courseId) return;
-    Promise.all([
-      apiClient.getAdminCourse(token, courseId),
-      apiClient.getAcademyCategories(),
-    ]).then(([courseRes, catRes]) => {
+    apiClient.getAdminCourse(token, courseId).then((courseRes) => {
       setCourse(courseRes.data);
-      setCategories(catRes.data);
       reset({
+        category_id: courseRes.data.category_id,
         title: courseRes.data.title,
         description: courseRes.data.description ?? "",
         duration: courseRes.data.duration ?? "",
@@ -91,12 +89,17 @@ export default function EditCoursePage() {
               <Label>Description</Label>
               <Textarea {...register("description")} />
             </div>
-            <div className="space-y-2">
-              <Label>Category</Label>
-              <p className="text-sm text-app-muted">
-                {categories.find((c) => c.id === course.category_id)?.name ?? "—"}
-              </p>
-            </div>
+            <Controller
+              name="category_id"
+              control={control}
+              render={({ field }) => (
+                <CategorySelectField
+                  module="academy"
+                  value={field.value ?? 0}
+                  onChange={field.onChange}
+                />
+              )}
+            />
             <div className="space-y-2">
               <Label>Duration</Label>
               <Input {...register("duration")} />

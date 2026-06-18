@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useForm, useFieldArray, useWatch } from "react-hook-form";
+import { useForm, useFieldArray, useWatch, Controller } from "react-hook-form";
 import Link from "next/link";
 import { ExternalLink, Plus, Trash2 } from "lucide-react";
 import { HomepageSectionsEditor } from "@/components/cms/homepage-sections-editor";
+import { GradientPicker } from "@/components/admin/gradient-picker";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -277,8 +278,14 @@ export default function HomepageEditorPage() {
                     </Select>
                   </div>
                   <div className="form-field md:col-span-2">
-                    <Label>Gradient classes</Label>
-                    <Input {...register(`entry_cards.${index}.gradient`)} placeholder="from-blue-600 to-indigo-700" />
+                    <Label>Card gradient</Label>
+                    <Controller
+                      control={control}
+                      name={`entry_cards.${index}.gradient`}
+                      render={({ field }) => (
+                        <GradientPicker value={field.value ?? ""} onChange={field.onChange} className="mt-2" />
+                      )}
+                    />
                   </div>
                 </div>
               ))}

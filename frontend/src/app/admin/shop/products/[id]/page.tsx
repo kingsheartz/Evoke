@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,9 +11,20 @@ import { Textarea } from "@/components/ui/textarea";
 import { PageHeader } from "@/components/ui/page-header";
 import { PageLoading } from "@/components/ui/page-loading";
 import { AdminBackLink } from "@/components/admin/admin-form-primitives";
+import { CategorySelectField } from "@/components/admin/category-select-field";
 import { apiClient, type Product } from "@/lib/api";
 import { useAuthStore } from "@/stores/app";
 import { cn } from "@/lib/utils";
+
+interface EditForm {
+  category_id: number;
+  name: string;
+  description: string;
+  price: number;
+  stock: number;
+  is_active: boolean;
+  is_featured: boolean;
+}
 
 export default function EditProductPage() {
   const params = useParams();
@@ -21,17 +32,25 @@ export default function EditProductPage() {
   const id = Number(params.id);
   const [product, setProduct] = useState<Product | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const { register, handleSubmit, reset } = useForm<{ name: string; description: string; price: number; stock: number; is_active: boolean; is_featured: boolean }>();
+  const { register, handleSubmit, reset, control } = useForm<EditForm>();
 
   useEffect(() => {
     if (!token) return;
     apiClient.getAdminProduct(token, id).then((r) => {
       setProduct(r.data);
-      reset({ name: r.data.name, description: r.data.description ?? "", price: Number(r.data.price), stock: r.data.stock, is_active: r.data.is_active, is_featured: r.data.is_featured });
+      reset({
+        category_id: r.data.category_id,
+        name: r.data.name,
+        description: r.data.description ?? "",
+        price: Number(r.data.price),
+        stock: r.data.stock,
+        is_active: r.data.is_active,
+        is_featured: r.data.is_featured,
+      });
     });
   }, [token, id, reset]);
 
-  const onSubmit = async (data: { name: string; description: string; price: number; stock: number; is_active: boolean; is_featured: boolean }) => {
+  const onSubmit = async (data: EditForm) => {
     if (!token) return;
     try {
       await apiClient.updateProduct(token, id, data);
@@ -56,6 +75,17 @@ export default function EditProductPage() {
           <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2 md:col-span-2"><Label>Name</Label><Input {...register("name")} /></div>
             <div className="space-y-2 md:col-span-2"><Label>Description</Label><Textarea {...register("description")} /></div>
+            <Controller
+              name="category_id"
+              control={control}
+              render={({ field }) => (
+                <CategorySelectField
+                  module="shop"
+                  value={field.value ?? 0}
+                  onChange={field.onChange}
+                />
+              )}
+            />
             <div className="space-y-2"><Label>Price</Label><Input type="number" step="0.01" {...register("price", { valueAsNumber: true })} /></div>
             <div className="space-y-2"><Label>Stock</Label><Input type="number" {...register("stock", { valueAsNumber: true })} /></div>
             <div className="flex items-center gap-2 text-app-text"><input type="checkbox" className="form-checkbox" {...register("is_active")} /><Label>Active</Label></div>

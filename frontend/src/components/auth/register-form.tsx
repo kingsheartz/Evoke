@@ -12,6 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { apiClient } from "@/lib/api";
 import { useNotifications } from "@/lib/notifications";
+import { useClientMounted } from "@/hooks/use-client-mounted";
+import { AuthFormSkeleton } from "@/components/auth/auth-form-skeleton";
 import { useAuthStore } from "@/stores/app";
 
 const schema = z
@@ -34,6 +36,7 @@ export function RegisterForm() {
   const { setAuth } = useAuthStore();
   const { error: notifyError, success: notifySuccess } = useNotifications();
   const [error, setError] = useState<string | null>(null);
+  const mounted = useClientMounted();
 
   const {
     register,
@@ -75,27 +78,30 @@ export function RegisterForm() {
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
       <CardHeader>
         <CardTitle>Create account</CardTitle>
-        <p className="text-sm text-app-muted">Join Evoke to enroll, shop, and book tours</p>
+        <p className="text-sm text-app-muted">Name, email, and password only — add photo & address later in My account.</p>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" suppressHydrationWarning>
+        {!mounted ? (
+          <AuthFormSkeleton />
+        ) : (
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name">Full name</Label>
-            <Input id="name" autoComplete="name" suppressHydrationWarning {...register("name")} />
+            <Input id="name" autoComplete="name" {...register("name")} />
             {errors.name && <p className="text-xs text-status-error">{errors.name.message}</p>}
           </div>
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" autoComplete="email" suppressHydrationWarning {...register("email")} />
+            <Input id="email" type="email" autoComplete="email" {...register("email")} />
             {errors.email && <p className="text-xs text-status-error">{errors.email.message}</p>}
           </div>
           <div className="space-y-2">
             <Label htmlFor="phone">Phone (optional)</Label>
-            <Input id="phone" type="tel" autoComplete="tel" suppressHydrationWarning {...register("phone")} />
+            <Input id="phone" type="tel" autoComplete="tel" {...register("phone")} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" autoComplete="new-password" suppressHydrationWarning {...register("password")} />
+            <Input id="password" type="password" autoComplete="new-password" {...register("password")} />
             {errors.password && <p className="text-xs text-status-error">{errors.password.message}</p>}
           </div>
           <div className="space-y-2">
@@ -104,7 +110,6 @@ export function RegisterForm() {
               id="password_confirmation"
               type="password"
               autoComplete="new-password"
-              suppressHydrationWarning
               {...register("password_confirmation")}
             />
             {errors.password_confirmation && (
@@ -114,10 +119,11 @@ export function RegisterForm() {
           {error && (
             <p className="rounded-lg bg-status-error/10 px-3 py-2 text-sm text-status-error ring-1 ring-status-error/20">{error}</p>
           )}
-          <Button type="submit" variant="glow" className="w-full" disabled={isSubmitting}>
+          <Button type="submit" variant="glow" className="w-full" disabled={isSubmitting} suppressHydrationWarning>
             {isSubmitting ? "Creating account..." : "Create account"}
           </Button>
         </form>
+        )}
         <p className="mt-6 text-center text-sm text-app-muted">
           Already have an account?{" "}
           <Link href="/sign-in" className="font-medium text-accent-soft hover:text-accent">

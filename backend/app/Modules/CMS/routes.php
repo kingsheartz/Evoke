@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\CMS\DivisionPageController;
 use App\Http\Controllers\Api\V1\CMS\PageSectionController;
 use App\Http\Controllers\Api\V1\CMS\PageController;
 use App\Http\Controllers\Api\V1\CMS\HomepageAdminController;
@@ -11,6 +12,11 @@ Route::prefix('cms')->middleware(['module.enabled:cms'])->group(function () {
 
     Route::middleware(['auth:sanctum', 'permission:cms.homepage.manage'])->group(function () {
         Route::put('/homepage', [HomepageAdminController::class, 'update']);
+        Route::get('/admin/divisions', [DivisionPageController::class, 'adminIndex']);
+        Route::post('/admin/divisions', [DivisionPageController::class, 'store']);
+        Route::get('/admin/divisions/{slug}', [DivisionPageController::class, 'adminShow']);
+        Route::put('/admin/divisions/{slug}', [DivisionPageController::class, 'update']);
+        Route::delete('/admin/divisions/{slug}', [DivisionPageController::class, 'destroy']);
     });
 
     Route::middleware(['auth:sanctum', 'permission:cms.pages.manage'])->group(function () {

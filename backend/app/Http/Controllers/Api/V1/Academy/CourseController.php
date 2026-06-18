@@ -81,6 +81,7 @@ class CourseController extends Controller
     public function update(Request $request, Course $course): JsonResponse
     {
         $validated = $request->validate([
+            'category_id' => 'sometimes|exists:academy_categories,id',
             'title' => 'sometimes|string|max:255',
             'description' => 'nullable|string',
             'duration' => 'nullable|string',

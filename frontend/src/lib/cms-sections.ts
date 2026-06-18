@@ -52,6 +52,7 @@ export interface GalleryContent {
   heading?: string;
   body?: string;
   columns?: 2 | 3 | 4;
+  preview_limit?: number;
   images?: GalleryImage[];
 }
 
@@ -123,7 +124,7 @@ export function defaultSectionContent(type: SectionType): Record<string, unknown
     case "text":
       return { heading: "New section", body: "" };
     case "gallery":
-      return { heading: "Gallery", body: "", columns: 3, images: [] };
+      return { heading: "Gallery", body: "", columns: 3, preview_limit: 6, images: [] };
     case "faq":
       return { heading: "Frequently asked questions", items: [] };
     case "video":

@@ -14,7 +14,7 @@ export function StatsBar({
   const stats = items?.length ? items : defaultHomepageStats;
 
   return (
-    <section className="border-y border-app-border bg-white/[0.02] py-12">
+    <section className="border-y border-app-border bg-app-surface/40 py-12">
       <PageContainer className="grid grid-cols-2 gap-8 md:grid-cols-4">
         {stats.map((stat) => (
           <div key={`${stat.label}-${stat.value}`} className="text-center">

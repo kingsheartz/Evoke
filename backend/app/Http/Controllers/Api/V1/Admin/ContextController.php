@@ -48,10 +48,22 @@ class ContextController extends Controller
             ],
         ];
 
+        if ($can('tasks.manage')) {
+            $items[] = [
+                'label' => 'Tasks & Calendar',
+                'href' => '/admin/tasks',
+                'icon' => 'calendar-days',
+                'visible' => true,
+            ];
+        }
+
         if (in_array('cms', $enabled, true) && ($can('cms.homepage.manage') || $can('cms.pages.manage'))) {
             $cmsChildren = [];
             if ($can('cms.homepage.manage') || $can('cms.pages.manage')) {
                 $cmsChildren[] = ['label' => 'Homepage', 'href' => '/admin/cms/homepage', 'icon' => 'home'];
+            }
+            if ($can('cms.homepage.manage')) {
+                $cmsChildren[] = ['label' => 'Division pages', 'href' => '/admin/cms/divisions', 'icon' => 'layout-grid'];
             }
             if ($can('cms.pages.manage')) {
                 $cmsChildren[] = ['label' => 'Pages', 'href' => '/admin/cms/pages', 'icon' => 'files'];
@@ -87,19 +99,25 @@ class ContextController extends Controller
                 $tourChildren[] = ['label' => 'Packages', 'href' => '/admin/tours/packages', 'icon' => 'map-pin'];
             }
             if ($can('tours.bookings.manage')) {
-                $tourChildren[] = ['label' => 'Bookings', 'href' => '/admin/tours/bookings', 'icon' => 'calendar'];
+                $tourChildren[] = ['label' => 'Bookings', 'href' => '/admin/tours/bookings', 'icon' => 'calendar-check'];
             }
             $items[] = ['label' => 'Tours & Travels', 'icon' => 'plane', 'children' => $tourChildren];
         }
 
         if ($can('platform.manage') || $can('users.manage')) {
+            $settingsChildren = [];
+            if ($can('platform.manage')) {
+                $settingsChildren[] = ['label' => 'Preferences', 'href' => '/admin/settings/preferences', 'icon' => 'sliders'];
+                $settingsChildren[] = ['label' => 'Advertisements', 'href' => '/admin/settings/advertisements', 'icon' => 'megaphone'];
+                $settingsChildren[] = ['label' => 'Modules', 'href' => '/admin/settings/modules', 'icon' => 'blocks'];
+            }
+            if ($can('users.manage')) {
+                $settingsChildren[] = ['label' => 'Users', 'href' => '/admin/settings/users', 'icon' => 'users'];
+            }
             $items[] = [
                 'label' => 'Settings',
                 'icon' => 'settings',
-                'children' => [
-                    ['label' => 'Modules', 'href' => '/admin/settings/modules', 'icon' => 'blocks'],
-                    ['label' => 'Users', 'href' => '/admin/settings/users', 'icon' => 'users'],
-                ],
+                'children' => $settingsChildren,
             ];
         }
 

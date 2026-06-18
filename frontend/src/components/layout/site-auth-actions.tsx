@@ -5,10 +5,17 @@ import { useRouter } from "next/navigation";
 import { LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { apiClient, hasAdminAccess } from "@/lib/api";
+import { useAuthHydrated } from "@/hooks/use-auth-hydration";
 import { useAuthStore } from "@/stores/app";
+
+const ghostAction =
+  "site-header-action site-header-action-ghost hidden sm:inline-flex";
+const outlineAction =
+  "site-header-action site-header-action-outline hidden sm:inline-flex";
 
 export function SiteAuthActions({ className }: { className?: string }) {
   const router = useRouter();
+  const hydrated = useAuthHydrated();
   const { user, token, roles, permissions, logout } = useAuthStore();
   const isAdmin = hasAdminAccess(roles, permissions);
 
@@ -24,23 +31,17 @@ export function SiteAuthActions({ className }: { className?: string }) {
     router.push("/");
   };
 
+  if (!hydrated) {
+    return <div className={className} aria-hidden="true" />;
+  }
+
   if (!user || !token) {
     return (
       <div className={className}>
-        <Button
-          variant="ghost"
-          size="sm"
-          asChild
-          className="hidden text-white/90 hover:bg-white/10 hover:text-white sm:inline-flex"
-        >
+        <Button variant="ghost" size="sm" asChild className={ghostAction}>
           <Link href="/sign-in">Sign in</Link>
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          asChild
-          className="border-white/20 bg-white/5 text-white backdrop-blur-md hover:border-white/30 hover:bg-white/10"
-        >
+        <Button variant="outline" size="sm" asChild className={outlineAction}>
           <Link href="/register">Get started</Link>
         </Button>
       </div>
@@ -49,24 +50,14 @@ export function SiteAuthActions({ className }: { className?: string }) {
 
   return (
     <div className={className}>
-      <Button
-        variant="ghost"
-        size="sm"
-        asChild
-        className="hidden text-white/90 hover:bg-white/10 hover:text-white sm:inline-flex"
-      >
+      <Button variant="ghost" size="sm" asChild className={ghostAction}>
         <Link href="/account">
           <User className="h-4 w-4" />
           {user.name.split(" ")[0]}
         </Link>
       </Button>
       {isAdmin && (
-        <Button
-          variant="outline"
-          size="sm"
-          asChild
-          className="hidden border-white/20 bg-white/5 text-white backdrop-blur-md hover:border-white/30 hover:bg-white/10 sm:inline-flex"
-        >
+        <Button variant="outline" size="sm" asChild className={outlineAction}>
           <Link href="/admin">Admin</Link>
         </Button>
       )}
@@ -74,7 +65,7 @@ export function SiteAuthActions({ className }: { className?: string }) {
         variant="ghost"
         size="sm"
         onClick={handleSignOut}
-        className="hidden text-white/70 hover:bg-white/10 hover:text-white sm:inline-flex"
+        className={`${ghostAction} site-header-action-muted`}
         aria-label="Sign out"
       >
         <LogOut className="h-4 w-4" />

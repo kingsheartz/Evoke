@@ -37,7 +37,7 @@ function Show-Help {
 switch ($Command.ToLower()) {
     "help" { Show-Help }
     "up" {
-        docker compose up -d --build
+        docker compose --profile pgsql up -d --build
         Write-Host ""
         Write-Host "Frontend: http://localhost:3000" -ForegroundColor Green
         Write-Host "Admin:    http://localhost:3000/login" -ForegroundColor Green

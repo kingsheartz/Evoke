@@ -20,6 +20,7 @@ class RolePermissionSeeder extends Seeder
             'users.manage',
             'analytics.view',
             'audit.view',
+            'tasks.manage',
             // CMS
             'cms.pages.manage',
             'cms.sections.manage',
@@ -61,15 +62,15 @@ class RolePermissionSeeder extends Seeder
             'academy-manager' => [
                 'academy.categories.manage', 'academy.courses.manage', 'academy.trainers.manage',
                 'academy.batches.manage', 'academy.enrollments.manage', 'academy.attendance.manage',
-                'academy.certificates.manage', 'analytics.view', 'cms.homepage.manage',
+                'academy.certificates.manage', 'analytics.view', 'cms.homepage.manage', 'tasks.manage',
             ],
             'shop-manager' => [
                 'shop.products.manage', 'shop.orders.manage', 'shop.inventory.manage',
-                'shop.coupons.manage', 'analytics.view',
+                'shop.coupons.manage', 'analytics.view', 'tasks.manage',
             ],
             'travel-manager' => [
                 'tours.packages.manage', 'tours.bookings.manage', 'tours.enquiries.manage',
-                'analytics.view',
+                'analytics.view', 'tasks.manage',
             ],
             'trainer' => [
                 'academy.attendance.manage', 'academy.enrollments.manage',

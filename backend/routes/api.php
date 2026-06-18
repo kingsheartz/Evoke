@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\Api\V1\Auth\AuthController;
+use App\Http\Controllers\Api\V1\Auth\ProfileController;
+use App\Http\Controllers\Api\V1\Admin\PlatformSettingsController;
+use App\Http\Controllers\Api\V1\CMS\DivisionPageController;
 use App\Http\Controllers\Api\V1\HomepageController;
 use App\Http\Controllers\Api\V1\ModuleController;
 use App\Http\Controllers\Api\V1\SearchController;
@@ -10,6 +13,9 @@ Route::get('/health', fn () => response()->json(['status' => 'ok', 'version' => 
 
 // Public routes
 Route::get('/homepage', [HomepageController::class, 'show']);
+Route::get('/divisions', [DivisionPageController::class, 'index']);
+Route::get('/divisions/{slug}', [DivisionPageController::class, 'show']);
+Route::get('/ads', [PlatformSettingsController::class, 'publicAds']);
 Route::get('/modules', [ModuleController::class, 'index']);
 Route::get('/search', [SearchController::class, 'search']);
 
@@ -24,5 +30,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('auth')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/me', [AuthController::class, 'me']);
+        Route::put('/profile', [ProfileController::class, 'update']);
+        Route::post('/avatar', [ProfileController::class, 'uploadAvatar']);
+        Route::delete('/avatar', [ProfileController::class, 'removeAvatar']);
     });
 });

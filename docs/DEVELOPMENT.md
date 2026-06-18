@@ -2,6 +2,10 @@
 
 Quick reference for running the platform locally, fixing common Docker issues, and verifying that UI changes actually show up in the browser.
 
+**Production hosting:** see [DEPLOYMENT.md](DEPLOYMENT.md).
+
+**Stack runner (start only what you need):** [RUN.md](../RUN.md).
+
 ## URLs
 
 | What | URL |
@@ -19,6 +23,34 @@ Quick reference for running the platform locally, fixing common Docker issues, a
 
 ## First-time setup
 
+Use the **run script** (recommended) — starts only the core stack:
+
+**PowerShell**
+
+```powershell
+.\scripts\run.ps1 init
+.\scripts\run.ps1 up core --migrate --seed
+```
+
+**CMD**
+
+```cmd
+scripts\run.cmd init
+scripts\run.cmd up core --migrate --seed
+```
+
+**WSL**
+
+```bash
+./scripts/run.sh init
+./scripts/run.sh up core --migrate --seed
+```
+
+See [RUN.md](../RUN.md) for stacks (`mysql`, `web`, `ai`, `full`) and prod mode.
+
+<details>
+<summary>Manual docker compose (advanced)</summary>
+
 ```powershell
 # From repo root (d:\WORK\Projects\Evoke)
 
@@ -27,8 +59,8 @@ copy .env.example .env
 copy backend\.env.example backend\.env
 copy frontend\.env.example frontend\.env.local
 
-# 2. Start everything
-docker compose up -d --build
+# 2. Start core stack (postgres profile required)
+docker compose --profile pgsql up -d --build
 
 # 3. Backend (first run only)
 docker compose exec backend composer install
@@ -39,9 +71,12 @@ docker compose exec backend php artisan migrate --seed
 docker compose exec frontend npm install
 
 # 5. Optional: AI models
+docker compose --profile ai up -d
 docker compose exec ollama ollama pull qwen3
 docker compose exec ollama ollama pull nomic-embed-text
 ```
+
+</details>
 
 ---
 
@@ -262,17 +297,14 @@ The Laravel backend can use **MySQL 8+** or **MariaDB** instead of PostgreSQL fo
 
 ### Docker with MySQL profile
 
-**PowerShell:**
+**Recommended:**
+
 ```powershell
-docker compose --profile mysql up -d --build
+.\scripts\run.ps1 up mysql --migrate --seed
 ```
 
-**CMD:**
-```cmd
-docker compose --profile mysql up -d --build
-```
+**PowerShell / CMD / WSL (manual):**
 
-**WSL:**
 ```bash
 docker compose --profile mysql up -d --build
 ```

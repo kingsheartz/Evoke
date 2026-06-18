@@ -1,2 +1,5 @@
 * text=auto eol=lf
 *.sh text eol=lf
+scripts/run.sh text eol=lf
+scripts/dev.sh text eol=lf
+backend/docker-entrypoint.sh text eol=lf

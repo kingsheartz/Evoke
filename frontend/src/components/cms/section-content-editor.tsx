@@ -145,6 +145,18 @@ export function SectionContentEditor({
               <option value={4}>4 columns</option>
             </select>
           </FieldGroup>
+          <FieldGroup label="Inline preview limit">
+            <Input
+              type="number"
+              min={1}
+              max={24}
+              value={Number(content.preview_limit ?? 6)}
+              onChange={(e) => patch({ preview_limit: Math.max(1, Number(e.target.value) || 6) })}
+            />
+            <p className="mt-1 text-xs text-app-muted">
+              Show this many images before the &quot;View all&quot; gallery opens. No maximum on total images.
+            </p>
+          </FieldGroup>
           <ListFieldGroup
             label="Images"
             addLabel="Add image"

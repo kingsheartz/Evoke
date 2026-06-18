@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Shop\CategoryController as ShopCategoryController;
 use App\Http\Controllers\Api\V1\Shop\ProductController;
 use App\Http\Controllers\Api\V1\Shop\CartController;
 use App\Http\Controllers\Api\V1\Shop\OrderController;
@@ -20,6 +21,8 @@ Route::prefix('shop')->middleware(['module.enabled:shop'])->group(function () {
     });
 
     Route::middleware(['auth:sanctum', 'permission:shop.products.manage'])->group(function () {
+        Route::get('/admin/categories', [ShopCategoryController::class, 'index']);
+        Route::post('/admin/categories', [ShopCategoryController::class, 'store']);
         Route::get('/admin/products', [ProductController::class, 'adminIndex']);
         Route::get('/admin/products/{product}', [ProductController::class, 'adminShow']);
         Route::post('/products', [ProductController::class, 'store']);

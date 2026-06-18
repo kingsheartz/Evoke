@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowUpRight, ChevronDown, Mail, MapPin } from "lucide-react";
+import { GalleryView } from "@/components/cms/gallery-view";
 import type { PageSection } from "@/lib/api";
 import {
   mapsLink,
@@ -11,7 +12,6 @@ import {
   type FaqItem,
   type FormsContent,
   type GalleryContent,
-  type GalleryImage,
   type MapContent,
   type SectionType,
   type TestimonialItem,
@@ -127,39 +127,21 @@ function GallerySection({ content }: { content: GalleryContent }) {
   if (images.length === 0 && !content.heading?.trim() && !content.body?.trim()) return null;
 
   const columns = content.columns ?? 3;
-  const gridClass =
-    columns === 2 ? "sm:grid-cols-2" : columns === 4 ? "sm:grid-cols-2 lg:grid-cols-4" : "sm:grid-cols-2 lg:grid-cols-3";
+  const previewLimit = content.preview_limit ?? 6;
 
   return (
     <SectionShell wide>
       <SectionHeading>{content.heading?.trim()}</SectionHeading>
       <SectionBody text={content.body} className={content.heading?.trim() ? "mt-3" : undefined} />
       {images.length > 0 && (
-        <div className={cn("grid gap-4", content.heading?.trim() || content.body?.trim() ? "mt-8" : undefined, gridClass)}>
-          {images.map((image, index) => (
-            <GalleryImageCard key={`${image.url}-${index}`} image={image} />
-          ))}
-        </div>
+        <GalleryView
+          images={images}
+          columns={columns}
+          previewLimit={previewLimit}
+          className={content.heading?.trim() || content.body?.trim() ? "mt-8" : undefined}
+        />
       )}
     </SectionShell>
-  );
-}
-
-function GalleryImageCard({ image }: { image: GalleryImage }) {
-  return (
-    <figure className="group overflow-hidden rounded-xl border border-app-border bg-app-surface-muted/40">
-      <div className="relative aspect-[4/3] overflow-hidden">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={image.url}
-          alt={image.alt?.trim() || "Gallery image"}
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-        />
-      </div>
-      {image.caption?.trim() && (
-        <figcaption className="px-4 py-3 text-sm text-app-muted">{image.caption}</figcaption>
-      )}
-    </figure>
   );
 }
 

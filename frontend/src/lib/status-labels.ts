@@ -19,6 +19,9 @@ const STATUS_MAP: Record<string, { label: string; variant: StatusVariant }> = {
   paid: { label: "Paid", variant: "success" },
   failed: { label: "Failed", variant: "error" },
   in_progress: { label: "In progress", variant: "info" },
+  high: { label: "High", variant: "error" },
+  medium: { label: "Medium", variant: "warning" },
+  low: { label: "Low", variant: "neutral" },
   partial: { label: "Partial", variant: "warning" },
   no_match: { label: "No match", variant: "info" },
 };

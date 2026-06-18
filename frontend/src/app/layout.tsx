@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Geist, Geist_Mono } from "next/font/google";
 import { AppProviders } from "@/components/providers/app-providers";
+import { ThemeInitScript } from "@/components/providers/theme-init-script";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -42,7 +43,11 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} ${display.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
+      <head>
+        <ThemeInitScript />
+      </head>
       <body className="flex min-h-full flex-col bg-app-bg font-sans tracking-tight text-app-text">
         <AppProviders>{children}</AppProviders>
       </body>

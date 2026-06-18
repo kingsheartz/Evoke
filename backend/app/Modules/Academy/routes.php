@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Academy\CategoryController as AcademyCategoryController;
 use App\Http\Controllers\Api\V1\Academy\CourseController;
 use App\Http\Controllers\Api\V1\Academy\EnrollmentController;
 use Illuminate\Support\Facades\Route;
@@ -15,6 +16,8 @@ Route::prefix('academy')->middleware(['module.enabled:academy'])->group(function
     });
 
     Route::middleware(['auth:sanctum', 'permission:academy.courses.manage'])->group(function () {
+        Route::get('/admin/categories', [AcademyCategoryController::class, 'index']);
+        Route::post('/admin/categories', [AcademyCategoryController::class, 'store']);
         Route::get('/admin/courses', [CourseController::class, 'adminIndex']);
         Route::get('/admin/courses/{course}', [CourseController::class, 'adminShow']);
         Route::post('/courses', [CourseController::class, 'store']);

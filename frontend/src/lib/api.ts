@@ -86,6 +86,35 @@ export const apiClient = {
   logout: (token: string) =>
     api<{ message: string }>("/auth/logout", { method: "POST", token }),
 
+  updateProfile: (token: string, payload: ProfilePayload) =>
+    api<{ data: User }>("/auth/profile", {
+      method: "PUT",
+      token,
+      body: JSON.stringify(payload),
+    }),
+
+  uploadAvatar: async (token: string, file: File) => {
+    const form = new FormData();
+    form.append("avatar", file);
+    const url = `${getApiUrl()}/auth/avatar`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: form,
+    });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: "Upload failed" }));
+      throw new ApiError(response.status, error.message ?? "Upload failed");
+    }
+    return response.json() as Promise<{ data: User }>;
+  },
+
+  removeAvatar: (token: string) =>
+    api<{ data: User }>("/auth/avatar", { method: "DELETE", token }),
+
   getAdminContext: (token: string) =>
     api<{ data: AdminContext }>("/admin/context", { token }),
 
@@ -99,7 +128,45 @@ export const apiClient = {
       body: JSON.stringify(payload),
     }),
 
+  getDivisionNav: () => api<{ data: DivisionNavItem[] }>("/divisions"),
+
+  getDivisionPage: (slug: string) =>
+    api<{ data: DivisionPageData }>(`/divisions/${slug}`),
+
+  getAdminDivisionPages: (token: string) =>
+    api<{ data: DivisionPageData[] }>("/cms/admin/divisions", { token }),
+
+  getAdminDivisionPage: (token: string, slug: string) =>
+    api<{ data: DivisionPageData }>(`/cms/admin/divisions/${slug}`, { token }),
+
+  createDivisionPage: (token: string, payload: DivisionPageCreatePayload) =>
+    api<{ message: string; data: DivisionPageData }>("/cms/admin/divisions", {
+      method: "POST",
+      token,
+      body: JSON.stringify(payload),
+    }),
+
+  updateDivisionPage: (token: string, slug: string, payload: DivisionPagePayload) =>
+    api<{ message: string; data: DivisionPageData }>(`/cms/admin/divisions/${slug}`, {
+      method: "PUT",
+      token,
+      body: JSON.stringify(payload),
+    }),
+
+  deleteDivisionPage: (token: string, slug: string) =>
+    api<{ message: string }>(`/cms/admin/divisions/${slug}`, { method: "DELETE", token }),
+
   getAcademyCategories: () => api<{ data: AcademyCategory[] }>("/academy/categories"),
+
+  getAdminAcademyCategories: (token: string) =>
+    api<{ data: AcademyCategory[] }>("/academy/admin/categories", { token }),
+
+  createAcademyCategory: (token: string, payload: CategoryPayload) =>
+    api<{ data: AcademyCategory }>("/academy/admin/categories", {
+      method: "POST",
+      token,
+      body: JSON.stringify(payload),
+    }),
 
   getAdminCourses: (token: string, params?: { status?: string; search?: string; page?: number }) => {
     const query = new URLSearchParams();
@@ -132,6 +199,16 @@ export const apiClient = {
 
   // Shop
   getShopCategories: () => api<{ data: ShopCategory[] }>("/shop/categories"),
+
+  getAdminShopCategories: (token: string) =>
+    api<{ data: ShopCategory[] }>("/shop/admin/categories", { token }),
+
+  createShopCategory: (token: string, payload: CategoryPayload) =>
+    api<{ data: ShopCategory }>("/shop/admin/categories", {
+      method: "POST",
+      token,
+      body: JSON.stringify(payload),
+    }),
   getAdminProducts: (token: string) =>
     api<Paginated<Product>>(`/shop/admin/products`, { token }),
   getAdminProduct: (token: string, id: number) =>
@@ -164,16 +241,66 @@ export const apiClient = {
     api<{ data: AdminModule[] }>("/admin/modules", { token }),
   updateModule: (token: string, id: number, payload: { is_enabled?: boolean; name?: string; description?: string }) =>
     api<{ data: AdminModule }>(`/admin/modules/${id}`, { method: "PUT", token, body: JSON.stringify(payload) }),
-  getAdminUsers: (token: string) =>
-    api<Paginated<AdminUser>>(`/admin/users`, { token }),
   getRoles: (token: string) =>
     api<{ data: string[] }>("/admin/roles", { token }),
+  getAdminBranches: (token: string) =>
+    api<{ data: AdminBranch[] }>("/admin/branches", { token }),
+  getAdminUser: (token: string, id: number) =>
+    api<{ data: AdminUser }>(`/admin/users/${id}`, { token }),
   createUser: (token: string, payload: UserPayload) =>
     api<{ data: AdminUser }>("/admin/users", { method: "POST", token, body: JSON.stringify(payload) }),
   updateUser: (token: string, id: number, payload: Partial<UserPayload>) =>
     api<{ data: AdminUser }>(`/admin/users/${id}`, { method: "PUT", token, body: JSON.stringify(payload) }),
   deleteUser: (token: string, id: number) =>
     api<{ message: string }>(`/admin/users/${id}`, { method: "DELETE", token }),
+  uploadUserAvatar: async (token: string, userId: number, file: File) => {
+    const form = new FormData();
+    form.append("avatar", file);
+    const url = `${getApiUrl()}/admin/users/${userId}/avatar`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+      body: form,
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({ message: "Upload failed" }));
+      throw new ApiError(response.status, err.message ?? "Upload failed");
+    }
+    return response.json() as Promise<{ data: AdminUser }>;
+  },
+  removeUserAvatar: (token: string, userId: number) =>
+    api<{ data: AdminUser }>(`/admin/users/${userId}/avatar`, { method: "DELETE", token }),
+  getAdminUsers: (token: string, params?: UserListParams) => {
+    const query = new URLSearchParams();
+    if (params?.search) query.set("search", params.search);
+    if (params?.role) query.set("role", params.role);
+    if (params?.sort) query.set("sort", params.sort);
+    if (params?.dir) query.set("dir", params.dir);
+    if (params?.page) query.set("page", String(params.page));
+    if (params?.per_page) query.set("per_page", String(params.per_page));
+    const qs = query.toString();
+    return api<Paginated<AdminUser> & { stats?: UserListStats }>(`/admin/users${qs ? `?${qs}` : ""}`, { token });
+  },
+  getAdminPreferences: (token: string) =>
+    api<{ data: AdminPreferencesPayload | null }>("/admin/settings/admin_preferences", { token }),
+  updateAdminPreferences: (token: string, value: AdminPreferencesPayload) =>
+    api<{ data: AdminPreferencesPayload }>("/admin/settings/admin_preferences", {
+      method: "PUT",
+      token,
+      body: JSON.stringify({ value }),
+    }),
+  getAdvertisements: (token: string) =>
+    api<{ data: Advertisement[] }>("/admin/settings/advertisements", { token }),
+  updateAdvertisements: (token: string, value: Advertisement[]) =>
+    api<{ data: Advertisement[] }>("/admin/settings/advertisements", {
+      method: "PUT",
+      token,
+      body: JSON.stringify({ value }),
+    }),
+  getPublicAds: (placement?: string) => {
+    const qs = placement ? `?placement=${encodeURIComponent(placement)}` : "";
+    return api<{ data: Advertisement[] }>(`/ads${qs}`, { cache: "no-store" });
+  },
 
   // CMS Pages
   getPublicPage: (slug: string) =>
@@ -194,6 +321,23 @@ export const apiClient = {
     api<{ message: string }>(`/cms/admin/pages/${pageId}/sections/${sectionId}`, { method: "DELETE", token }),
   reorderPageSections: (token: string, pageId: number, sections: { id: number; sort_order: number }[]) =>
     api<{ data: PageSection[] }>(`/cms/admin/pages/${pageId}/sections/reorder`, { method: "PUT", token, body: JSON.stringify({ sections }) }),
+
+  // Tasks & calendar
+  getAdminTasks: (token: string, params?: { from?: string; to?: string; date?: string; status?: AdminTaskStatus }) => {
+    const query = new URLSearchParams();
+    if (params?.from) query.set("from", params.from);
+    if (params?.to) query.set("to", params.to);
+    if (params?.date) query.set("date", params.date);
+    if (params?.status) query.set("status", params.status);
+    const qs = query.toString();
+    return api<{ data: AdminTask[] }>(`/admin/tasks${qs ? `?${qs}` : ""}`, { token });
+  },
+  createAdminTask: (token: string, payload: AdminTaskPayload) =>
+    api<{ data: AdminTask }>("/admin/tasks", { method: "POST", token, body: JSON.stringify(payload) }),
+  updateAdminTask: (token: string, id: number, payload: Partial<AdminTaskPayload>) =>
+    api<{ data: AdminTask }>(`/admin/tasks/${id}`, { method: "PUT", token, body: JSON.stringify(payload) }),
+  deleteAdminTask: (token: string, id: number) =>
+    api<{ message: string }>(`/admin/tasks/${id}`, { method: "DELETE", token }),
 };
 
 export interface HomepageData {
@@ -220,6 +364,72 @@ export interface HomepageUpdatePayload {
   hero_cta_url?: string;
   entry_cards?: EntryCard[];
   meta?: Record<string, unknown>;
+}
+
+export type DivisionAccentStyle =
+  | "accent"
+  | "emerald"
+  | "orange"
+  | "rose"
+  | "blue"
+  | "amber"
+  | "violet";
+
+export interface DivisionNavItem {
+  slug: string;
+  nav_label: string;
+  icon: string;
+  public_path: string;
+  sort_order: number;
+  show_in_nav: boolean;
+}
+
+export interface DivisionHighlightCard {
+  title: string;
+  description: string;
+  icon: string;
+}
+
+export interface DivisionPageData {
+  slug: string;
+  nav_label: string;
+  sort_order: number;
+  show_in_nav: boolean;
+  public_path: string;
+  badge: string;
+  title: string;
+  description: string;
+  icon: string;
+  accent_style: DivisionAccentStyle;
+  home_gradient: string | null;
+  highlight_cards: DivisionHighlightCard[];
+  footer_note: string | null;
+  meta: Record<string, unknown>;
+  is_active?: boolean;
+}
+
+export interface DivisionPagePayload {
+  nav_label?: string;
+  badge?: string;
+  title?: string;
+  description?: string;
+  icon?: string;
+  accent_style?: DivisionAccentStyle;
+  home_gradient?: string | null;
+  show_in_nav?: boolean;
+  sort_order?: number;
+  highlight_cards?: DivisionHighlightCard[];
+  footer_note?: string | null;
+  meta?: Record<string, unknown>;
+  is_active?: boolean;
+}
+
+export interface DivisionPageCreatePayload extends DivisionPagePayload {
+  slug: string;
+  nav_label: string;
+  badge: string;
+  title: string;
+  description: string;
 }
 
 export interface EntryCard {
@@ -250,8 +460,26 @@ export interface User {
   name: string;
   email: string;
   phone?: string | null;
+  avatar_url?: string | null;
+  address_line1?: string | null;
+  address_line2?: string | null;
+  city?: string | null;
+  state?: string | null;
+  postal_code?: string | null;
+  country?: string | null;
   roles?: { name: string }[];
   permissions?: { name: string }[];
+}
+
+export interface ProfilePayload {
+  name?: string;
+  phone?: string;
+  address_line1?: string;
+  address_line2?: string;
+  city?: string;
+  state?: string;
+  postal_code?: string;
+  country?: string;
 }
 
 export interface RegisterPayload {
@@ -304,6 +532,14 @@ export interface AcademyCategory {
   id: number;
   name: string;
   slug: string;
+  description?: string | null;
+  is_active?: boolean;
+  sort_order?: number;
+}
+
+export interface CategoryPayload {
+  name: string;
+  description?: string;
 }
 
 export interface Course {
@@ -348,6 +584,10 @@ export interface ShopCategory {
   id: number;
   name: string;
   slug: string;
+  description?: string | null;
+  parent_id?: number | null;
+  is_active?: boolean;
+  sort_order?: number;
 }
 
 export interface Product {
@@ -430,7 +670,82 @@ export interface AdminUser {
   name: string;
   email: string;
   phone: string | null;
+  avatar?: string | null;
+  avatar_url?: string | null;
+  address_line1?: string | null;
+  address_line2?: string | null;
+  city?: string | null;
+  state?: string | null;
+  postal_code?: string | null;
+  country?: string | null;
+  branch_id?: number | null;
+  email_verified_at?: string | null;
+  phone_verified_at?: string | null;
+  two_factor_enabled?: boolean;
+  created_at?: string;
+  updated_at?: string;
+  branch?: { id: number; name: string } | null;
   roles: { name: string }[];
+  permissions?: { name: string }[];
+}
+
+export interface AdminBranch {
+  id: number;
+  name: string;
+  city?: string | null;
+  country?: string | null;
+}
+
+export interface UserListParams {
+  search?: string;
+  role?: string;
+  sort?: "created_at" | "name" | "email" | "updated_at";
+  dir?: "asc" | "desc";
+  page?: number;
+  per_page?: number;
+}
+
+export interface UserListStats {
+  total: number;
+  by_role: Record<string, number>;
+}
+
+export interface AdminPreferencesPayload {
+  notifications: {
+    enabled: boolean;
+    position: "top-right" | "top-left" | "bottom-right" | "bottom-left" | "top-center" | "bottom-center";
+    defaultDurationMs: number;
+    showProgressBar: boolean;
+    showCountdown: boolean;
+  };
+  hotkeys: {
+    save: string;
+    search: string;
+    help: string;
+    hotkeys: string;
+    new: string;
+    close: string;
+    sidebar: string;
+  };
+  tour: {
+    autoStart: boolean;
+  };
+  theme?: {
+    mode: "dark" | "light";
+    accent: "violet" | "blue" | "emerald" | "rose" | "amber";
+  };
+}
+
+export type AdPlacement = "admin_sidebar" | "site_header" | "homepage" | "footer";
+
+export interface Advertisement {
+  id: string;
+  title: string;
+  image_url: string;
+  link_url: string;
+  placement: AdPlacement;
+  enabled: boolean;
+  sort_order: number;
 }
 
 export interface UserPayload {
@@ -439,6 +754,13 @@ export interface UserPayload {
   phone?: string;
   password?: string;
   role: string;
+  branch_id?: number;
+  address_line1?: string;
+  address_line2?: string;
+  city?: string;
+  state?: string;
+  postal_code?: string;
+  country?: string;
 }
 
 export interface CmsPage {
@@ -471,6 +793,31 @@ export interface SectionPayload {
   component_type: string;
   content: Record<string, unknown>;
   is_visible?: boolean;
+}
+
+export type AdminTaskStatus = "pending" | "in_progress" | "completed" | "cancelled";
+export type AdminTaskPriority = "low" | "medium" | "high";
+
+export interface AdminTask {
+  id: number;
+  user_id: number;
+  branch_id: number | null;
+  title: string;
+  description: string | null;
+  due_at: string | null;
+  status: AdminTaskStatus;
+  priority: AdminTaskPriority;
+  created_at: string;
+  updated_at: string;
+  user?: { id: number; name: string };
+}
+
+export interface AdminTaskPayload {
+  title: string;
+  description?: string | null;
+  due_at?: string | null;
+  status?: AdminTaskStatus;
+  priority?: AdminTaskPriority;
 }
 
 export const SECTION_TYPES = [

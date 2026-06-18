@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { GraduationCap, LogOut, Plane, ShoppingBag, User } from "lucide-react";
+import { GraduationCap, LogOut, Plane, Palette, ShoppingBag } from "lucide-react";
 import { CustomerAuthGuard } from "@/components/auth/customer-auth-guard";
+import { ProfileEditor } from "@/components/account/profile-editor";
 import { PageContainer } from "@/components/layout/app-shell";
+import { ThemeSettings } from "@/components/theme/theme-settings";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { apiClient, hasAdminAccess } from "@/lib/api";
@@ -33,7 +35,9 @@ function AccountContent() {
     router.push("/");
   };
 
-  if (!user) return null;
+  if (!user || !token) return null;
+
+  const addressComplete = Boolean(user.address_line1 && user.city && user.postal_code);
 
   return (
     <PageContainer className="py-16 md:py-20">
@@ -52,28 +56,30 @@ function AccountContent() {
           </Button>
         </div>
 
+        {!addressComplete && (
+          <div className="mb-6 rounded-xl border border-status-warning/30 bg-status-warning/10 px-4 py-3 text-sm text-app-text">
+            Add your delivery address below for shop orders and tour bookings.
+          </div>
+        )}
+
+        <Card variant="glass" className="mb-8">
+          <CardHeader>
+            <CardTitle className="text-lg">Profile & address</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ProfileEditor user={user} token={token} />
+          </CardContent>
+        </Card>
+
         <Card variant="glass" className="mb-8">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
-              <User className="h-5 w-5 text-accent-soft" />
-              Profile
+              <Palette className="h-5 w-5 text-accent-soft" />
+              Theme
             </CardTitle>
           </CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wider text-app-muted">Name</p>
-              <p className="mt-1 text-app-text">{user.name}</p>
-            </div>
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wider text-app-muted">Email</p>
-              <p className="mt-1 text-app-text">{user.email}</p>
-            </div>
-            {user.phone && (
-              <div>
-                <p className="text-xs font-medium uppercase tracking-wider text-app-muted">Phone</p>
-                <p className="mt-1 text-app-text">{user.phone}</p>
-              </div>
-            )}
+          <CardContent>
+            <ThemeSettings />
           </CardContent>
         </Card>
 
@@ -91,10 +97,6 @@ function AccountContent() {
             </Link>
           ))}
         </div>
-
-        <p className="mt-8 text-sm text-app-muted">
-          Orders, enrollments, and bookings will appear here as those features roll out across Academy, Shop, and Tours.
-        </p>
 
         {isAdmin && (
           <div className="mt-8 rounded-xl border border-accent/25 bg-accent/5 p-4">

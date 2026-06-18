@@ -1,14 +1,14 @@
-import Link from "next/link";
-import { GraduationCap, Plane, ShoppingBag } from "lucide-react";
-import { PageContainer } from "@/components/layout/app-shell";
+"use client";
 
-const divisions = [
-  { href: "/academy", label: "Academy", icon: GraduationCap },
-  { href: "/shop", label: "Sports Shop", icon: ShoppingBag },
-  { href: "/tours", label: "Tours & Travels", icon: Plane },
-];
+import Link from "next/link";
+import { resolveDivisionIcon } from "@/lib/division-page";
+import { PageContainer } from "@/components/layout/app-shell";
+import { SiteThemeToggle } from "@/components/theme/site-theme-toggle";
+import { useDivisionNav } from "@/hooks/use-division-nav";
 
 export function SiteFooter() {
+  const { items: divisions } = useDivisionNav();
+
   return (
     <footer className="relative border-t border-app-border bg-app-surface/50">
       <PageContainer className="py-16">
@@ -26,17 +26,21 @@ export function SiteFooter() {
           <div>
             <h4 className="text-xs font-semibold uppercase tracking-wider text-app-muted">Divisions</h4>
             <ul className="mt-4 space-y-3">
-              {divisions.map((d) => (
-                <li key={d.href}>
-                  <Link
-                    href={d.href}
-                    className="inline-flex items-center gap-2 text-sm text-app-text transition-colors hover:text-accent-soft"
-                  >
-                    <d.icon className="h-4 w-4 text-accent/60" />
-                    {d.label}
-                  </Link>
-                </li>
-              ))}
+              {divisions.map((d) => {
+                const Icon = resolveDivisionIcon(d.icon);
+                const href = d.public_path ?? `/${d.slug}`;
+                return (
+                  <li key={d.slug}>
+                    <Link
+                      href={href}
+                      className="inline-flex items-center gap-2 text-sm text-app-text transition-colors hover:text-accent-soft"
+                    >
+                      <Icon className="h-4 w-4 text-accent/60" />
+                      {d.nav_label}
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           </div>
 
@@ -77,9 +81,10 @@ export function SiteFooter() {
           <p className="text-xs text-app-muted">
             © {new Date().getFullYear()} Evoke Platform. All rights reserved.
           </p>
-          <p className="text-xs text-app-muted">
-            Crafted with precision · Academy · Shop · Tours
-          </p>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <SiteThemeToggle />
+            <p className="text-xs text-app-muted">Academy · Shop · Tours</p>
+          </div>
         </div>
       </PageContainer>
     </footer>

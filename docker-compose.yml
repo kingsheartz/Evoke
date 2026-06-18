@@ -1,5 +1,8 @@
+# Optional services use Compose profiles — start stacks via scripts/run.* (see RUN.md).
+# Profiles: pgsql | mysql | proxy | workers | ai
 services:
   nginx:
+    profiles: ["proxy", "full"]
     image: nginx:alpine
     ports:
       - "8080:80"
@@ -21,6 +24,9 @@ services:
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
       - INTERNAL_API_URL=http://backend:8000/api/v1
+      # Windows bind mounts: reliable file watching + route discovery in Docker
+      - WATCHPACK_POLLING=true
+      - CHOKIDAR_USEPOLLING=true
     volumes:
       - ./frontend:/app
       # Keep node_modules inside the container (Linux binaries). Do NOT mount
@@ -41,12 +47,12 @@ services:
       - APP_ENV=local
       - APP_KEY=base64:2fl+KtvkAGL8OuGzJmHj4zgnZqZKhK8YN8xPEqQ8V0k=
       - APP_DEBUG=true
-      - DB_CONNECTION=pgsql
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_DATABASE=evoke
-      - DB_USERNAME=evoke
-      - DB_PASSWORD=evoke_secret
+      - DB_CONNECTION=${DB_CONNECTION:-pgsql}
+      - DB_HOST=${DB_HOST:-postgres}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_DATABASE=${DB_DATABASE:-evoke}
+      - DB_USERNAME=${DB_USERNAME:-evoke}
+      - DB_PASSWORD=${DB_PASSWORD:-evoke_secret}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - CACHE_STORE=redis
@@ -59,6 +65,10 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+        required: false
+      mysql:
+        condition: service_healthy
+        required: false
       redis:
         condition: service_started
     networks:
@@ -66,6 +76,7 @@ services:
     restart: unless-stopped
 
   ai-service:
+    profiles: ["ai", "full"]
     build:
       context: ./ai-service
       dockerfile: Dockerfile
@@ -83,6 +94,7 @@ services:
       - evoke-network
 
   ollama:
+    profiles: ["ai", "full"]
     image: ollama/ollama:latest
     ports:
       - "11434:11434"
@@ -92,6 +104,7 @@ services:
       - evoke-network
 
   postgres:
+    profiles: ["pgsql", "full", "ai"]
     image: pgvector/pgvector:pg16
     ports:
       - "5432:5432"
@@ -119,7 +132,7 @@ services:
     networks:
       - evoke-network
 
-  # Optional MySQL for XAMPP-style local dev (enable with: docker compose --profile mysql up)
+  # MySQL — lighter stack (scripts/run.* stack: mysql)
   mysql:
     profiles: ["mysql"]
     image: mysql:8.4
@@ -142,6 +155,7 @@ services:
       - evoke-network
 
   queue-worker:
+    profiles: ["workers", "full"]
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -149,12 +163,12 @@ services:
     environment:
       - APP_ENV=local
       - APP_KEY=base64:2fl+KtvkAGL8OuGzJmHj4zgnZqZKhK8YN8xPEqQ8V0k=
-      - DB_CONNECTION=pgsql
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_DATABASE=evoke
-      - DB_USERNAME=evoke
-      - DB_PASSWORD=evoke_secret
+      - DB_CONNECTION=${DB_CONNECTION:-pgsql}
+      - DB_HOST=${DB_HOST:-postgres}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_DATABASE=${DB_DATABASE:-evoke}
+      - DB_USERNAME=${DB_USERNAME:-evoke}
+      - DB_PASSWORD=${DB_PASSWORD:-evoke_secret}
       - REDIS_HOST=redis
       - QUEUE_CONNECTION=redis
     volumes:
@@ -168,6 +182,7 @@ services:
     restart: unless-stopped
 
   scheduler:
+    profiles: ["workers", "full"]
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -175,12 +190,12 @@ services:
     environment:
       - APP_ENV=local
       - APP_KEY=base64:2fl+KtvkAGL8OuGzJmHj4zgnZqZKhK8YN8xPEqQ8V0k=
-      - DB_CONNECTION=pgsql
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_DATABASE=evoke
-      - DB_USERNAME=evoke
-      - DB_PASSWORD=evoke_secret
+      - DB_CONNECTION=${DB_CONNECTION:-pgsql}
+      - DB_HOST=${DB_HOST:-postgres}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_DATABASE=${DB_DATABASE:-evoke}
+      - DB_USERNAME=${DB_USERNAME:-evoke}
+      - DB_PASSWORD=${DB_PASSWORD:-evoke_secret}
       - REDIS_HOST=redis
     volumes:
       - ./backend:/var/www/html

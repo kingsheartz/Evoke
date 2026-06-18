@@ -1,6 +1,7 @@
 import dynamic from "next/dynamic";
 import { HeroSection } from "@/components/home/hero-section";
 import { HomepageExtraSections } from "@/components/home/homepage-extra-sections";
+import { SiteAdBanner } from "@/components/site/site-ad-banner";
 import { PageLoading } from "@/components/ui/page-loading";
 import { apiClient } from "@/lib/api";
 import { defaultHomepageFallback } from "@/lib/homepage-defaults";
@@ -37,6 +38,9 @@ export default async function HomePage() {
   return (
     <>
       <HeroSection hero={homepage.hero} />
+      <div className="app-shell-x deferred-section py-6">
+        <SiteAdBanner placement="homepage" />
+      </div>
       <div className="deferred-section">
         <StatsBar items={meta.stats?.items} enabled={meta.stats?.enabled} />
       </div>

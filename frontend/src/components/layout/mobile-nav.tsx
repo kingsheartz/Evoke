@@ -6,21 +6,19 @@ import { useRouter } from "next/navigation";
 import { LogOut, Menu, User, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { apiClient, hasAdminAccess } from "@/lib/api";
+import { useAuthHydrated } from "@/hooks/use-auth-hydration";
 import { useAuthStore } from "@/stores/app";
+import { useDivisionNav } from "@/hooks/use-division-nav";
 import { cn } from "@/lib/utils";
-
-const links = [
-  { href: "/academy", label: "Academy" },
-  { href: "/shop", label: "Sports Shop" },
-  { href: "/tours", label: "Tours & Travels" },
-];
 
 export function MobileNav() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const { items: links } = useDivisionNav();
+  const hydrated = useAuthHydrated();
   const { user, token, roles, permissions, logout } = useAuthStore();
   const isAdmin = hasAdminAccess(roles, permissions);
-  const isLoggedIn = Boolean(user && token);
+  const isLoggedIn = hydrated && Boolean(user && token);
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -49,7 +47,7 @@ export function MobileNav() {
         size="sm"
         aria-label={open ? "Close menu" : "Open menu"}
         onClick={() => setOpen(!open)}
-        className="h-10 w-10 p-0 text-white"
+        className="site-header-menu-btn h-10 w-10 p-0"
       >
         {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
       </Button>
@@ -66,7 +64,7 @@ export function MobileNav() {
         />
         <nav
           className={cn(
-            "absolute right-0 top-0 flex h-full w-[min(100%,20rem)] flex-col border-l border-app-border glass p-6 transition-transform duration-300 ease-out",
+            "absolute right-0 top-0 flex h-full w-[min(100%,20rem)] flex-col border-l border-app-border bg-app-surface p-6 shadow-xl transition-transform duration-300 ease-out",
             open ? "translate-x-0" : "translate-x-full",
           )}
         >
@@ -77,17 +75,20 @@ export function MobileNav() {
             </Button>
           </div>
           <ul className="flex flex-col gap-1">
-            {links.map((link) => (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  onClick={() => setOpen(false)}
-                  className="block rounded-xl px-4 py-3 text-base font-medium text-app-text transition-colors hover:bg-white/[0.06] hover:text-accent-soft"
-                >
-                  {link.label}
-                </Link>
-              </li>
-            ))}
+            {links.map((link) => {
+              const href = link.public_path ?? `/${link.slug}`;
+              return (
+                <li key={link.slug}>
+                  <Link
+                    href={href}
+                    onClick={() => setOpen(false)}
+                    className="block rounded-xl px-4 py-3 text-base font-medium text-app-text transition-colors hover:bg-app-surface-muted hover:text-accent-soft"
+                  >
+                    {link.nav_label}
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
           <div className="mt-auto space-y-3 pt-6">
             {isLoggedIn ? (
