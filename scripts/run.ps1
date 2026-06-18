@@ -44,7 +44,7 @@ Commands:
   prod up | prod down | prod build | prod migrate | prod health
 
 Options:
-  --migrate --seed --fresh --no-build --pull --foreground -f --volumes --force
+  --migrate --seed --fresh --no-build --watch --pull --foreground -f --volumes --force
 
 Examples:
   .\scripts\run.ps1 init
@@ -69,7 +69,7 @@ function Get-Flags {
         Migrate    = ($Args -contains "--migrate") -or ($Args -contains "--seed") -or ($Args -contains "--fresh")
         Seed       = ($Args -contains "--seed") -or ($Args -contains "--fresh")
         Fresh      = $Args -contains "--fresh"
-        Build      = -not ($Args -contains "--no-build")
+        Build      = -not (($Args -contains "--no-build") -or ($Args -contains "--watch"))
         Pull       = $Args -contains "--pull"
         Foreground = ($Args -contains "--foreground") -or ($Args -contains "-f")
         Volumes    = $Args -contains "--volumes"

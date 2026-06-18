@@ -64,7 +64,8 @@ Options (for up / build / prod up):
   --migrate         Run migrations after start
   --seed            Migrate with seed data
   --fresh           migrate:fresh --seed (destroys data)
-  --no-build        Skip image build
+  --no-build        Skip image rebuild (hot reload — same as --watch)
+  --watch           Alias for --no-build; start without rebuilding images
   --pull            Pull base images before build
   --foreground, -f  Attach logs (no -d)
   --volumes         down: remove volumes
@@ -93,7 +94,7 @@ parse_flags() {
       --migrate) DO_MIGRATE=1 ;;
       --seed) DO_SEED=1; DO_MIGRATE=1 ;;
       --fresh) DO_SEED=1; DO_MIGRATE=1; FRESH_MIGRATE=1 ;;
-      --no-build) DO_BUILD=0 ;;
+      --no-build|--watch) DO_BUILD=0 ;;
       --pull) DO_PULL=1 ;;
       --foreground|-f) FOREGROUND=1 ;;
       --volumes) REMOVE_VOLUMES=1 ;;

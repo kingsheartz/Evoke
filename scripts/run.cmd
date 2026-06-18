@@ -140,6 +140,7 @@ echo %* | findstr /i /c:"--migrate" >nul && set "FLAG_MIGRATE=1"
 echo %* | findstr /i /c:"--seed" >nul && (set "FLAG_MIGRATE=1" & set "FLAG_SEED=1")
 echo %* | findstr /i /c:"--fresh" >nul && (set "FLAG_MIGRATE=1" & set "FLAG_SEED=1" & set "FLAG_FRESH=1")
 echo %* | findstr /i /c:"--no-build" >nul && set "FLAG_BUILD=0"
+echo %* | findstr /i /c:"--watch" >nul && set "FLAG_BUILD=0"
 echo %* | findstr /i /c:"--pull" >nul && set "FLAG_PULL=1"
 echo %* | findstr /i /c:"--foreground" >nul && set "FLAG_FG=1"
 echo %* | findstr /i /c:" -f " >nul && set "FLAG_FG=1"

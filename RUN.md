@@ -134,10 +134,51 @@ docker compose exec ollama ollama pull nomic-embed-text
 | `--migrate` | Run migrations after `up` |
 | `--seed` | Migrate with demo data |
 | `--fresh` | `migrate:fresh --seed` (**wipes DB**) |
-| `--no-build` | Skip image rebuild |
+| `--no-build` / `--watch` | Skip image rebuild; use for daily dev (hot reload) |
 | `--pull` | Pull base images first |
 | `--foreground` / `-f` | Attach logs (no `-d`) |
 | `--force` | `init`: overwrite env files from examples |
+
+---
+
+## Hot reload (why code changes apply without rebuild)
+
+In **dev mode** (default `up core`, not `prod up`), Evoke is set up for live editing:
+
+| Piece | How it works |
+|-------|----------------|
+| **Frontend** | `./frontend` is bind-mounted into the container; `npm run dev` (Next.js) recompiles on save |
+| **Backend** | `./backend` is bind-mounted; PHP picks up changes immediately |
+| **No stale `.next` cache** | The dev compose file does **not** use a separate Docker volume for `.next` |
+
+So you edit files on disk → containers see them → the dev servers refresh. You only need a **full image rebuild** when dependencies or Dockerfiles change (`package.json`, `composer.json`, etc.).
+
+### Daily workflow
+
+**First time** (or after dependency/Dockerfile changes):
+
+```bash
+./scripts/run.sh up core --migrate --seed
+```
+
+**Every day after** (containers already built — skip rebuild, keep hot reload):
+
+```bash
+./scripts/run.sh up core --watch --migrate
+# or:  --no-build  (same thing)
+```
+
+If containers are already running, you usually don't need `up` at all — just save files and refresh the browser. Use `down` / `up --watch` when restarting Docker.
+
+**When you *do* need a rebuild:**
+
+```bash
+./scripts/run.sh up core --migrate          # default: rebuilds if Dockerfile/deps changed
+./scripts/run.sh build core && ./scripts/run.sh up core --watch
+./scripts/dev.sh reset-frontend             # UI still stale after code changes
+```
+
+**Production** (`prod up`) is different: code is baked into images at build time — you must rebuild after changes.
 
 ---
 
