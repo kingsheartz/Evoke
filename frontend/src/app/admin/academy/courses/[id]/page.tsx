@@ -3,6 +3,11 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
+import { CourseBatchesEditor } from "@/components/admin/course-batches-editor";
+import { GalleryUrlsField, normalizeUrlList } from "@/components/admin/gallery-urls-field";
+import { AdminBackLink } from "@/components/admin/admin-form-primitives";
+import { CategorySelectField } from "@/components/admin/category-select-field";
+import { MediaUrlField } from "@/components/cms/media-url-field";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,9 +16,8 @@ import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { PageHeader } from "@/components/ui/page-header";
 import { PageLoading } from "@/components/ui/page-loading";
-import { AdminBackLink } from "@/components/admin/admin-form-primitives";
-import { CategorySelectField } from "@/components/admin/category-select-field";
 import { apiClient, type Course } from "@/lib/api";
+import { revalidateAcademyPublicCache } from "@/lib/revalidate-cms";
 import { useAuthStore } from "@/stores/app";
 import { cn } from "@/lib/utils";
 
@@ -32,14 +36,17 @@ export default function EditCoursePage() {
   const token = useAuthStore((s) => s.token);
   const courseId = Number(params.id);
   const [course, setCourse] = useState<Course | null>(null);
+  const [thumbnail, setThumbnail] = useState("");
+  const [gallery, setGallery] = useState<string[]>([]);
   const [message, setMessage] = useState<string | null>(null);
-
   const { register, handleSubmit, reset, control } = useForm<EditForm>();
 
-  useEffect(() => {
+  const load = () => {
     if (!token || !courseId) return;
     apiClient.getAdminCourse(token, courseId).then((courseRes) => {
       setCourse(courseRes.data);
+      setThumbnail(courseRes.data.thumbnail ?? "");
+      setGallery(courseRes.data.gallery ?? []);
       reset({
         category_id: courseRes.data.category_id,
         title: courseRes.data.title,
@@ -49,15 +56,23 @@ export default function EditCoursePage() {
         status: courseRes.data.status,
       });
     });
-  }, [token, courseId, reset]);
+  };
+
+  useEffect(load, [token, courseId, reset]);
 
   const onSubmit = async (data: EditForm) => {
     if (!token) return;
     setMessage(null);
     try {
-      await apiClient.updateCourse(token, courseId, data);
+      await apiClient.updateCourse(token, courseId, {
+        ...data,
+        thumbnail: thumbnail.trim() || undefined,
+        gallery: normalizeUrlList(gallery),
+      });
+      await revalidateAcademyPublicCache(course.slug);
       setMessage("Course updated successfully.");
       router.refresh();
+      load();
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "Update failed");
     }
@@ -68,7 +83,7 @@ export default function EditCoursePage() {
   }
 
   return (
-    <div className="app-page">
+    <div className="app-page space-y-6">
       <PageHeader
         title="Edit Course"
         description={course.slug}
@@ -76,60 +91,57 @@ export default function EditCoursePage() {
       />
 
       <Card>
-        <CardHeader>
-          <CardTitle>{course.title}</CardTitle>
-        </CardHeader>
+        <CardHeader><CardTitle>{course.title}</CardTitle></CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2 md:col-span-2">
-              <Label>Title</Label>
-              <Input {...register("title")} />
-            </div>
-            <div className="space-y-2 md:col-span-2">
-              <Label>Description</Label>
-              <Textarea {...register("description")} />
-            </div>
-            <Controller
-              name="category_id"
-              control={control}
-              render={({ field }) => (
-                <CategorySelectField
-                  module="academy"
-                  value={field.value ?? 0}
-                  onChange={field.onChange}
-                />
-              )}
-            />
-            <div className="space-y-2">
-              <Label>Duration</Label>
-              <Input {...register("duration")} />
-            </div>
-            <div className="space-y-2">
-              <Label>Fees (₹)</Label>
-              <Input type="number" step="0.01" {...register("fees", { valueAsNumber: true })} />
-            </div>
-            <div className="space-y-2">
-              <Label>Status</Label>
-              <Select {...register("status")}>
-                <option value="draft">Draft</option>
-                <option value="published">Published</option>
-                <option value="archived">Archived</option>
-              </Select>
-            </div>
-            {message && (
-              <p
-                className={cn(
-                  "text-sm md:col-span-2",
-                  message.includes("success") ? "text-status-success" : "text-status-error",
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2 md:col-span-2"><Label>Title</Label><Input {...register("title")} /></div>
+              <div className="space-y-2 md:col-span-2"><Label>Description</Label><Textarea rows={4} {...register("description")} /></div>
+              <Controller
+                name="category_id"
+                control={control}
+                render={({ field }) => (
+                  <CategorySelectField module="academy" value={field.value ?? 0} onChange={field.onChange} />
                 )}
-              >
+              />
+              <div className="space-y-2"><Label>Duration</Label><Input {...register("duration")} placeholder="e.g. 12 weeks" /></div>
+              <div className="space-y-2"><Label>Fees (₹)</Label><Input type="number" step="0.01" {...register("fees", { valueAsNumber: true })} /></div>
+              <div className="space-y-2">
+                <Label>Status</Label>
+                <Select {...register("status")}>
+                  <option value="draft">Draft</option>
+                  <option value="published">Published</option>
+                  <option value="archived">Archived</option>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Thumbnail</Label>
+              <MediaUrlField value={thumbnail} onChange={setThumbnail} cropAspect={4 / 3} />
+            </div>
+
+            <GalleryUrlsField
+              label="Course gallery"
+              values={gallery.length ? gallery : [""]}
+              onChange={(next) => setGallery(next.filter(Boolean))}
+            />
+
+            {message && (
+              <p className={cn("text-sm", message.includes("success") ? "text-status-success" : "text-status-error")}>
                 {message}
               </p>
             )}
-            <div className="md:col-span-2">
-              <Button type="submit">Save Changes</Button>
-            </div>
+            <Button type="submit">Save course</Button>
           </form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle>Batches</CardTitle></CardHeader>
+        <CardContent>
+          <p className="mb-4 text-sm text-app-muted">Schedule upcoming batches shown on the public course page.</p>
+          <CourseBatchesEditor courseId={courseId} courseSlug={course.slug} initialBatches={course.batches ?? []} />
         </CardContent>
       </Card>
     </div>

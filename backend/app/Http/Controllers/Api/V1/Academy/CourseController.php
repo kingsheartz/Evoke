@@ -87,6 +87,7 @@ class CourseController extends Controller
             'duration' => 'nullable|string',
             'fees' => 'sometimes|numeric|min:0',
             'status' => 'nullable|string|in:draft,published,archived',
+            'thumbnail' => 'nullable|string',
             'gallery' => 'nullable|array',
         ]);
 

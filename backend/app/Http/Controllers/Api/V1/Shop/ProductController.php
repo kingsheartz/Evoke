@@ -81,13 +81,17 @@ class ProductController extends Controller
             'name' => 'sometimes|string|max:255',
             'description' => 'nullable|string',
             'price' => 'sometimes|numeric|min:0',
+            'compare_price' => 'nullable|numeric|min:0',
             'stock' => 'sometimes|integer|min:0',
+            'images' => 'nullable|array',
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
+            'seo_title' => 'nullable|string|max:255',
+            'seo_description' => 'nullable|string',
         ]);
 
         $product->update($validated);
 
-        return response()->json(['data' => $product->fresh('category')]);
+        return response()->json(['data' => $product->fresh(['category', 'variants'])]);
     }
 }

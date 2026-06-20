@@ -181,7 +181,7 @@ export function productStats(product: Product): StatItem[] {
 
 export function formatNextBatchLabel(course: Course): string | undefined {
   const upcoming = (course.batches ?? [])
-    .filter((batch) => batch.status === "open" || batch.status === "active")
+    .filter((batch) => ["upcoming", "open", "active"].includes(batch.status))
     .sort((a, b) => a.start_date.localeCompare(b.start_date))[0];
 
   if (!upcoming) return undefined;

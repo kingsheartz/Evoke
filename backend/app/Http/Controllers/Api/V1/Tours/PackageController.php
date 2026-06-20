@@ -78,9 +78,17 @@ class PackageController extends Controller
         $validated = $request->validate([
             'title' => 'sometimes|string|max:255',
             'description' => 'nullable|string',
+            'destination' => 'sometimes|string|max:255',
+            'type' => 'sometimes|string|in:domestic,international,adventure,group,custom',
+            'duration_days' => 'sometimes|integer|min:1',
             'price' => 'sometimes|numeric|min:0',
+            'gallery' => 'nullable|array',
+            'inclusions' => 'nullable|array',
+            'exclusions' => 'nullable|array',
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
+            'seo_title' => 'nullable|string|max:255',
+            'seo_description' => 'nullable|string',
         ]);
 
         $package->update($validated);

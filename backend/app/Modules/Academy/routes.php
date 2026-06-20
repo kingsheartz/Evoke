@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Academy\BatchController;
 use App\Http\Controllers\Api\V1\Academy\CategoryController as AcademyCategoryController;
 use App\Http\Controllers\Api\V1\Academy\CourseController;
 use App\Http\Controllers\Api\V1\Academy\EnrollmentController;
@@ -22,5 +23,9 @@ Route::prefix('academy')->middleware(['module.enabled:academy'])->group(function
         Route::get('/admin/courses/{course}', [CourseController::class, 'adminShow']);
         Route::post('/courses', [CourseController::class, 'store']);
         Route::put('/courses/{course}', [CourseController::class, 'update']);
+        Route::get('/admin/courses/{course}/batches', [BatchController::class, 'index']);
+        Route::post('/admin/courses/{course}/batches', [BatchController::class, 'store']);
+        Route::put('/admin/courses/{course}/batches/{batch}', [BatchController::class, 'update']);
+        Route::delete('/admin/courses/{course}/batches/{batch}', [BatchController::class, 'destroy']);
     });
 });

@@ -265,11 +265,43 @@ export const apiClient = {
       body: JSON.stringify(payload),
     }),
 
-  updateCourse: (token: string, id: number, payload: Partial<CoursePayload & { status: string }>) =>
+  updateCourse: (token: string, id: number, payload: Partial<CoursePayload & { status: string; gallery?: string[]; thumbnail?: string }>) =>
     api<{ data: Course }>(`/academy/courses/${id}`, {
       method: "PUT",
       token,
       body: JSON.stringify(payload),
+    }),
+
+  getCourseBatches: (token: string, courseId: number) =>
+    api<{ data: CourseBatch[] }>(`/academy/admin/courses/${courseId}/batches`, { token }),
+
+  createCourseBatch: (
+    token: string,
+    courseId: number,
+    payload: CourseBatchPayload,
+  ) =>
+    api<{ data: CourseBatch }>(`/academy/admin/courses/${courseId}/batches`, {
+      method: "POST",
+      token,
+      body: JSON.stringify(payload),
+    }),
+
+  updateCourseBatch: (
+    token: string,
+    courseId: number,
+    batchId: number,
+    payload: Partial<CourseBatchPayload>,
+  ) =>
+    api<{ data: CourseBatch }>(`/academy/admin/courses/${courseId}/batches/${batchId}`, {
+      method: "PUT",
+      token,
+      body: JSON.stringify(payload),
+    }),
+
+  deleteCourseBatch: (token: string, courseId: number, batchId: number) =>
+    api<{ message: string }>(`/academy/admin/courses/${courseId}/batches/${batchId}`, {
+      method: "DELETE",
+      token,
     }),
 
   getEnrollments: (token: string) =>
@@ -293,8 +325,36 @@ export const apiClient = {
     api<{ data: Product }>(`/shop/admin/products/${id}`, { token }),
   createProduct: (token: string, payload: ProductPayload) =>
     api<{ data: Product }>("/shop/products", { method: "POST", token, body: JSON.stringify(payload) }),
-  updateProduct: (token: string, id: number, payload: Partial<ProductPayload & { is_active: boolean; is_featured: boolean }>) =>
+  updateProduct: (token: string, id: number, payload: Partial<ProductPayload & { is_active: boolean; is_featured: boolean; images?: string[]; compare_price?: number | null; seo_title?: string; seo_description?: string }>) =>
     api<{ data: Product }>(`/shop/products/${id}`, { method: "PUT", token, body: JSON.stringify(payload) }),
+
+  getProductVariants: (token: string, productId: number) =>
+    api<{ data: ProductVariant[] }>(`/shop/admin/products/${productId}/variants`, { token }),
+
+  createProductVariant: (token: string, productId: number, payload: ProductVariantPayload) =>
+    api<{ data: ProductVariant }>(`/shop/admin/products/${productId}/variants`, {
+      method: "POST",
+      token,
+      body: JSON.stringify(payload),
+    }),
+
+  updateProductVariant: (
+    token: string,
+    productId: number,
+    variantId: number,
+    payload: Partial<ProductVariantPayload>,
+  ) =>
+    api<{ data: ProductVariant }>(`/shop/admin/products/${productId}/variants/${variantId}`, {
+      method: "PUT",
+      token,
+      body: JSON.stringify(payload),
+    }),
+
+  deleteProductVariant: (token: string, productId: number, variantId: number) =>
+    api<{ message: string }>(`/shop/admin/products/${productId}/variants/${variantId}`, {
+      method: "DELETE",
+      token,
+    }),
 
   // Tours
   getAdminPackages: (token: string) =>
@@ -303,7 +363,7 @@ export const apiClient = {
     api<{ data: TourPackage }>(`/tours/admin/packages/${id}`, { token }),
   createPackage: (token: string, payload: PackagePayload) =>
     api<{ data: TourPackage }>("/tours/packages", { method: "POST", token, body: JSON.stringify(payload) }),
-  updatePackage: (token: string, id: number, payload: Partial<PackagePayload & { is_active: boolean; is_featured: boolean }>) =>
+  updatePackage: (token: string, id: number, payload: Partial<PackagePayload & { is_active: boolean; is_featured: boolean; gallery?: string[]; inclusions?: string[]; exclusions?: string[]; seo_title?: string; seo_description?: string }>) =>
     api<{ data: TourPackage }>(`/tours/packages/${id}`, { method: "PUT", token, body: JSON.stringify(payload) }),
   getItinerary: (token: string, packageId: number) =>
     api<{ data: ItineraryDay[] }>(`/tours/admin/packages/${packageId}/itinerary`, { token }),
@@ -640,8 +700,17 @@ export interface CourseBatch {
   name: string;
   start_date: string;
   end_date?: string | null;
-  status: string;
+  status: "upcoming" | "open" | "active" | "completed" | "cancelled";
+  capacity?: number;
   trainer?: { name: string } | null;
+}
+
+export interface CourseBatchPayload {
+  name: string;
+  start_date: string;
+  end_date?: string;
+  capacity?: number;
+  status?: CourseBatch["status"];
 }
 
 export interface Course {
@@ -728,8 +797,27 @@ export interface Product {
   is_featured: boolean;
   category_id: number;
   category?: ShopCategory;
+  variants?: ProductVariant[];
   seo_title?: string | null;
   seo_description?: string | null;
+}
+
+export interface ProductVariant {
+  id: number;
+  product_id: number;
+  sku: string;
+  name: string;
+  price: string;
+  stock: number;
+  options?: Record<string, string> | null;
+}
+
+export interface ProductVariantPayload {
+  sku: string;
+  name: string;
+  price: number;
+  stock: number;
+  options?: Record<string, string>;
 }
 
 export interface ProductPayload {
@@ -767,6 +855,11 @@ export interface PackagePayload {
   type: string;
   duration_days: number;
   price: number;
+  gallery?: string[];
+  inclusions?: string[];
+  exclusions?: string[];
+  seo_title?: string;
+  seo_description?: string;
 }
 
 export interface ItineraryDay {

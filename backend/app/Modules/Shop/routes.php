@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\Shop\CategoryController as ShopCategoryController;
 use App\Http\Controllers\Api\V1\Shop\ProductController;
+use App\Http\Controllers\Api\V1\Shop\ProductVariantController;
 use App\Http\Controllers\Api\V1\Shop\CartController;
 use App\Http\Controllers\Api\V1\Shop\OrderController;
 use Illuminate\Support\Facades\Route;
@@ -27,5 +28,9 @@ Route::prefix('shop')->middleware(['module.enabled:shop'])->group(function () {
         Route::get('/admin/products/{product}', [ProductController::class, 'adminShow']);
         Route::post('/products', [ProductController::class, 'store']);
         Route::put('/products/{product}', [ProductController::class, 'update']);
+        Route::get('/admin/products/{product}/variants', [ProductVariantController::class, 'index']);
+        Route::post('/admin/products/{product}/variants', [ProductVariantController::class, 'store']);
+        Route::put('/admin/products/{product}/variants/{variant}', [ProductVariantController::class, 'update']);
+        Route::delete('/admin/products/{product}/variants/{variant}', [ProductVariantController::class, 'destroy']);
     });
 });
