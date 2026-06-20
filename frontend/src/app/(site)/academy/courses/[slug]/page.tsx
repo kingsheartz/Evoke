@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { OfferingDetailShell } from "@/components/offerings/offering-detail-shell";
+import { AcademyEnrollAction } from "@/components/offerings/offering-academy-enroll-action";
 import { apiClient } from "@/lib/api";
 import {
   catalogPath,
@@ -41,6 +42,7 @@ export default async function AcademyCourseDetailPage({
       loadRelatedOfferings("academy", slug),
     ]);
     const cta = offeringCta("academy");
+    const redirectPath = `/academy/courses/${slug}`;
     const gallery = toGalleryImages(course.gallery);
     const heroImage = course.thumbnail ?? gallery[0]?.url;
 
@@ -52,6 +54,7 @@ export default async function AcademyCourseDetailPage({
         priceLabel={formatOfferingPrice(course.fees)}
         ctaLabel={cta.label}
         ctaHref={cta.href}
+        ctaAction={<AcademyEnrollAction batches={course.batches ?? []} redirectPath={redirectPath} />}
         backHref={catalogPath("academy")}
         backLabel="All courses"
         heroImageUrl={heroImage}

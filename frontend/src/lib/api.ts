@@ -307,6 +307,39 @@ export const apiClient = {
   getEnrollments: (token: string) =>
     api<{ data: Enrollment[] } | Paginated<Enrollment>>("/academy/enrollments", { token }),
 
+  createEnrollment: (token: string, payload: { batch_id: number }) =>
+    api<{ data: Enrollment }>("/academy/enrollments", {
+      method: "POST",
+      token,
+      body: JSON.stringify(payload),
+    }),
+
+  getAdminTrainers: (token: string) =>
+    api<Paginated<Trainer>>(`/academy/admin/trainers`, { token }),
+
+  getAdminTrainer: (token: string, id: number) =>
+    api<{ data: Trainer }>(`/academy/admin/trainers/${id}`, { token }),
+
+  createTrainer: (token: string, payload: TrainerPayload) =>
+    api<{ data: Trainer }>("/academy/admin/trainers", {
+      method: "POST",
+      token,
+      body: JSON.stringify(payload),
+    }),
+
+  updateTrainer: (token: string, id: number, payload: Partial<TrainerPayload & { is_active: boolean }>) =>
+    api<{ data: Trainer }>(`/academy/admin/trainers/${id}`, {
+      method: "PUT",
+      token,
+      body: JSON.stringify(payload),
+    }),
+
+  deleteTrainer: (token: string, id: number) =>
+    api<{ message: string }>(`/academy/admin/trainers/${id}`, {
+      method: "DELETE",
+      token,
+    }),
+
   // Shop
   getShopCategories: () => api<{ data: ShopCategory[] }>("/shop/categories"),
 
@@ -356,6 +389,37 @@ export const apiClient = {
       token,
     }),
 
+  getCart: (token: string) =>
+    api<{ data: Cart }>("/shop/cart", { token }),
+
+  addCartItem: (
+    token: string,
+    payload: { product_id: number; variant_id?: number | null; quantity: number },
+  ) =>
+    api<{ data: Cart }>("/shop/cart/items", {
+      method: "POST",
+      token,
+      body: JSON.stringify(payload),
+    }),
+
+  removeCartItem: (token: string, itemId: number) =>
+    api<{ data: Cart }>(`/shop/cart/items/${itemId}`, {
+      method: "DELETE",
+      token,
+    }),
+
+  createOrder: (
+    token: string,
+    payload: { shipping_address: Record<string, string>; billing_address?: Record<string, string> | null },
+  ) =>
+    api<{ data: ShopOrder }>("/shop/orders", {
+      method: "POST",
+      token,
+      body: JSON.stringify(payload),
+    }),
+
+  getOrders: (token: string) => api<Paginated<ShopOrder>>("/shop/orders", { token }),
+
   // Tours
   getAdminPackages: (token: string) =>
     api<Paginated<TourPackage>>(`/tours/admin/packages`, { token }),
@@ -373,6 +437,24 @@ export const apiClient = {
     api<{ data: ItineraryDay }>(`/tours/admin/packages/${packageId}/itinerary/${dayId}`, { method: "PUT", token, body: JSON.stringify(payload) }),
   deleteItineraryDay: (token: string, packageId: number, dayId: number) =>
     api<{ message: string }>(`/tours/admin/packages/${packageId}/itinerary/${dayId}`, { method: "DELETE", token }),
+
+  createBooking: (
+    token: string,
+    payload: {
+      package_id: number;
+      travel_date: string;
+      travelers_count: number;
+      traveler_details?: Record<string, unknown>;
+      special_requests?: string;
+    },
+  ) =>
+    api<{ data: TourBooking }>("/tours/bookings", {
+      method: "POST",
+      token,
+      body: JSON.stringify(payload),
+    }),
+
+  getBookings: (token: string) => api<Paginated<TourBooking>>("/tours/bookings", { token }),
 
   // Settings
   getAdminModules: (token: string) =>
@@ -702,6 +784,7 @@ export interface CourseBatch {
   end_date?: string | null;
   status: "upcoming" | "open" | "active" | "completed" | "cancelled";
   capacity?: number;
+  trainer_id?: number | null;
   trainer?: { name: string } | null;
 }
 
@@ -711,6 +794,29 @@ export interface CourseBatchPayload {
   end_date?: string;
   capacity?: number;
   status?: CourseBatch["status"];
+  trainer_id?: number | null;
+}
+
+export interface Trainer {
+  id: number;
+  name: string;
+  slug: string;
+  bio?: string | null;
+  photo?: string | null;
+  specializations?: string[] | null;
+  certifications?: string[] | null;
+  is_active: boolean;
+  branch_id?: number | null;
+}
+
+export interface TrainerPayload {
+  name: string;
+  bio?: string;
+  photo?: string;
+  specializations?: string[];
+  certifications?: string[];
+  branch_id?: number | null;
+  is_active?: boolean;
 }
 
 export interface Course {
@@ -746,6 +852,37 @@ export interface Enrollment {
   payment_status: string;
   user?: User;
   batch?: { course?: { title: string } };
+}
+
+export interface CartItem {
+  id: number;
+  quantity: number;
+  product?: Product;
+  variant?: ProductVariant | null;
+}
+
+export interface Cart {
+  id: number;
+  items: CartItem[];
+}
+
+export interface ShopOrder {
+  id: number;
+  order_number: string;
+  status: string;
+  total_amount: string;
+  created_at: string;
+}
+
+export interface TourBooking {
+  id: number;
+  booking_number: string;
+  status: string;
+  total_amount: string;
+  travel_date: string;
+  travelers_count: number;
+  package?: { title: string; slug: string };
+  created_at: string;
 }
 
 export interface Paginated<T> {
@@ -1074,6 +1211,7 @@ export const SECTION_TYPES = [
   { value: "stats", label: "Quick facts" },
   { value: "inclusions", label: "Inclusions & Exclusions" },
   { value: "itinerary", label: "Timeline" },
+  { value: "catalog", label: "Live catalog" },
   { value: "testimonials", label: "Testimonials" },
   { value: "map", label: "Map" },
   { value: "forms", label: "Forms" },

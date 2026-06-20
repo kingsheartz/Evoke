@@ -67,6 +67,7 @@ const childIconByHref: Record<string, LucideIcon> = {
   "/admin/cms/pages": Files,
   "/admin/academy/courses": BookOpen,
   "/admin/academy/enrollments": ClipboardList,
+  "/admin/academy/trainers": Users,
   "/admin/shop/products": Package,
   "/admin/shop/orders": ShoppingCart,
   "/admin/tours/packages": MapPin,

@@ -13,7 +13,7 @@ class PageSectionController extends Controller
     public function store(Request $request, int $pageId): JsonResponse
     {
         $validated = $request->validate([
-            'component_type' => 'required|string|in:banner,text,gallery,faq,video,cards,testimonials,map,forms,stats,itinerary,inclusions',
+            'component_type' => 'required|string|in:banner,text,gallery,faq,video,cards,testimonials,map,forms,stats,itinerary,inclusions,catalog',
             'content' => 'required|array',
             'section_key' => 'nullable|string',
             'is_visible' => 'boolean',
@@ -36,7 +36,7 @@ class PageSectionController extends Controller
         abort_unless($section->page_id === $pageId, 404);
 
         $validated = $request->validate([
-            'component_type' => 'sometimes|string|in:banner,text,gallery,faq,video,cards,testimonials,map,forms,stats,itinerary,inclusions',
+            'component_type' => 'sometimes|string|in:banner,text,gallery,faq,video,cards,testimonials,map,forms,stats,itinerary,inclusions,catalog',
             'content' => 'sometimes|array',
             'is_visible' => 'boolean',
         ]);

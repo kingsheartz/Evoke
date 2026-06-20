@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { OfferingDetailShell } from "@/components/offerings/offering-detail-shell";
+import { TourBookingAction } from "@/components/offerings/offering-tour-booking-action";
 import { apiClient } from "@/lib/api";
 import {
   catalogPath,
@@ -43,6 +44,7 @@ export default async function TourPackageDetailPage({
       loadRelatedOfferings("tours", slug),
     ]);
     const cta = offeringCta("tours");
+    const redirectPath = `/tours/${slug}`;
     const inclusions = tourInclusionsContent(pkg);
     const timelineItems = itineraryDaysToTimeline(pkg.itinerary_days ?? []);
 
@@ -54,6 +56,7 @@ export default async function TourPackageDetailPage({
         priceLabel={formatOfferingPrice(pkg.price)}
         ctaLabel={cta.label}
         ctaHref={cta.href}
+        ctaAction={<TourBookingAction packageId={pkg.id} redirectPath={redirectPath} />}
         backHref={catalogPath("tours")}
         backLabel="All tour packages"
         heroImageUrl={toGalleryImages(pkg.gallery)[0]?.url}

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
-import { apiClient, type CourseBatch } from "@/lib/api";
+import { apiClient, type CourseBatch, type Trainer } from "@/lib/api";
 import { revalidateAcademyPublicCache } from "@/lib/revalidate-cms";
 import { useAuthStore } from "@/stores/app";
 
@@ -16,6 +16,7 @@ type DraftBatch = {
   end_date: string;
   capacity: number;
   status: CourseBatch["status"];
+  trainer_id: number | "";
 };
 
 const emptyBatch = (): DraftBatch => ({
@@ -24,6 +25,7 @@ const emptyBatch = (): DraftBatch => ({
   end_date: "",
   capacity: 20,
   status: "upcoming",
+  trainer_id: "",
 });
 
 export function CourseBatchesEditor({
@@ -37,12 +39,18 @@ export function CourseBatchesEditor({
 }) {
   const token = useAuthStore((s) => s.token);
   const [batches, setBatches] = useState<CourseBatch[]>(initialBatches);
+  const [trainers, setTrainers] = useState<Trainer[]>([]);
   const [draft, setDraft] = useState<DraftBatch>(emptyBatch());
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
     setBatches(initialBatches);
   }, [initialBatches]);
+
+  useEffect(() => {
+    if (!token) return;
+    apiClient.getAdminTrainers(token).then((response) => setTrainers(response.data ?? []));
+  }, [token]);
 
   const reload = async () => {
     if (!token) return;
@@ -64,6 +72,7 @@ export function CourseBatchesEditor({
         end_date: draft.end_date || undefined,
         capacity: draft.capacity,
         status: draft.status,
+        trainer_id: draft.trainer_id === "" ? null : draft.trainer_id,
       });
       setDraft(emptyBatch());
       await reload();
@@ -81,6 +90,7 @@ export function CourseBatchesEditor({
       await apiClient.updateCourseBatch(token, courseId, batch.id, {
         ...patch,
         end_date: patch.end_date || undefined,
+        trainer_id: patch.trainer_id === "" ? null : patch.trainer_id,
       });
       await reload();
       await revalidate();
@@ -109,6 +119,7 @@ export function CourseBatchesEditor({
         <BatchRow
           key={batch.id}
           batch={batch}
+          trainers={trainers}
           onSave={(patch) => updateBatch(batch, patch)}
           onRemove={() => removeBatch(batch.id)}
         />
@@ -160,6 +171,22 @@ export function CourseBatchesEditor({
             <option value="cancelled">Cancelled</option>
           </Select>
         </div>
+        <div className="space-y-2">
+          <Label>Trainer (optional)</Label>
+          <Select
+            value={draft.trainer_id === "" ? "" : String(draft.trainer_id)}
+            onChange={(e) =>
+              setDraft({ ...draft, trainer_id: e.target.value ? Number(e.target.value) : "" })
+            }
+          >
+            <option value="">Unassigned</option>
+            {trainers.map((trainer) => (
+              <option key={trainer.id} value={trainer.id}>
+                {trainer.name}
+              </option>
+            ))}
+          </Select>
+        </div>
         <div className="md:col-span-2">
           <Button type="button" onClick={addBatch}>
             <Plus className="mr-2 h-4 w-4" />
@@ -175,10 +202,12 @@ export function CourseBatchesEditor({
 
 function BatchRow({
   batch,
+  trainers,
   onSave,
   onRemove,
 }: {
   batch: CourseBatch;
+  trainers: Trainer[];
   onSave: (patch: Partial<DraftBatch>) => void;
   onRemove: () => void;
 }) {
@@ -187,6 +216,7 @@ function BatchRow({
   const [endDate, setEndDate] = useState(batch.end_date?.slice(0, 10) ?? "");
   const [capacity, setCapacity] = useState(batch.capacity ?? 20);
   const [status, setStatus] = useState(batch.status);
+  const [trainerId, setTrainerId] = useState<number | "">(batch.trainer_id ?? "");
 
   useEffect(() => {
     setName(batch.name);
@@ -194,11 +224,12 @@ function BatchRow({
     setEndDate(batch.end_date?.slice(0, 10) ?? "");
     setCapacity(batch.capacity ?? 20);
     setStatus(batch.status);
+    setTrainerId(batch.trainer_id ?? "");
   }, [batch]);
 
   return (
     <div className="rounded-lg border border-app-border bg-app-surface/80 p-4 ring-1 ring-app-border">
-      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-[1.2fr_10rem_10rem_8rem_10rem_auto] lg:items-end">
+      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-[1.2fr_10rem_10rem_8rem_10rem_10rem_auto] lg:items-end">
         <div className="space-y-2">
           <Label>Name</Label>
           <Input value={name} onChange={(e) => setName(e.target.value)} />
@@ -225,12 +256,33 @@ function BatchRow({
             <option value="cancelled">Cancelled</option>
           </Select>
         </div>
+        <div className="space-y-2">
+          <Label>Trainer</Label>
+          <Select
+            value={trainerId === "" ? "" : String(trainerId)}
+            onChange={(e) => setTrainerId(e.target.value ? Number(e.target.value) : "")}
+          >
+            <option value="">Unassigned</option>
+            {trainers.map((trainer) => (
+              <option key={trainer.id} value={trainer.id}>
+                {trainer.name}
+              </option>
+            ))}
+          </Select>
+        </div>
         <div className="flex gap-2">
           <Button
             type="button"
             size="sm"
             onClick={() =>
-              onSave({ name, start_date: startDate, end_date: endDate, capacity, status })
+              onSave({
+                name,
+                start_date: startDate,
+                end_date: endDate,
+                capacity,
+                status,
+                trainer_id: trainerId,
+              })
             }
           >
             Save

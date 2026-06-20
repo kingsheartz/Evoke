@@ -20,6 +20,7 @@ class BatchController extends Controller
     public function store(Request $request, Course $course): JsonResponse
     {
         $validated = $request->validate([
+            'trainer_id' => 'nullable|exists:academy_trainers,id',
             'name' => 'required|string|max:255',
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
@@ -46,6 +47,7 @@ class BatchController extends Controller
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'capacity' => 'sometimes|integer|min:1',
             'status' => 'sometimes|string|in:upcoming,open,active,completed,cancelled',
+            'trainer_id' => 'nullable|exists:academy_trainers,id',
         ]);
 
         $batch->update($validated);

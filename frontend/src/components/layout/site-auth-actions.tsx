@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LogOut, User } from "lucide-react";
+import { LogOut, ShoppingCart, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { apiClient, hasAdminAccess } from "@/lib/api";
 import { useAuthHydrated } from "@/hooks/use-auth-hydration";
@@ -50,6 +50,11 @@ export function SiteAuthActions({ className }: { className?: string }) {
 
   return (
     <div className={className}>
+      <Button variant="ghost" size="sm" asChild className={ghostAction}>
+        <Link href="/shop/cart" aria-label="Cart">
+          <ShoppingCart className="h-4 w-4" />
+        </Link>
+      </Button>
       <Button variant="ghost" size="sm" asChild className={ghostAction}>
         <Link href="/account">
           <User className="h-4 w-4" />

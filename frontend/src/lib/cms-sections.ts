@@ -1,5 +1,5 @@
 import { SECTION_TYPES } from "@/lib/api";
-import type { TimelineVariant } from "@/lib/offerings";
+import type { TimelineVariant, OfferingVertical } from "@/lib/offerings";
 
 export type SectionType = (typeof SECTION_TYPES)[number]["value"];
 
@@ -157,6 +157,15 @@ export interface FormsContent {
   fields?: FormField[];
 }
 
+export interface CatalogContent {
+  heading?: string;
+  body?: string;
+  vertical: SectionDefaultsDivision;
+  featured_only?: boolean;
+  limit?: number;
+  view_all_label?: string;
+}
+
 export type SectionContentByType = {
   banner: BannerContent;
   text: TextContent;
@@ -167,6 +176,7 @@ export type SectionContentByType = {
   stats: StatsContent;
   inclusions: InclusionsContent;
   itinerary: ItineraryContent;
+  catalog: CatalogContent;
   testimonials: TestimonialsContent;
   map: MapContent;
   forms: FormsContent;
@@ -324,6 +334,23 @@ export function defaultSectionContent(
       return { ...defaultInclusionsContent(division) };
     case "itinerary":
       return { ...defaultTimelineContent(division) };
+    case "catalog": {
+      const vertical = division ?? "tours";
+      const catalogLabels: Record<SectionDefaultsDivision, string> = {
+        tours: "tour packages",
+        shop: "products",
+        academy: "courses",
+      };
+      const label = catalogLabels[vertical];
+      return {
+        heading: `Featured ${label}`,
+        body: "",
+        vertical,
+        featured_only: true,
+        limit: 6,
+        view_all_label: `Browse all ${label}`,
+      };
+    }
     case "testimonials":
       return { heading: "What people say", items: [] };
     case "map":
@@ -435,6 +462,10 @@ export function isSectionEmpty(section: { component_type: string; content: Recor
       const c = content as unknown as ItineraryContent;
       const items = (c.items ?? []).filter((item) => item.title?.trim());
       return items.length === 0 && !c.heading?.trim() && !c.cost_body?.trim();
+    }
+    case "catalog": {
+      const c = content as unknown as CatalogContent;
+      return !c.vertical;
     }
     case "testimonials": {
       const c = content as unknown as TestimonialsContent;

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { OfferingDetailShell } from "@/components/offerings/offering-detail-shell";
+import { ShopBuyAction } from "@/components/offerings/offering-shop-buy-action";
 import { apiClient } from "@/lib/api";
 import {
   catalogPath,
@@ -41,6 +42,7 @@ export default async function ShopProductDetailPage({
       loadRelatedOfferings("shop", slug),
     ]);
     const cta = offeringCta("shop");
+    const redirectPath = `/shop/${slug}`;
 
     return (
       <OfferingDetailShell
@@ -50,6 +52,16 @@ export default async function ShopProductDetailPage({
         priceLabel={formatOfferingPrice(product.price, { prefix: false })}
         ctaLabel={product.stock > 0 ? cta.label : "Out of stock"}
         ctaHref={product.stock > 0 ? cta.href : catalogPath("shop")}
+        ctaAction={
+          product.stock > 0 ? (
+            <ShopBuyAction
+              productId={product.id}
+              stock={product.stock}
+              variants={product.variants ?? []}
+              redirectPath={redirectPath}
+            />
+          ) : undefined
+        }
         backHref={catalogPath("shop")}
         backLabel="All products"
         heroImageUrl={toGalleryImages(product.images)[0]?.url}

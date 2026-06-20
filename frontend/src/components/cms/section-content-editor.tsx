@@ -672,6 +672,59 @@ export function SectionContentEditor({
       );
     }
 
+    case "catalog":
+      return (
+        <div className={sectionStack}>
+          <FieldGroup label="Vertical">
+            <select
+              value={String(content.vertical ?? "tours")}
+              onChange={(e) => patch({ vertical: e.target.value })}
+              className="form-select h-10 w-full rounded-lg border border-app-border bg-app-surface-muted/60 px-3 text-sm text-app-text sm:max-w-xs"
+            >
+              <option value="tours">Tours</option>
+              <option value="shop">Shop</option>
+              <option value="academy">Academy</option>
+            </select>
+          </FieldGroup>
+          <FieldGroup label="Heading">
+            <Input value={String(content.heading ?? "")} onChange={(e) => patch({ heading: e.target.value })} />
+          </FieldGroup>
+          <FieldGroup label="Description">
+            <Textarea value={String(content.body ?? "")} onChange={(e) => patch({ body: e.target.value })} rows={2} />
+          </FieldGroup>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FieldGroup label="Item limit">
+              <Input
+                type="number"
+                min={1}
+                max={24}
+                value={Number(content.limit ?? 6)}
+                onChange={(e) => patch({ limit: Number(e.target.value) || 6 })}
+              />
+            </FieldGroup>
+            <FieldGroup label="View all label">
+              <Input
+                value={String(content.view_all_label ?? "")}
+                onChange={(e) => patch({ view_all_label: e.target.value })}
+                placeholder="Browse all products"
+              />
+            </FieldGroup>
+          </div>
+          <label className="flex items-center gap-2 text-sm text-app-text">
+            <input
+              type="checkbox"
+              className="form-checkbox"
+              checked={Boolean(content.featured_only)}
+              onChange={(e) => patch({ featured_only: e.target.checked })}
+            />
+            Featured items only
+          </label>
+          <p className="text-xs text-app-muted">
+            Pulls live packages, products, or courses from the API. Academy lists published courses.
+          </p>
+        </div>
+      );
+
     default:
       return (
         <div className={sectionStack}>

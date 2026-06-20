@@ -228,6 +228,38 @@ export function catalogTitle(vertical: OfferingVertical): string {
   }
 }
 
+export async function loadCatalogForCms(content: {
+  vertical: OfferingVertical;
+  featured_only?: boolean;
+  limit?: number;
+}): Promise<OfferingCardData[]> {
+  const limit = content.limit ?? 6;
+  const featured = content.featured_only ?? false;
+
+  switch (content.vertical) {
+    case "tours": {
+      const response = await apiClient.getTourPackages({
+        featured: featured || undefined,
+        per_page: limit,
+      });
+      return response.data.map(tourPackageToOffering);
+    }
+    case "shop": {
+      const response = await apiClient.getShopProducts({
+        featured: featured || undefined,
+        per_page: limit,
+      });
+      return response.data.map(productToOffering);
+    }
+    case "academy": {
+      const response = await apiClient.getAcademyCourses({ per_page: limit });
+      return response.data.map((course) =>
+        courseToOffering(course, { nextBatchLabel: formatNextBatchLabel(course) }),
+      );
+    }
+  }
+}
+
 export function offeringCta(vertical: OfferingVertical): { label: string; href: string } {
   switch (vertical) {
     case "tours":

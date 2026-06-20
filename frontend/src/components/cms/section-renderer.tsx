@@ -3,6 +3,7 @@ import { ArrowUpRight, ChevronDown, Mail, MapPin } from "lucide-react";
 import { FormFieldPreview } from "@/components/cms/form-fields-editor";
 import { GalleryView } from "@/components/cms/gallery-view";
 import { ItinerarySection } from "@/components/cms/itinerary-section";
+import { CatalogCmsSection } from "@/components/cms/catalog-section";
 import { InclusionsSection } from "@/components/offerings/inclusions-section";
 import type { PageSection } from "@/lib/api";
 import { resolveDivisionIcon } from "@/lib/division-page";
@@ -12,6 +13,7 @@ import {
   type BannerContent,
   type CardItem,
   type CardsContent,
+  type CatalogContent,
   type FaqContent,
   type FaqItem,
   type FormsContent,
@@ -492,6 +494,8 @@ function renderSection(section: PageSection) {
       return <InclusionsCmsSection content={content as unknown as InclusionsContent} />;
     case "itinerary":
       return <ItinerarySection content={content as unknown as ItineraryContent} />;
+    case "catalog":
+      return <CatalogCmsSection content={content as unknown as CatalogContent} />;
     case "testimonials":
       return <TestimonialsSection content={content as unknown as TestimonialsContent} />;
     case "map":

@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\V1\Academy\BatchController;
 use App\Http\Controllers\Api\V1\Academy\CategoryController as AcademyCategoryController;
 use App\Http\Controllers\Api\V1\Academy\CourseController;
 use App\Http\Controllers\Api\V1\Academy\EnrollmentController;
+use App\Http\Controllers\Api\V1\Academy\TrainerController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('academy')->middleware(['module.enabled:academy'])->group(function () {
@@ -27,5 +28,10 @@ Route::prefix('academy')->middleware(['module.enabled:academy'])->group(function
         Route::post('/admin/courses/{course}/batches', [BatchController::class, 'store']);
         Route::put('/admin/courses/{course}/batches/{batch}', [BatchController::class, 'update']);
         Route::delete('/admin/courses/{course}/batches/{batch}', [BatchController::class, 'destroy']);
+        Route::get('/admin/trainers', [TrainerController::class, 'adminIndex']);
+        Route::get('/admin/trainers/{trainer}', [TrainerController::class, 'adminShow']);
+        Route::post('/admin/trainers', [TrainerController::class, 'store']);
+        Route::put('/admin/trainers/{trainer}', [TrainerController::class, 'update']);
+        Route::delete('/admin/trainers/{trainer}', [TrainerController::class, 'destroy']);
     });
 });

@@ -72,13 +72,17 @@ class ContextController extends Controller
         }
 
         if (in_array('academy', $enabled, true) && $can('academy.courses.manage')) {
+            $academyChildren = [
+                ['label' => 'Courses', 'href' => '/admin/academy/courses', 'icon' => 'book-open'],
+                ['label' => 'Enrollments', 'href' => '/admin/academy/enrollments', 'icon' => 'clipboard-list'],
+            ];
+            if ($can('academy.trainers.manage')) {
+                $academyChildren[] = ['label' => 'Trainers', 'href' => '/admin/academy/trainers', 'icon' => 'users'];
+            }
             $items[] = [
                 'label' => 'EVOKE Academy',
                 'icon' => 'graduation-cap',
-                'children' => [
-                    ['label' => 'Courses', 'href' => '/admin/academy/courses', 'icon' => 'book-open'],
-                    ['label' => 'Enrollments', 'href' => '/admin/academy/enrollments', 'icon' => 'clipboard-list'],
-                ],
+                'children' => $academyChildren,
             ];
         }
 
