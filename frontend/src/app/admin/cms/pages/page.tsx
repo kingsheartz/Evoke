@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ExternalLink, Pencil, Plus, Trash2 } from "lucide-react";
+import { ExternalLink, Pencil, Plus } from "lucide-react";
 import { ActionButton } from "@/components/ui/action-button";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfigurableDataTable, TableEmpty } from "@/components/ui/data-table";
 import { PageHeader } from "@/components/ui/page-header";
+import { TableActionButton, TableDeleteButton, TableRowActions } from "@/components/ui/table-row-actions";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { revalidateCmsPagePublicCache } from "@/lib/revalidate-cms";
 import { apiClient, type CmsPage } from "@/lib/api";
@@ -131,21 +131,15 @@ export default function CmsPagesListPage() {
                   hideable: false,
                   pinnable: false,
                   render: (page) => (
-                    <div className="table-actions flex flex-wrap gap-2">
-                      <ActionButton asChild variant="outline" size="sm" icon={Pencil}>
+                    <TableRowActions>
+                      <TableActionButton asChild icon={Pencil}>
                         <Link href={`/admin/cms/pages/${page.id}`}>Edit</Link>
-                      </ActionButton>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
+                      </TableActionButton>
+                      <TableDeleteButton
                         disabled={deletingId === page.id}
                         onClick={() => void deletePage(page)}
-                      >
-                        <Trash2 className="h-4 w-4 text-status-error" />
-                        Delete
-                      </Button>
-                    </div>
+                      />
+                    </TableRowActions>
                   ),
                 },
               ]}

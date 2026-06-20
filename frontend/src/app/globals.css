@@ -1214,6 +1214,30 @@ select:-webkit-autofill {
 .data-table td:has(.table-actions) {
   overflow: visible;
   text-overflow: clip;
+  white-space: normal;
+}
+
+.table-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+/* Inset rows already draw cell chrome — flatten ghost actions, keep primary CTAs */
+.table-inset .table-actions .table-action-btn:not(.bg-accent) {
+  border-color: transparent;
+  background: transparent;
+}
+
+.table-inset .table-actions .table-action-btn:not(.bg-accent):hover {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.table-inset .table-actions .table-action-btn--delete:hover {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.15);
 }
 
 .data-table-th--managed {

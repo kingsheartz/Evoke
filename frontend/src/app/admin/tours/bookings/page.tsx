@@ -2,20 +2,22 @@
 
 import { useEffect, useState } from "react";
 import { PermissionGate } from "@/components/admin/permission-gate";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfigurableDataTable, TableEmpty, TableLoading } from "@/components/ui/data-table";
 import { PageHeader } from "@/components/ui/page-header";
+import { TableRowActions, TableRowButton } from "@/components/ui/table-row-actions";
 import { Select } from "@/components/ui/select";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { apiClient, type TourBooking } from "@/lib/api";
 import { formatOfferingPrice } from "@/lib/offerings";
 import { useNotifications } from "@/lib/notifications";
+import { PAYMENT_REFERENCE_PROMPT, usePrompt } from "@/lib/process-modal";
 import { useAuthStore } from "@/stores/app";
 
 export default function TourBookingsAdminPage() {
   const token = useAuthStore((s) => s.token);
   const { success, error: notifyError } = useNotifications();
+  const prompt = usePrompt();
   const [bookings, setBookings] = useState<TourBooking[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("");
@@ -41,6 +43,18 @@ export default function TourBookingsAdminPage() {
     } catch (e) {
       notifyError(e instanceof Error ? e.message : "Update failed.");
     }
+  };
+
+  const markPaid = async (booking: TourBooking) => {
+    if (!token) return;
+    const reference = await prompt(PAYMENT_REFERENCE_PROMPT);
+    if (reference === null) return;
+    await apiClient.updateAdminBooking(token, booking.id, {
+      payment_status: "paid",
+      payment_reference: reference.trim() || undefined,
+    });
+    success("Payment recorded.");
+    load();
   };
 
   return (
@@ -128,42 +142,23 @@ export default function TourBookingsAdminPage() {
                     hideable: false,
                     pinnable: false,
                     render: (booking) => (
-                      <div className="table-actions flex flex-wrap gap-1">
+                      <TableRowActions>
                         {booking.status === "pending" && (
                           <>
-                            <Button type="button" size="sm" onClick={() => updateStatus(booking, "confirmed")}>
+                            <TableRowButton variant="default" onClick={() => updateStatus(booking, "confirmed")}>
                               Confirm
-                            </Button>
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="outline"
-                              onClick={() => updateStatus(booking, "cancelled")}
-                            >
+                            </TableRowButton>
+                            <TableRowButton onClick={() => updateStatus(booking, "cancelled")}>
                               Cancel
-                            </Button>
+                            </TableRowButton>
                           </>
                         )}
                         {booking.payment_status === "unpaid" && (
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            onClick={async () => {
-                              if (!token) return;
-                              const reference = window.prompt("Payment reference (optional):") ?? undefined;
-                              await apiClient.updateAdminBooking(token, booking.id, {
-                                payment_status: "paid",
-                                payment_reference: reference || undefined,
-                              });
-                              success("Payment recorded.");
-                              load();
-                            }}
-                          >
+                          <TableRowButton onClick={() => void markPaid(booking)}>
                             Mark paid
-                          </Button>
+                          </TableRowButton>
                         )}
-                      </div>
+                      </TableRowActions>
                     ),
                   },
                 ]}

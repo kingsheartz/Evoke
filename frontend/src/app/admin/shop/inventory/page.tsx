@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { PermissionGate } from "@/components/admin/permission-gate";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfigurableDataTable, TableEmpty, TableLoading } from "@/components/ui/data-table";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/ui/page-header";
+import { TableRowActions, TableRowButton } from "@/components/ui/table-row-actions";
 import { apiClient, type Product } from "@/lib/api";
 import { useNotifications } from "@/lib/notifications";
 import { useAuthStore } from "@/stores/app";
@@ -133,16 +133,15 @@ export default function ShopInventoryAdminPage() {
                     hideable: false,
                     pinnable: false,
                     render: (product) => (
-                      <div className="table-actions">
-                        <Button
-                          type="button"
-                          size="sm"
+                      <TableRowActions>
+                        <TableRowButton
+                          variant="default"
                           disabled={savingId === product.id}
                           onClick={() => adjust(product)}
                         >
                           {savingId === product.id ? "Saving…" : "Save"}
-                        </Button>
-                      </div>
+                        </TableRowButton>
+                      </TableRowActions>
                     ),
                   },
                 ]}

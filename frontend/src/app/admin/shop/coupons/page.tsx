@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Trash2 } from "lucide-react";
 import { PermissionGate } from "@/components/admin/permission-gate";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,11 +8,13 @@ import { ConfigurableDataTable, TableEmpty, TableLoading } from "@/components/ui
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageHeader } from "@/components/ui/page-header";
+import { TableDeleteButton, TableRowActions } from "@/components/ui/table-row-actions";
 import { Select } from "@/components/ui/select";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Switch } from "@/components/ui/switch";
 import { apiClient, type ShopCoupon } from "@/lib/api";
 import { useNotifications } from "@/lib/notifications";
+import { useConfirm } from "@/lib/process-modal";
 import { useAuthStore } from "@/stores/app";
 
 const emptyForm = {
@@ -26,6 +27,7 @@ const emptyForm = {
 export default function ShopCouponsAdminPage() {
   const token = useAuthStore((s) => s.token);
   const { success, error: notifyError } = useNotifications();
+  const confirm = useConfirm();
   const [coupons, setCoupons] = useState<ShopCoupon[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -66,7 +68,13 @@ export default function ShopCouponsAdminPage() {
 
   const remove = async (coupon: ShopCoupon) => {
     if (!token) return;
-    if (!window.confirm(`Delete coupon "${coupon.code}"?`)) return;
+    const confirmed = await confirm({
+      title: "Delete coupon?",
+      description: `This will permanently delete coupon "${coupon.code}".`,
+      confirmLabel: "Delete coupon",
+      variant: "danger",
+    });
+    if (!confirmed) return;
     try {
       await apiClient.deleteCoupon(token, coupon.id);
       success("Coupon deleted.");
@@ -119,12 +127,9 @@ export default function ShopCouponsAdminPage() {
         hideable: false,
         pinnable: false,
         render: (coupon: ShopCoupon) => (
-          <div className="table-actions">
-            <Button type="button" size="sm" variant="outline" onClick={() => remove(coupon)}>
-              <Trash2 className="h-4 w-4" />
-              Delete
-            </Button>
-          </div>
+          <TableRowActions>
+            <TableDeleteButton onClick={() => remove(coupon)} />
+          </TableRowActions>
         ),
       },
     ],

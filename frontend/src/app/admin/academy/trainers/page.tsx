@@ -8,6 +8,7 @@ import { ActionButton } from "@/components/ui/action-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfigurableDataTable, TableEmpty, TableLoading } from "@/components/ui/data-table";
 import { PageHeader } from "@/components/ui/page-header";
+import { TableActionButton, TableRowActions } from "@/components/ui/table-row-actions";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { apiClient, type Trainer } from "@/lib/api";
 import { useAuthStore } from "@/stores/app";
@@ -88,11 +89,11 @@ export default function AcademyTrainersPage() {
                     hideable: false,
                     pinnable: false,
                     render: (trainer) => (
-                      <div className="table-actions">
-                        <ActionButton asChild variant="outline" size="sm" icon={Pencil}>
+                      <TableRowActions>
+                        <TableActionButton asChild icon={Pencil}>
                           <Link href={`/admin/academy/trainers/${trainer.id}`}>Edit</Link>
-                        </ActionButton>
-                      </div>
+                        </TableActionButton>
+                      </TableRowActions>
                     ),
                   },
                 ]}

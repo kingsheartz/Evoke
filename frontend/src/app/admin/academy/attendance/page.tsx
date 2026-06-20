@@ -2,12 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { PermissionGate } from "@/components/admin/permission-gate";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfigurableDataTable, TableEmpty, TableLoading } from "@/components/ui/data-table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageHeader } from "@/components/ui/page-header";
+import { TableRowActions, TableRowButton } from "@/components/ui/table-row-actions";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { apiClient, type AttendanceRecord, type Enrollment } from "@/lib/api";
 import { useNotifications } from "@/lib/notifications";
@@ -162,25 +162,18 @@ export default function AcademyAttendanceAdminPage() {
                     hideable: false,
                     pinnable: false,
                     render: (row) => (
-                      <div className="table-actions flex flex-wrap gap-1">
-                        <Button
-                          type="button"
-                          size="sm"
+                      <TableRowActions>
+                        <TableRowButton
+                          variant="default"
                           disabled={row.busy}
                           onClick={() => mark(row.enrollment, "present")}
                         >
                           Present
-                        </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          disabled={row.busy}
-                          onClick={() => mark(row.enrollment, "absent")}
-                        >
+                        </TableRowButton>
+                        <TableRowButton disabled={row.busy} onClick={() => mark(row.enrollment, "absent")}>
                           Absent
-                        </Button>
-                      </div>
+                        </TableRowButton>
+                      </TableRowActions>
                     ),
                   },
                 ]}

@@ -2,15 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { PermissionGate } from "@/components/admin/permission-gate";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfigurableDataTable, TableEmpty, TableLoading } from "@/components/ui/data-table";
 import { PageHeader } from "@/components/ui/page-header";
+import { TableRowActions, TableRowButton } from "@/components/ui/table-row-actions";
 import { Select } from "@/components/ui/select";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { apiClient, type ShopOrder } from "@/lib/api";
 import { formatOfferingPrice } from "@/lib/offerings";
 import { useNotifications } from "@/lib/notifications";
+import { PAYMENT_REFERENCE_PROMPT, usePrompt } from "@/lib/process-modal";
 import { useAuthStore } from "@/stores/app";
 
 function orderTotal(order: ShopOrder): string {
@@ -20,6 +21,7 @@ function orderTotal(order: ShopOrder): string {
 export default function ShopOrdersAdminPage() {
   const token = useAuthStore((s) => s.token);
   const { success, error: notifyError } = useNotifications();
+  const prompt = usePrompt();
   const [orders, setOrders] = useState<ShopOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("");
@@ -41,6 +43,22 @@ export default function ShopOrdersAdminPage() {
     try {
       await apiClient.updateAdminOrder(token, order.id, { status });
       success("Order updated.");
+      load();
+    } catch (e) {
+      notifyError(e instanceof Error ? e.message : "Update failed.");
+    }
+  };
+
+  const markPaid = async (order: ShopOrder) => {
+    if (!token) return;
+    const reference = await prompt(PAYMENT_REFERENCE_PROMPT);
+    if (reference === null) return;
+    try {
+      await apiClient.updateAdminOrder(token, order.id, {
+        payment_status: "paid",
+        payment_reference: reference.trim() || undefined,
+      });
+      success("Payment recorded.");
       load();
     } catch (e) {
       notifyError(e instanceof Error ? e.message : "Update failed.");
@@ -131,37 +149,23 @@ export default function ShopOrdersAdminPage() {
                     hideable: false,
                     pinnable: false,
                     render: (order) => (
-                      <div className="table-actions flex flex-wrap gap-1">
+                      <TableRowActions>
                         {order.status === "pending" && (
-                          <Button type="button" size="sm" onClick={() => updateStatus(order, "processing")}>
+                          <TableRowButton variant="default" onClick={() => updateStatus(order, "processing")}>
                             Process
-                          </Button>
+                          </TableRowButton>
                         )}
                         {order.status === "processing" && (
-                          <Button type="button" size="sm" onClick={() => updateStatus(order, "shipped")}>
+                          <TableRowButton variant="default" onClick={() => updateStatus(order, "shipped")}>
                             Ship
-                          </Button>
+                          </TableRowButton>
                         )}
                         {order.payment_status === "unpaid" && (
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            onClick={async () => {
-                              if (!token) return;
-                              const reference = window.prompt("Payment reference (optional):") ?? undefined;
-                              await apiClient.updateAdminOrder(token, order.id, {
-                                payment_status: "paid",
-                                payment_reference: reference || undefined,
-                              });
-                              success("Payment recorded.");
-                              load();
-                            }}
-                          >
+                          <TableRowButton onClick={() => void markPaid(order)}>
                             Mark paid
-                          </Button>
+                          </TableRowButton>
                         )}
-                      </div>
+                      </TableRowActions>
                     ),
                   },
                 ]}

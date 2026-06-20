@@ -2,18 +2,20 @@
 
 import { useEffect, useState } from "react";
 import { PermissionGate } from "@/components/admin/permission-gate";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfigurableDataTable, TableEmpty } from "@/components/ui/data-table";
 import { PageHeader } from "@/components/ui/page-header";
+import { TableRowActions, TableRowButton } from "@/components/ui/table-row-actions";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { apiClient, type Enrollment } from "@/lib/api";
 import { useNotifications } from "@/lib/notifications";
+import { PAYMENT_REFERENCE_PROMPT, usePrompt } from "@/lib/process-modal";
 import { useAuthStore } from "@/stores/app";
 
 export default function EnrollmentsPage() {
   const token = useAuthStore((s) => s.token);
   const { success, error: notifyError } = useNotifications();
+  const prompt = usePrompt();
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
 
   const load = () => {
@@ -37,6 +39,15 @@ export default function EnrollmentsPage() {
     } catch (e) {
       notifyError(e instanceof Error ? e.message : "Update failed.");
     }
+  };
+
+  const markPaid = async (enrollment: Enrollment) => {
+    const reference = await prompt(PAYMENT_REFERENCE_PROMPT);
+    if (reference === null) return;
+    updateEnrollment(enrollment, {
+      payment_status: "paid",
+      payment_reference: reference.trim() || undefined,
+    });
   };
 
   return (
@@ -108,43 +119,28 @@ export default function EnrollmentsPage() {
                     hideable: false,
                     pinnable: false,
                     render: (enrollment) => (
-                      <div className="table-actions flex flex-wrap gap-1">
+                      <TableRowActions>
                         {enrollment.status === "pending" && (
                           <>
-                            <Button
-                              type="button"
-                              size="sm"
+                            <TableRowButton
+                              variant="default"
                               onClick={() => updateEnrollment(enrollment, { status: "approved" })}
                             >
                               Approve
-                            </Button>
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="outline"
+                            </TableRowButton>
+                            <TableRowButton
                               onClick={() => updateEnrollment(enrollment, { status: "rejected" })}
                             >
                               Reject
-                            </Button>
+                            </TableRowButton>
                           </>
                         )}
                         {enrollment.payment_status === "unpaid" && enrollment.status === "approved" && (
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              const reference = window.prompt("Payment reference (optional):") ?? undefined;
-                              updateEnrollment(enrollment, {
-                                payment_status: "paid",
-                                payment_reference: reference || undefined,
-                              });
-                            }}
-                          >
+                          <TableRowButton onClick={() => void markPaid(enrollment)}>
                             Mark paid
-                          </Button>
+                          </TableRowButton>
                         )}
-                      </div>
+                      </TableRowActions>
                     ),
                   },
                 ]}

@@ -9,7 +9,6 @@ import {
   ChevronRight,
   Eye,
   Search,
-  Trash2,
   UserPlus,
   Users,
 } from "lucide-react";
@@ -20,6 +19,7 @@ import { ConfigurableDataTable, TableEmpty } from "@/components/ui/data-table";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { PageHeader } from "@/components/ui/page-header";
+import { TableActionButton, TableDeleteButton, TableRowActions } from "@/components/ui/table-row-actions";
 import { apiClient, type AdminUser, type UserListParams, type UserListStats } from "@/lib/api";
 import { formatRole } from "@/lib/status-labels";
 import { useNotifications } from "@/lib/notifications";
@@ -316,14 +316,12 @@ export default function UsersSettingsPage() {
                     hideable: false,
                     pinnable: false,
                     render: (u) => (
-                      <div className="table-actions flex gap-1">
-                        <ActionButton variant="outline" size="sm" icon={Eye} onClick={() => openView(u)}>
+                      <TableRowActions>
+                        <TableActionButton icon={Eye} onClick={() => openView(u)}>
                           View
-                        </ActionButton>
-                        <ActionButton variant="outline" size="sm" icon={Trash2} onClick={() => remove(u.id, u.name)}>
-                          Delete
-                        </ActionButton>
-                      </div>
+                        </TableActionButton>
+                        <TableDeleteButton onClick={() => remove(u.id, u.name)} />
+                      </TableRowActions>
                     ),
                   },
                 ]}

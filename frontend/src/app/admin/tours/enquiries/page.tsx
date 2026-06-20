@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { PermissionGate } from "@/components/admin/permission-gate";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfigurableDataTable, TableEmpty, TableLoading } from "@/components/ui/data-table";
 import { PageHeader } from "@/components/ui/page-header";
+import { TableRowActions, TableRowButton } from "@/components/ui/table-row-actions";
 import { Select } from "@/components/ui/select";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { apiClient, type TourEnquiry } from "@/lib/api";
@@ -132,33 +132,23 @@ export default function TourEnquiriesAdminPage() {
                     hideable: false,
                     pinnable: false,
                     render: (enquiry) => (
-                      <div className="table-actions flex flex-wrap gap-1">
+                      <TableRowActions>
                         {enquiry.status !== "contacted" && (
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            onClick={() => updateStatus(enquiry, "contacted")}
-                          >
+                          <TableRowButton onClick={() => updateStatus(enquiry, "contacted")}>
                             Contacted
-                          </Button>
+                          </TableRowButton>
                         )}
                         {enquiry.status !== "quoted" && (
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            onClick={() => updateStatus(enquiry, "quoted")}
-                          >
+                          <TableRowButton onClick={() => updateStatus(enquiry, "quoted")}>
                             Quoted
-                          </Button>
+                          </TableRowButton>
                         )}
                         {enquiry.status !== "closed" && (
-                          <Button type="button" size="sm" onClick={() => updateStatus(enquiry, "closed")}>
+                          <TableRowButton variant="default" onClick={() => updateStatus(enquiry, "closed")}>
                             Closed
-                          </Button>
+                          </TableRowButton>
                         )}
-                      </div>
+                      </TableRowActions>
                     ),
                   },
                 ]}
