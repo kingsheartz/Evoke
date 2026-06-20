@@ -1,6 +1,7 @@
 "use client";
 
 import { Plus, Trash2 } from "lucide-react";
+import { MediaUrlField } from "@/components/cms/media-url-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -97,8 +98,12 @@ export function SectionContentEditor({
           <FieldGroup label="Body">
             <Textarea value={String(content.body ?? "")} onChange={(e) => patch({ body: e.target.value })} rows={3} />
           </FieldGroup>
-          <FieldGroup label="Background image URL">
-            <Input value={String(content.image_url ?? "")} onChange={(e) => patch({ image_url: e.target.value })} placeholder="https://..." />
+          <FieldGroup label="Background image">
+            <MediaUrlField
+              kind="image"
+              value={String(content.image_url ?? "")}
+              onChange={(url) => patch({ image_url: url })}
+            />
           </FieldGroup>
           <div className="grid gap-4 sm:grid-cols-2">
             <FieldGroup label="CTA label">
@@ -166,11 +171,13 @@ export function SectionContentEditor({
               {images.map((image, index) => (
                 <ItemCard key={index} onRemove={() => patch({ images: images.filter((_, i) => i !== index) })}>
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <Input
-                      placeholder="Image URL"
-                      value={image.url}
-                      onChange={(e) => patch({ images: updateList(images, index, { url: e.target.value }) })}
-                    />
+                    <div className="sm:col-span-2">
+                      <MediaUrlField
+                        kind="image"
+                        value={image.url}
+                        onChange={(url) => patch({ images: updateList(images, index, { url }) })}
+                      />
+                    </div>
                     <Input
                       placeholder="Alt text"
                       value={image.alt ?? ""}
@@ -193,10 +200,21 @@ export function SectionContentEditor({
 
     case "faq": {
       const items = (content.items as FaqItem[] | undefined) ?? [];
+      const style = content.style === "list" ? "list" : "details";
       return (
         <div className={sectionStack}>
           <FieldGroup label="Heading">
             <Input value={String(content.heading ?? "")} onChange={(e) => patch({ heading: e.target.value })} />
+          </FieldGroup>
+          <FieldGroup label="Layout">
+            <select
+              value={style}
+              onChange={(e) => patch({ style: e.target.value as "details" | "list" })}
+              className="form-select flex h-10 w-full rounded-lg border border-app-border bg-app-surface-muted/60 px-3 text-sm text-app-text"
+            >
+              <option value="details">Accordion (expand/collapse)</option>
+              <option value="list">Bullet list (all visible)</option>
+            </select>
           </FieldGroup>
           <ListFieldGroup
             label="Questions"
@@ -234,8 +252,12 @@ export function SectionContentEditor({
           <FieldGroup label="Description">
             <Textarea value={String(content.body ?? "")} onChange={(e) => patch({ body: e.target.value })} rows={2} />
           </FieldGroup>
-          <FieldGroup label="Video URL (YouTube, Vimeo, or .mp4)">
-            <Input value={String(content.video_url ?? "")} onChange={(e) => patch({ video_url: e.target.value })} placeholder="https://youtube.com/watch?v=..." />
+          <FieldGroup label="Video (YouTube, Vimeo, or .mp4)">
+            <MediaUrlField
+              kind="video"
+              value={String(content.video_url ?? "")}
+              onChange={(url) => patch({ video_url: url })}
+            />
           </FieldGroup>
           <FieldGroup label="Caption">
             <Input value={String(content.caption ?? "")} onChange={(e) => patch({ caption: e.target.value })} />
@@ -273,11 +295,13 @@ export function SectionContentEditor({
                     rows={2}
                   />
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <Input
-                      placeholder="Image URL (optional)"
-                      value={item.image_url ?? ""}
-                      onChange={(e) => patch({ items: updateList(items, index, { image_url: e.target.value }) })}
-                    />
+                    <div className="sm:col-span-2">
+                      <MediaUrlField
+                        kind="image"
+                        value={item.image_url ?? ""}
+                        onChange={(url) => patch({ items: updateList(items, index, { image_url: url }) })}
+                      />
+                    </div>
                     <Input
                       placeholder="Link URL (optional)"
                       value={item.link_url ?? ""}
@@ -330,10 +354,10 @@ export function SectionContentEditor({
                       onChange={(e) => patch({ items: updateList(items, index, { role: e.target.value }) })}
                     />
                   </div>
-                  <Input
-                    placeholder="Avatar URL (optional)"
+                  <MediaUrlField
+                    kind="image"
                     value={item.avatar_url ?? ""}
-                    onChange={(e) => patch({ items: updateList(items, index, { avatar_url: e.target.value }) })}
+                    onChange={(url) => patch({ items: updateList(items, index, { avatar_url: url }) })}
                   />
                 </ItemCard>
               ))}

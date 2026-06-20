@@ -1,14 +1,19 @@
 <?php
 
 use App\Http\Controllers\Api\V1\CMS\DivisionPageController;
-use App\Http\Controllers\Api\V1\CMS\PageSectionController;
-use App\Http\Controllers\Api\V1\CMS\PageController;
 use App\Http\Controllers\Api\V1\CMS\HomepageAdminController;
+use App\Http\Controllers\Api\V1\CMS\MediaController;
+use App\Http\Controllers\Api\V1\CMS\PageController;
+use App\Http\Controllers\Api\V1\CMS\PageSectionController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('cms')->middleware(['module.enabled:cms'])->group(function () {
     Route::get('/pages', [PageController::class, 'index']);
     Route::get('/pages/{slug}', [PageController::class, 'show']);
+
+    Route::middleware(['auth:sanctum'])->group(function () {
+        Route::post('/media', [MediaController::class, 'store']);
+    });
 
     Route::middleware(['auth:sanctum', 'permission:cms.homepage.manage'])->group(function () {
         Route::put('/homepage', [HomepageAdminController::class, 'update']);

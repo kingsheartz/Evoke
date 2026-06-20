@@ -58,6 +58,7 @@ export interface GalleryContent {
 
 export interface FaqContent {
   heading?: string;
+  style?: "details" | "list";
   items?: FaqItem[];
 }
 
@@ -126,7 +127,7 @@ export function defaultSectionContent(type: SectionType): Record<string, unknown
     case "gallery":
       return { heading: "Gallery", body: "", columns: 3, preview_limit: 6, images: [] };
     case "faq":
-      return { heading: "Frequently asked questions", items: [] };
+      return { heading: "Frequently asked questions", style: "details", items: [] };
     case "video":
       return { heading: "Watch", body: "", video_url: "", caption: "" };
     case "cards":

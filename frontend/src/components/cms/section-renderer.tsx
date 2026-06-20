@@ -149,15 +149,34 @@ function FaqSection({ content }: { content: FaqContent }) {
   const items = (content.items ?? []).filter((item) => item.question?.trim() && item.answer?.trim());
   if (items.length === 0 && !content.heading?.trim()) return null;
 
+  const style = content.style === "list" ? "list" : "details";
+
   return (
     <SectionShell>
       <SectionHeading>{content.heading?.trim()}</SectionHeading>
-      <div className={cn("divide-y divide-app-border", content.heading?.trim() ? "mt-6" : undefined)}>
-        {items.map((item, index) => (
-          <FaqItemRow key={`${item.question}-${index}`} item={item} />
-        ))}
-      </div>
+      {style === "list" ? (
+        <ul className={cn("list-disc space-y-6 pl-5 marker:text-accent-soft", content.heading?.trim() ? "mt-6" : undefined)}>
+          {items.map((item, index) => (
+            <FaqListItem key={`${item.question}-${index}`} item={item} />
+          ))}
+        </ul>
+      ) : (
+        <div className={cn("divide-y divide-app-border", content.heading?.trim() ? "mt-6" : undefined)}>
+          {items.map((item, index) => (
+            <FaqItemRow key={`${item.question}-${index}`} item={item} />
+          ))}
+        </div>
+      )}
     </SectionShell>
+  );
+}
+
+function FaqListItem({ item }: { item: FaqItem }) {
+  return (
+    <li className="space-y-2">
+      <p className="font-medium text-app-text">{item.question}</p>
+      <p className="text-sm leading-relaxed text-app-muted">{item.answer}</p>
+    </li>
   );
 }
 

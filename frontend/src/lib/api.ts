@@ -115,6 +115,26 @@ export const apiClient = {
   removeAvatar: (token: string) =>
     api<{ data: User }>("/auth/avatar", { method: "DELETE", token }),
 
+  uploadCmsMedia: async (token: string, file: File, type: "image" | "video" = "image") => {
+    const form = new FormData();
+    form.append("file", file);
+    form.append("type", type);
+    const url = `${getApiUrl()}/cms/media`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: form,
+    });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: "Upload failed" }));
+      throw new ApiError(response.status, error.message ?? "Upload failed");
+    }
+    return response.json() as Promise<{ data: { url: string; path: string; type: string } }>;
+  },
+
   getAdminContext: (token: string) =>
     api<{ data: AdminContext }>("/admin/context", { token }),
 

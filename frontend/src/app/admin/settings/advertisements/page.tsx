@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Plus, Save, Trash2 } from "lucide-react";
+import { MediaUrlField } from "@/components/cms/media-url-field";
 import { ActionButton } from "@/components/ui/action-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -113,8 +114,12 @@ export default function AdvertisementsSettingsPage() {
                   </Select>
                 </div>
                 <div className="space-y-2 md:col-span-2">
-                  <Label>Image URL</Label>
-                  <Input value={ad.image_url} onChange={(e) => update(ad.id, { image_url: e.target.value })} placeholder="https://..." />
+                  <Label>Image</Label>
+                  <MediaUrlField
+                    kind="image"
+                    value={ad.image_url}
+                    onChange={(url) => update(ad.id, { image_url: url })}
+                  />
                 </div>
                 <div className="space-y-2 md:col-span-2">
                   <Label>Link URL</Label>
@@ -128,12 +133,6 @@ export default function AdvertisementsSettingsPage() {
                     onChange={(e) => update(ad.id, { sort_order: Number(e.target.value) || 0 })}
                   />
                 </div>
-                {ad.image_url && (
-                  <div className="overflow-hidden rounded-lg border border-app-border">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={ad.image_url} alt={ad.title || "Preview"} className="aspect-video w-full object-cover" />
-                  </div>
-                )}
               </CardContent>
             </Card>
           ))}

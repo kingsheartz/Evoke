@@ -5,6 +5,7 @@ import { useForm, useFieldArray, useWatch, Controller } from "react-hook-form";
 import Link from "next/link";
 import { ExternalLink, Plus, Save, Trash2 } from "lucide-react";
 import { HomepageSectionsEditor } from "@/components/cms/homepage-sections-editor";
+import { MediaUrlField } from "@/components/cms/media-url-field";
 import { GradientPicker } from "@/components/admin/gradient-picker";
 import { ActionButton } from "@/components/ui/action-button";
 import { Button } from "@/components/ui/button";
@@ -208,16 +209,28 @@ export default function HomepageEditorPage() {
                 </Select>
               </div>
               {backgroundType === "image" && (
-                <div className="form-field">
-                  <Label htmlFor="hero_background_url">Image URL</Label>
-                  <Input id="hero_background_url" placeholder="/images/hero.jpg" {...register("hero_background_url")} />
+                <div className="form-field md:col-span-2">
+                  <Label htmlFor="hero_background_url">Background image</Label>
+                  <Controller
+                    control={control}
+                    name="hero_background_url"
+                    render={({ field }) => (
+                      <MediaUrlField id="hero_background_url" kind="image" value={field.value} onChange={field.onChange} />
+                    )}
+                  />
                 </div>
               )}
               {backgroundType === "video" && (
                 <div className="form-field md:col-span-2">
-                  <Label htmlFor="hero_video_url">Video URL</Label>
-                  <Input id="hero_video_url" placeholder={DEFAULT_HERO_VIDEO} {...register("hero_video_url")} />
-                  <p className="text-xs text-app-muted">
+                  <Label htmlFor="hero_video_url">Hero video</Label>
+                  <Controller
+                    control={control}
+                    name="hero_video_url"
+                    render={({ field }) => (
+                      <MediaUrlField id="hero_video_url" kind="video" value={field.value} onChange={field.onChange} />
+                    )}
+                  />
+                  <p className="mt-2 text-xs text-app-muted">
                     Path: <span className="font-mono text-accent-soft">{videoUrl || DEFAULT_HERO_VIDEO}</span>
                   </p>
                 </div>
