@@ -617,6 +617,7 @@ export interface Course {
   category?: AcademyCategory;
   requires_approval?: boolean;
   thumbnail?: string | null;
+  gallery?: string[] | null;
 }
 
 export interface CoursePayload {
@@ -661,6 +662,7 @@ export interface Product {
   price: string;
   stock: number;
   description: string | null;
+  images?: string[] | null;
   is_active: boolean;
   is_featured: boolean;
   category_id: number;
@@ -685,6 +687,9 @@ export interface TourPackage {
   duration_days: number;
   price: string;
   description: string | null;
+  gallery?: string[] | null;
+  inclusions?: string[] | null;
+  exclusions?: string[] | null;
   is_active: boolean;
   is_featured: boolean;
   itinerary_days?: ItineraryDay[];
