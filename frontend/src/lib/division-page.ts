@@ -72,6 +72,9 @@ export const RESERVED_SITE_SLUGS = new Set([
   "search",
   "modules",
   "homepage",
+  "tours",
+  "shop",
+  "academy",
 ]);
 
 export const DIVISION_ACCENT_STYLES: { value: DivisionAccentStyle; label: string }[] = [

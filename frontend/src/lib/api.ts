@@ -1,4 +1,4 @@
-import { CMS_CACHE_TAGS } from "@/lib/cms-cache-tags";
+import { CMS_CACHE_TAGS, OFFERINGS_CACHE_TAGS } from "@/lib/cms-cache-tags";
 
 function getApiUrl(): string {
   // Browser must use localhost — "backend" only resolves inside Docker network
@@ -203,6 +203,36 @@ export const apiClient = {
 
   deleteDivisionPage: (token: string, slug: string) =>
     api<{ message: string }>(`/cms/admin/divisions/${slug}`, { method: "DELETE", token }),
+
+  getTourPackages: (params?: CatalogListParams) =>
+    api<Paginated<TourPackage>>(`/tours/packages${catalogQuery(params)}`, {
+      next: { revalidate: 60, tags: [OFFERINGS_CACHE_TAGS.tours] },
+    }),
+
+  getTourPackage: (slug: string) =>
+    api<{ data: TourPackage }>(`/tours/packages/${encodeURIComponent(slug)}`, {
+      next: { revalidate: 60, tags: [OFFERINGS_CACHE_TAGS.tours, OFFERINGS_CACHE_TAGS.tour(slug)] },
+    }),
+
+  getShopProducts: (params?: CatalogListParams) =>
+    api<Paginated<Product>>(`/shop/products${catalogQuery(params)}`, {
+      next: { revalidate: 60, tags: [OFFERINGS_CACHE_TAGS.shop] },
+    }),
+
+  getShopProduct: (slug: string) =>
+    api<{ data: Product }>(`/shop/products/${encodeURIComponent(slug)}`, {
+      next: { revalidate: 60, tags: [OFFERINGS_CACHE_TAGS.shop, OFFERINGS_CACHE_TAGS.product(slug)] },
+    }),
+
+  getAcademyCourses: (params?: CatalogListParams) =>
+    api<Paginated<Course>>(`/academy/courses${catalogQuery(params)}`, {
+      next: { revalidate: 60, tags: [OFFERINGS_CACHE_TAGS.academy] },
+    }),
+
+  getAcademyCourse: (slug: string) =>
+    api<{ data: Course }>(`/academy/courses/${encodeURIComponent(slug)}`, {
+      next: { revalidate: 60, tags: [OFFERINGS_CACHE_TAGS.academy, OFFERINGS_CACHE_TAGS.course(slug)] },
+    }),
 
   getAcademyCategories: () => api<{ data: AcademyCategory[] }>("/academy/categories"),
 
@@ -605,6 +635,15 @@ export interface CategoryPayload {
   description?: string;
 }
 
+export interface CourseBatch {
+  id: number;
+  name: string;
+  start_date: string;
+  end_date?: string | null;
+  status: string;
+  trainer?: { name: string } | null;
+}
+
 export interface Course {
   id: number;
   title: string;
@@ -618,6 +657,9 @@ export interface Course {
   requires_approval?: boolean;
   thumbnail?: string | null;
   gallery?: string[] | null;
+  batches?: CourseBatch[];
+  seo_title?: string | null;
+  seo_description?: string | null;
 }
 
 export interface CoursePayload {
@@ -644,6 +686,24 @@ export interface Paginated<T> {
   total: number;
 }
 
+export interface CatalogListParams {
+  featured?: boolean;
+  category?: string;
+  page?: number;
+  per_page?: number;
+}
+
+function catalogQuery(params?: CatalogListParams): string {
+  if (!params) return "";
+  const query = new URLSearchParams();
+  if (params.featured) query.set("featured", "1");
+  if (params.category) query.set("category", params.category);
+  if (params.page) query.set("page", String(params.page));
+  if (params.per_page) query.set("per_page", String(params.per_page));
+  const value = query.toString();
+  return value ? `?${value}` : "";
+}
+
 export interface ShopCategory {
   id: number;
   name: string;
@@ -660,6 +720,7 @@ export interface Product {
   slug: string;
   sku: string;
   price: string;
+  compare_price?: string | null;
   stock: number;
   description: string | null;
   images?: string[] | null;
@@ -667,6 +728,8 @@ export interface Product {
   is_featured: boolean;
   category_id: number;
   category?: ShopCategory;
+  seo_title?: string | null;
+  seo_description?: string | null;
 }
 
 export interface ProductPayload {
@@ -693,6 +756,8 @@ export interface TourPackage {
   is_active: boolean;
   is_featured: boolean;
   itinerary_days?: ItineraryDay[];
+  seo_title?: string | null;
+  seo_description?: string | null;
 }
 
 export interface PackagePayload {

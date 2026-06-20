@@ -1,4 +1,6 @@
 import type { Course, Product, TourPackage } from "@/lib/api";
+import { apiClient } from "@/lib/api";
+import type { StatItem } from "@/lib/cms-sections";
 import type { GalleryImage } from "@/lib/cms-sections";
 
 export type OfferingVertical = "tours" | "shop" | "academy";
@@ -147,11 +149,157 @@ export function itineraryDaysToTimeline(
 }
 
 export function tourInclusionsContent(pkg: TourPackage): InclusionsContent {
+  const included = (pkg.inclusions ?? []).filter((item) => item.trim());
+  const excluded = (pkg.exclusions ?? []).filter((item) => item.trim());
+  if (included.length === 0 && excluded.length === 0) return { heading: "" };
+
   return {
     heading: "Inclusions & Exclusions",
-    included: pkg.inclusions ?? [],
-    excluded: pkg.exclusions ?? [],
+    included,
+    excluded,
   };
+}
+
+export function tourPackageStats(pkg: TourPackage): StatItem[] {
+  return [
+    { label: "Duration", value: `${pkg.duration_days} day${pkg.duration_days === 1 ? "" : "s"}`, icon: "clock" },
+    { label: "Destination", value: pkg.destination, icon: "globe" },
+    { label: "Tour type", value: pkg.type.replace(/_/g, " "), icon: "compass" },
+  ];
+}
+
+export function productStats(product: Product): StatItem[] {
+  const stockLabel =
+    product.stock <= 0 ? "Out of stock" : product.stock <= 5 ? `${product.stock} left` : "In stock";
+
+  return [
+    { label: "Category", value: product.category?.name ?? "General", icon: "package" },
+    { label: "Availability", value: stockLabel, icon: "clock" },
+    { label: "SKU", value: product.sku, icon: "compass" },
+  ];
+}
+
+export function formatNextBatchLabel(course: Course): string | undefined {
+  const upcoming = (course.batches ?? [])
+    .filter((batch) => batch.status === "open" || batch.status === "active")
+    .sort((a, b) => a.start_date.localeCompare(b.start_date))[0];
+
+  if (!upcoming) return undefined;
+
+  const date = new Date(upcoming.start_date);
+  if (Number.isNaN(date.getTime())) return upcoming.name;
+
+  return `Next batch ${date.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}`;
+}
+
+export function courseStats(course: Course): StatItem[] {
+  const nextBatch = formatNextBatchLabel(course);
+
+  return [
+    { label: "Duration", value: course.duration?.trim() || "Flexible", icon: "clock" },
+    { label: "Category", value: course.category?.name ?? "General", icon: "book-open" },
+    { label: "Next batch", value: nextBatch ?? "Contact us", icon: "users" },
+  ];
+}
+
+export function catalogPath(vertical: OfferingVertical): string {
+  switch (vertical) {
+    case "tours":
+      return "/tours/packages";
+    case "shop":
+      return "/shop/products";
+    case "academy":
+      return "/academy/courses";
+  }
+}
+
+export function divisionPath(vertical: OfferingVertical): string {
+  return `/${vertical}`;
+}
+
+export function catalogTitle(vertical: OfferingVertical): string {
+  switch (vertical) {
+    case "tours":
+      return "Tour packages";
+    case "shop":
+      return "Products";
+    case "academy":
+      return "Courses";
+  }
+}
+
+export function offeringCta(vertical: OfferingVertical): { label: string; href: string } {
+  switch (vertical) {
+    case "tours":
+      return { label: "Book now", href: "/sign-in" };
+    case "shop":
+      return { label: "Sign in to buy", href: "/sign-in" };
+    case "academy":
+      return { label: "Enroll now", href: "/sign-in" };
+  }
+}
+
+export async function loadFeaturedOfferings(vertical: OfferingVertical): Promise<OfferingCardData[]> {
+  switch (vertical) {
+    case "tours": {
+      const response = await apiClient.getTourPackages({ featured: true, per_page: 6 });
+      return response.data.map(tourPackageToOffering);
+    }
+    case "shop": {
+      const response = await apiClient.getShopProducts({ featured: true, per_page: 6 });
+      return response.data.map(productToOffering);
+    }
+    case "academy": {
+      const response = await apiClient.getAcademyCourses({ per_page: 6 });
+      return response.data.map((course) => courseToOffering(course, { nextBatchLabel: formatNextBatchLabel(course) }));
+    }
+  }
+}
+
+export async function loadCatalogOfferings(
+  vertical: OfferingVertical,
+  params?: { page?: number; per_page?: number },
+): Promise<{ items: OfferingCardData[]; total: number; lastPage: number }> {
+  const per_page = params?.per_page ?? 12;
+  const page = params?.page ?? 1;
+
+  switch (vertical) {
+    case "tours": {
+      const response = await apiClient.getTourPackages({ page, per_page });
+      return {
+        items: response.data.map(tourPackageToOffering),
+        total: response.total,
+        lastPage: response.last_page,
+      };
+    }
+    case "shop": {
+      const response = await apiClient.getShopProducts({ page, per_page });
+      return {
+        items: response.data.map(productToOffering),
+        total: response.total,
+        lastPage: response.last_page,
+      };
+    }
+    case "academy": {
+      const response = await apiClient.getAcademyCourses({ page, per_page });
+      return {
+        items: response.data.map((course) =>
+          courseToOffering(course, { nextBatchLabel: formatNextBatchLabel(course) }),
+        ),
+        total: response.total,
+        lastPage: response.last_page,
+      };
+    }
+  }
+}
+
+export async function loadRelatedOfferings(
+  vertical: OfferingVertical,
+  excludeSlug: string,
+  limit = 3,
+): Promise<OfferingCardData[]> {
+  const { items } = await loadCatalogOfferings(vertical, { per_page: limit + 1 });
+  return items.filter((item) => !item.href.endsWith(`/${excludeSlug}`)).slice(0, limit);
 }
 
 export function timelineVariantLabels(variant: TimelineVariant = "travel") {

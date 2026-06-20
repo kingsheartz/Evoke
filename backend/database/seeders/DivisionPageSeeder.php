@@ -25,7 +25,7 @@ class DivisionPageSeeder extends Seeder
                     ['title' => 'Yoga & Wellness', 'description' => 'Beginner to Advanced', 'icon' => 'book-open'],
                     ['title' => 'Swimming', 'description' => 'Certified coaches', 'icon' => 'clock'],
                 ],
-                'footer_note' => 'Full course catalog and enrollment coming soon.',
+                'footer_note' => 'Browse courses and enroll online.',
             ],
             [
                 'slug' => 'shop',
@@ -42,7 +42,7 @@ class DivisionPageSeeder extends Seeder
                     ['title' => 'Apparel', 'description' => 'Performance wear and team kits', 'icon' => 'shirt'],
                     ['title' => 'Accessories', 'description' => 'Bags, bottles, guards, and more', 'icon' => 'package'],
                 ],
-                'footer_note' => 'Online storefront launching soon.',
+                'footer_note' => 'Shop curated gear and academy merchandise online.',
             ],
             [
                 'slug' => 'tours',
@@ -59,7 +59,7 @@ class DivisionPageSeeder extends Seeder
                     ['title' => 'International', 'description' => 'Curated global destinations with premium stays', 'icon' => 'globe'],
                     ['title' => 'Adventure', 'description' => 'Trekking, diving, and adrenaline experiences', 'icon' => 'mountain'],
                 ],
-                'footer_note' => 'Package booking portal coming soon.',
+                'footer_note' => 'Explore packages and book your next journey.',
             ],
         ];
 

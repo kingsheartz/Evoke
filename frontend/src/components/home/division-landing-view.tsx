@@ -11,8 +11,10 @@ import { cn } from "@/lib/utils";
 
 export function DivisionLandingView({
   page,
+  featuredCatalog,
 }: {
   page: DivisionPageData;
+  featuredCatalog?: React.ReactNode;
 }) {
   const HeroIcon = resolveDivisionIcon(page.icon);
   const accent = getDivisionCardAccent(page.accent_style ?? "accent");
@@ -72,6 +74,7 @@ export function DivisionLandingView({
           <p className="mt-12 text-center text-sm text-app-muted">{page.footer_note.trim()}</p>
         ) : null}
       </DivisionContent>
+      {featuredCatalog}
       {sections.length > 0 && <HomepageExtraSections sections={sections} />}
     </>
   );
