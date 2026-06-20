@@ -25,7 +25,7 @@ const iconMap: Record<string, LucideIcon> = {
 };
 
 export function FeaturesSection({
-  eyebrow = "Why Evoke",
+  eyebrow = "Why EOKE",
   heading = "Built for excellence",
   items,
   enabled = true,

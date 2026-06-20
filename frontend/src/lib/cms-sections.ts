@@ -17,6 +17,7 @@ export interface CardItem {
   title: string;
   description: string;
   image_url?: string;
+  icon?: string;
   link_url?: string;
   link_label?: string;
 }
@@ -30,8 +31,49 @@ export interface TestimonialItem {
 
 export interface FormField {
   label: string;
-  type: "text" | "email" | "tel" | "textarea";
+  type: FormFieldType;
   required?: boolean;
+  placeholder?: string;
+  /** Options for select, radio, or checkbox (multiple choice) fields. */
+  options?: string[];
+}
+
+export type FormFieldType =
+  | "text"
+  | "textarea"
+  | "number"
+  | "email"
+  | "tel"
+  | "date"
+  | "file"
+  | "select"
+  | "radio"
+  | "checkbox";
+
+export interface StatItem {
+  label: string;
+  value: string;
+  icon?: string;
+}
+
+export interface StatsContent {
+  heading?: string;
+  columns?: 2 | 3 | 4;
+  items?: StatItem[];
+}
+
+export interface ItineraryDay {
+  title: string;
+  body?: string;
+  /** Marks first/last day styling on the timeline. */
+  milestone?: "start" | "end";
+}
+
+export interface ItineraryContent {
+  heading?: string;
+  cost_heading?: string;
+  cost_body?: string;
+  items?: ItineraryDay[];
 }
 
 export interface BannerContent {
@@ -102,6 +144,8 @@ export type SectionContentByType = {
   faq: FaqContent;
   video: VideoContent;
   cards: CardsContent;
+  stats: StatsContent;
+  itinerary: ItineraryContent;
   testimonials: TestimonialsContent;
   map: MapContent;
   forms: FormsContent;
@@ -132,6 +176,27 @@ export function defaultSectionContent(type: SectionType): Record<string, unknown
       return { heading: "Watch", body: "", video_url: "", caption: "" };
     case "cards":
       return { heading: "Highlights", body: "", items: [] };
+    case "stats":
+      return {
+        heading: "",
+        columns: 3,
+        items: [
+          { label: "Duration", value: "5 Days – 6 Nights", icon: "clock" },
+          { label: "Group size", value: "2–12", icon: "users" },
+          { label: "Tour type", value: "Custom trip", icon: "compass" },
+        ],
+      };
+    case "itinerary":
+      return {
+        heading: "Itinerary",
+        cost_heading: "Cost",
+        cost_body: "",
+        items: [
+          { title: "Day 01: Arrival", body: "", milestone: "start" },
+          { title: "Day 02: Explore", body: "" },
+          { title: "Day 06: Departure", body: "", milestone: "end" },
+        ],
+      };
     case "testimonials":
       return { heading: "What people say", items: [] };
     case "map":
@@ -227,6 +292,16 @@ export function isSectionEmpty(section: { component_type: string; content: Recor
       const c = content as unknown as CardsContent;
       const items = (c.items ?? []).filter((item) => item.title?.trim() || item.description?.trim());
       return items.length === 0 && !c.heading?.trim() && !c.body?.trim();
+    }
+    case "stats": {
+      const c = content as unknown as StatsContent;
+      const items = (c.items ?? []).filter((item) => item.label?.trim() && item.value?.trim());
+      return items.length === 0 && !c.heading?.trim();
+    }
+    case "itinerary": {
+      const c = content as unknown as ItineraryContent;
+      const items = (c.items ?? []).filter((item) => item.title?.trim());
+      return items.length === 0 && !c.heading?.trim() && !c.cost_body?.trim();
     }
     case "testimonials": {
       const c = content as unknown as TestimonialsContent;

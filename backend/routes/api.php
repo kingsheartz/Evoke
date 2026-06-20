@@ -9,13 +9,14 @@ use App\Http\Controllers\Api\V1\ModuleController;
 use App\Http\Controllers\Api\V1\SearchController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/health', fn () => response()->json(['status' => 'ok', 'version' => 'v1']));
+Route::get('/health', fn () => response()->json(['status' => 'ok', 'version' => 'v1', 'docs' => url('/docs/api')]));
 
 // Public routes
 Route::get('/homepage', [HomepageController::class, 'show']);
 Route::get('/divisions', [DivisionPageController::class, 'index']);
 Route::get('/divisions/{slug}', [DivisionPageController::class, 'show']);
 Route::get('/ads', [PlatformSettingsController::class, 'publicAds']);
+Route::get('/brand', [PlatformSettingsController::class, 'publicBrand']);
 Route::get('/modules', [ModuleController::class, 'index']);
 Route::get('/search', [SearchController::class, 'search']);
 

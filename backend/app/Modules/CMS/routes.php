@@ -31,8 +31,8 @@ Route::prefix('cms')->middleware(['module.enabled:cms'])->group(function () {
         Route::put('/pages/{page}', [PageController::class, 'update']);
         Route::delete('/pages/{page}', [PageController::class, 'destroy']);
         Route::post('/admin/pages/{page}/sections', [PageSectionController::class, 'store']);
-        Route::put('/admin/pages/{page}/sections/{section}', [PageSectionController::class, 'update']);
-        Route::delete('/admin/pages/{page}/sections/{section}', [PageSectionController::class, 'destroy']);
         Route::put('/admin/pages/{page}/sections/reorder', [PageSectionController::class, 'reorder']);
+        Route::put('/admin/pages/{page}/sections/{section}', [PageSectionController::class, 'update'])->whereNumber('section');
+        Route::delete('/admin/pages/{page}/sections/{section}', [PageSectionController::class, 'destroy'])->whereNumber('section');
     });
 });

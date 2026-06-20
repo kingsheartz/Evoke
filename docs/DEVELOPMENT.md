@@ -12,12 +12,37 @@ Quick reference for running the platform locally, fixing common Docker issues, a
 |------|-----|
 | **Frontend (use this for UI work)** | http://localhost:3000 |
 | API (direct) | http://localhost:8000/api/v1 |
+| **API docs (Swagger UI)** | http://localhost:8000/docs/api |
+| OpenAPI JSON | http://localhost:8000/docs/api.json |
 | Nginx proxy (API + frontend) | http://localhost:8080 |
 | Admin login | http://localhost:3000/login |
 | Admin panel | http://localhost:3000/admin |
 | AI service | http://localhost:8001 |
 
 **Default admin** (after `migrate --seed`): `admin@evoke.com` / `password`
+
+---
+
+## API documentation (OpenAPI / Swagger)
+
+Interactive docs are generated from Laravel routes with [Scramble](https://scramble.dedoc.co/) and stay in sync as routes change.
+
+| Resource | URL |
+|----------|-----|
+| Swagger UI | http://localhost:8000/docs/api |
+| OpenAPI 3 JSON | http://localhost:8000/docs/api.json |
+
+**Try authenticated endpoints:** use `POST /api/v1/auth/login`, copy the `token` from the response, then click **Authorize** in the docs UI and paste `Bearer {token}`.
+
+Docs are available when `APP_ENV=local` or `APP_DEBUG=true` (see `RestrictedDocsAccess` in `config/scramble.php`).
+
+Export a static spec file:
+
+```bash
+docker compose exec backend php artisan scramble:export --path=storage/app/openapi.json
+# or
+docker compose exec backend composer export-api-docs
+```
 
 ---
 

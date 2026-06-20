@@ -10,16 +10,11 @@ import { Label } from "@/components/ui/label";
 import { PageHeader } from "@/components/ui/page-header";
 import { Select } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { AD_PLACEMENT_OPTIONS, normalizeAdvertisement } from "@/lib/ad-placements";
+import { invalidateSiteAdsCache } from "@/hooks/use-site-ads";
 import { apiClient, type AdPlacement, type Advertisement } from "@/lib/api";
 import { useNotifications } from "@/lib/notifications";
 import { useAuthStore } from "@/stores/app";
-
-const PLACEMENTS: { value: AdPlacement; label: string }[] = [
-  { value: "admin_sidebar", label: "Admin sidebar" },
-  { value: "homepage", label: "Homepage" },
-  { value: "site_header", label: "Site header" },
-  { value: "footer", label: "Site footer" },
-];
 
 function newAd(): Advertisement {
   return {
@@ -27,9 +22,10 @@ function newAd(): Advertisement {
     title: "",
     image_url: "",
     link_url: "",
-    placement: "admin_sidebar",
+    placement: "floating_right",
     enabled: true,
     sort_order: 0,
+    dismissible: true,
   };
 }
 
@@ -41,7 +37,10 @@ export default function AdvertisementsSettingsPage() {
 
   useEffect(() => {
     if (!token) return;
-    apiClient.getAdvertisements(token).then((r) => setAds(r.data ?? [])).catch(() => setAds([]));
+    apiClient
+      .getAdvertisements(token)
+      .then((r) => setAds((r.data ?? []).map(normalizeAdvertisement)))
+      .catch(() => setAds([]));
   }, [token]);
 
   const update = (id: string, patch: Partial<Advertisement>) => {
@@ -54,9 +53,10 @@ export default function AdvertisementsSettingsPage() {
     if (!token) return;
     setSaving(true);
     try {
-      const { data } = await apiClient.updateAdvertisements(token, ads);
-      setAds(data);
-      success("Advertisements saved.");
+      const { data } = await apiClient.updateAdvertisements(token, ads.map(normalizeAdvertisement));
+      setAds(data.map(normalizeAdvertisement));
+      invalidateSiteAdsCache();
+      success("Advertisements saved. Visitor dismissals reset on next page load.");
     } catch (e) {
       error(e instanceof Error ? e.message : "Could not save advertisements.");
     } finally {
@@ -64,11 +64,14 @@ export default function AdvertisementsSettingsPage() {
     }
   };
 
+  const placementHint = (placement: AdPlacement) =>
+    AD_PLACEMENT_OPTIONS.find((p) => p.value === placement)?.hint ?? "";
+
   return (
     <div className="app-page">
       <PageHeader
         title="Advertisements"
-        description="Manage promotional banners across admin and public site"
+        description="Promotional banners for the public site only — choose placement, side, and whether visitors can dismiss each ad."
         actions={
           <div className="flex gap-2">
             <ActionButton variant="outline" icon={Plus} onClick={() => setAds((prev) => [...prev, newAd()])}>
@@ -84,7 +87,7 @@ export default function AdvertisementsSettingsPage() {
       {ads.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center text-app-muted">
-            No advertisements yet. Add one to show promotions in the admin sidebar or on the public site.
+            No advertisements yet. Add one to show promotions on the public site.
           </CardContent>
         </Card>
       ) : (
@@ -108,10 +111,11 @@ export default function AdvertisementsSettingsPage() {
                 <div className="space-y-2">
                   <Label>Placement</Label>
                   <Select value={ad.placement} onChange={(e) => update(ad.id, { placement: e.target.value as AdPlacement })}>
-                    {PLACEMENTS.map((p) => (
+                    {AD_PLACEMENT_OPTIONS.map((p) => (
                       <option key={p.value} value={p.value}>{p.label}</option>
                     ))}
                   </Select>
+                  <p className="text-xs text-app-muted">{placementHint(ad.placement)}</p>
                 </div>
                 <div className="space-y-2 md:col-span-2">
                   <Label>Image</Label>
@@ -131,6 +135,17 @@ export default function AdvertisementsSettingsPage() {
                     type="number"
                     value={ad.sort_order}
                     onChange={(e) => update(ad.id, { sort_order: Number(e.target.value) || 0 })}
+                  />
+                </div>
+                <div className="flex items-center justify-between gap-3 rounded-lg border border-app-border px-4 py-3">
+                  <div>
+                    <p className="text-sm font-medium text-app-text">Allow dismiss (close button)</p>
+                    <p className="text-xs text-app-muted">Visitors can hide this ad; preference is saved in their browser.</p>
+                  </div>
+                  <Switch
+                    checked={ad.dismissible ?? true}
+                    onCheckedChange={(v) => update(ad.id, { dismissible: v })}
+                    aria-label="Dismissible"
                   />
                 </div>
               </CardContent>

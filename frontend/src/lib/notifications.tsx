@@ -55,13 +55,21 @@ const VARIANT_STYLES: Record<
 };
 
 const POSITION_CLASSES: Record<NotificationPosition, string> = {
-  "top-right": "right-4 items-end",
-  "top-left": "left-4 items-start",
-  "bottom-right": "bottom-4 right-4 items-end",
-  "bottom-left": "bottom-4 left-4 items-start",
-  "top-center": "left-1/2 top-4 -translate-x-1/2 items-center",
-  "bottom-center": "bottom-4 left-1/2 -translate-x-1/2 items-center",
+  "top-right": "right-4 top-[var(--notification-top)] items-end",
+  "top-left": "left-4 top-[var(--notification-top)] items-start",
+  "top-center": "left-1/2 top-[var(--notification-top)] -translate-x-1/2 items-center",
+  /* Legacy bottom values — rendered at top (same horizontal alignment). */
+  "bottom-right": "right-4 top-[var(--notification-top)] items-end",
+  "bottom-left": "left-4 top-[var(--notification-top)] items-start",
+  "bottom-center": "left-1/2 top-[var(--notification-top)] -translate-x-1/2 items-center",
 };
+
+function normalizePosition(position: NotificationPosition): NotificationPosition {
+  if (position.startsWith("bottom")) {
+    return position.replace("bottom", "top") as NotificationPosition;
+  }
+  return position;
+}
 
 function ToastItem({
   item,
@@ -168,8 +176,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     [notify],
   );
 
-  const position = notifications.position ?? "top-right";
-  const isTop = position.startsWith("top");
+  const position = normalizePosition(notifications.position ?? "top-center");
 
   return (
     <NotificationContext.Provider value={value}>
@@ -178,10 +185,9 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         createPortal(
           <div
             className={cn(
-              "pointer-events-none fixed z-[99999] flex w-full max-w-[22rem] flex-col gap-2",
+              "pointer-events-none fixed z-[var(--z-notification)] flex w-full max-w-[22rem] flex-col gap-2",
               POSITION_CLASSES[position],
             )}
-            style={isTop ? { top: "calc(var(--app-topbar-height) + 0.5rem)" } : undefined}
             aria-live="polite"
           >
             {items.map((item) => (

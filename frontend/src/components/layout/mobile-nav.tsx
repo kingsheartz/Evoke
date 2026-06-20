@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LogOut, Menu, User, X } from "lucide-react";
+import { EvokeLogo } from "@/components/brand/evoke-logo";
 import { Button } from "@/components/ui/button";
 import { apiClient, hasAdminAccess } from "@/lib/api";
 import { useAuthHydrated } from "@/hooks/use-auth-hydration";
@@ -68,8 +69,8 @@ export function MobileNav() {
             open ? "translate-x-0" : "translate-x-full",
           )}
         >
-          <div className="mb-8 flex items-center justify-between">
-            <span className="font-display text-lg font-bold text-app-text">Evoke</span>
+          <div className="mb-8 flex items-center justify-between gap-3">
+            <EvokeLogo variant="icon" href="/" />
             <Button variant="ghost" size="sm" onClick={() => setOpen(false)} className="h-9 w-9 p-0">
               <X className="h-4 w-4" />
             </Button>

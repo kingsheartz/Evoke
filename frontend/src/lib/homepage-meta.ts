@@ -55,7 +55,7 @@ export function defaultHomepageMeta(): HomepageMeta {
     stats: { enabled: true, items: defaultHomepageStats },
     features: {
       enabled: true,
-      eyebrow: "Why Evoke",
+      eyebrow: "Why EOKE",
       heading: "Built for excellence",
       items: defaultHomepageFeatures,
     },

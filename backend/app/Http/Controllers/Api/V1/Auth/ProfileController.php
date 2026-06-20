@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\UpdateProfileRequest;
+use App\Support\ImageNormalizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -23,7 +24,7 @@ class ProfileController extends Controller
     public function uploadAvatar(Request $request): JsonResponse
     {
         $request->validate([
-            'avatar' => ['required', 'image', 'max:2048'],
+            'avatar' => ImageNormalizer::validationRules(2048),
         ]);
 
         $user = $request->user();
@@ -32,7 +33,11 @@ class ProfileController extends Controller
             Storage::disk('public')->delete($user->avatar);
         }
 
-        $path = $request->file('avatar')->store('avatars/'.$user->id, 'public');
+        try {
+            $path = ImageNormalizer::store($request->file('avatar'), 'avatars/'.$user->id);
+        } catch (\RuntimeException $e) {
+            abort(422, $e->getMessage());
+        }
         $user->update(['avatar' => $path]);
 
         return response()->json([

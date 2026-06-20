@@ -15,10 +15,13 @@ import {
   X,
 } from "lucide-react";
 import { ActionButton } from "@/components/ui/action-button";
+import { ImageCropModal } from "@/components/ui/image-crop-modal";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
+import { useImageCropFlow } from "@/hooks/use-image-crop-flow";
 import { apiClient, type AdminBranch, type AdminUser, type UserPayload } from "@/lib/api";
+import { UPLOADABLE_IMAGE_ACCEPT } from "@/lib/media";
 import { formatRole } from "@/lib/status-labels";
 import { useNotifications } from "@/lib/notifications";
 import { cn } from "@/lib/utils";
@@ -143,10 +146,12 @@ export function UserDetailPanel({ userId, mode, open, onClose, onSaved, token, r
   const [branches, setBranches] = useState<AdminBranch[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [editing, setEditing] = useState(mode === "create");
   const [form, setForm] = useState<UserForm>(emptyForm());
   const fileRef = useRef<HTMLInputElement>(null);
+  const { pendingCrop, startCrop, cancelCrop } = useImageCropFlow();
 
   const load = useCallback(async () => {
     if (!token || !userId) return;
@@ -165,6 +170,7 @@ export function UserDetailPanel({ userId, mode, open, onClose, onSaved, token, r
 
   useEffect(() => {
     if (!open) return;
+    setSaveError(null);
     setEditing(mode === "create");
     if (mode === "create") {
       setUser(null);
@@ -204,10 +210,13 @@ export function UserDetailPanel({ userId, mode, open, onClose, onSaved, token, r
   const save = async () => {
     if (!token) return;
     setSaving(true);
+    setSaveError(null);
     try {
       if (mode === "create") {
         if (!form.password) {
-          error("Password is required for new users.");
+          const message = "Password is required for new users.";
+          setSaveError(message);
+          error(message);
           setSaving(false);
           return;
         }
@@ -224,13 +233,15 @@ export function UserDetailPanel({ userId, mode, open, onClose, onSaved, token, r
         onSaved();
       }
     } catch (e) {
-      error(e instanceof Error ? e.message : "Could not save user.");
+      const message = e instanceof Error ? e.message : "Could not save user.";
+      setSaveError(message);
+      error(message);
     } finally {
       setSaving(false);
     }
   };
 
-  const onAvatarPick = async (file: File) => {
+  const uploadAvatarFile = async (file: File) => {
     if (!token || !user) return;
     setUploading(true);
     try {
@@ -243,6 +254,11 @@ export function UserDetailPanel({ userId, mode, open, onClose, onSaved, token, r
     } finally {
       setUploading(false);
     }
+  };
+
+  const onAvatarPick = (file: File) => {
+    if (startCrop(file)) return;
+    void uploadAvatarFile(file);
   };
 
   const removeAvatar = async () => {
@@ -260,12 +276,15 @@ export function UserDetailPanel({ userId, mode, open, onClose, onSaved, token, r
     }
   };
 
-  if (!open) return null;
+  if (!open && !pendingCrop) return null;
 
   const title = mode === "create" ? "New user" : user?.name ?? "User details";
 
-  return createPortal(
-    <div className="fixed inset-0 z-[2147483630] flex justify-end bg-black/50" role="dialog" aria-modal="true">
+  return (
+    <>
+      {open &&
+        createPortal(
+    <div className="fixed inset-0 z-[var(--z-admin-panel)] flex justify-end bg-black/50" role="dialog" aria-modal="true">
       <button type="button" className="absolute inset-0 cursor-default" aria-label="Close panel" onClick={onClose} />
       <aside
         data-admin-detail-panel="true"
@@ -322,7 +341,7 @@ export function UserDetailPanel({ userId, mode, open, onClose, onSaved, token, r
                       <input
                         ref={fileRef}
                         type="file"
-                        accept="image/*"
+                        accept={UPLOADABLE_IMAGE_ACCEPT}
                         className="hidden"
                         onChange={(e) => {
                           const file = e.target.files?.[0];
@@ -445,13 +464,20 @@ export function UserDetailPanel({ userId, mode, open, onClose, onSaved, token, r
           )}
         </div>
 
-        <div className="flex gap-2 border-t border-app-border px-5 py-4">
+        <div className="flex flex-col gap-2 border-t border-app-border px-5 py-4">
+          {saveError && (
+            <p className="rounded-lg border border-error/30 bg-error-bg px-3 py-2 text-sm text-error" role="alert">
+              {saveError}
+            </p>
+          )}
+          <div className="flex gap-2">
           {editing ? (
             <>
               {mode !== "create" && (
                 <ActionButton
                   variant="outline"
                   onClick={() => {
+                    setSaveError(null);
                     setEditing(false);
                     if (user) setForm(formFromUser(user));
                   }}
@@ -466,10 +492,25 @@ export function UserDetailPanel({ userId, mode, open, onClose, onSaved, token, r
           ) : user ? (
             <ActionButton onClick={() => setEditing(true)}>Edit details</ActionButton>
           ) : null}
+          </div>
         </div>
       </aside>
     </div>,
     document.body,
+        )}
+
+      <ImageCropModal
+        open={Boolean(pendingCrop)}
+        imageSrc={pendingCrop?.src ?? null}
+        fileName={pendingCrop?.fileName ?? "avatar.jpg"}
+        mimeType={pendingCrop?.mimeType ?? "image/jpeg"}
+        aspect={1}
+        title="Crop profile photo"
+        confirmLabel="Crop & upload"
+        onClose={cancelCrop}
+        onConfirm={uploadAvatarFile}
+      />
+    </>
   );
 }
 

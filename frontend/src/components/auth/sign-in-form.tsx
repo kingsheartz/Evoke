@@ -98,7 +98,7 @@ export function SignInForm() {
         </form>
         )}
         <p className="mt-6 text-center text-sm text-app-muted">
-          New to Evoke?{" "}
+          New to EOKE?{" "}
           <Link href="/register" className="font-medium text-accent-soft hover:text-accent">
             Create an account
           </Link>

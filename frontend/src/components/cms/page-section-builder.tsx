@@ -26,6 +26,7 @@ import { SectionTypeBadge } from "@/components/cms/cms-page-view";
 import { createSectionContent, SectionContentEditor } from "@/components/cms/section-content-editor";
 import { apiClient, SECTION_TYPES, type PageSection } from "@/lib/api";
 import { isSectionType } from "@/lib/cms-sections";
+import { revalidateCmsPagePublicCache } from "@/lib/revalidate-cms";
 import { useAuthStore } from "@/stores/app";
 
 function SortableSection({
@@ -65,11 +66,15 @@ function SortableSection({
 
 export function PageSectionBuilder({
   pageId,
+  pageSlug,
+  pageStatus = "draft",
   sections: initial,
   onChange,
   onDirtyChange,
 }: {
   pageId: number;
+  pageSlug: string;
+  pageStatus?: string;
   sections: PageSection[];
   onChange: (sections: PageSection[]) => void;
   onDirtyChange?: (dirty: boolean) => void;
@@ -79,6 +84,12 @@ export function PageSectionBuilder({
   const [newType, setNewType] = useState("text");
   const sectionsRef = useRef(sections);
   sectionsRef.current = sections;
+
+  const maybeRevalidatePublic = useCallback(async () => {
+    if (pageStatus === "published") {
+      await revalidateCmsPagePublicCache(pageSlug);
+    }
+  }, [pageSlug, pageStatus]);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -107,6 +118,7 @@ export function PageSectionBuilder({
     const next = [...sectionsRef.current, data];
     setSections(next);
     onChange(next);
+    await maybeRevalidatePublic();
   };
 
   const deleteSection = async (id: number) => {
@@ -115,17 +127,25 @@ export function PageSectionBuilder({
     const next = sectionsRef.current.filter((s) => s.id !== id);
     setSections(next);
     onChange(next);
+    await maybeRevalidatePublic();
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id || !token) return;
-    const oldIndex = sectionsRef.current.findIndex((s) => s.id === active.id);
-    const newIndex = sectionsRef.current.findIndex((s) => s.id === over.id);
-    const reordered = arrayMove(sectionsRef.current, oldIndex, newIndex).map((s, i) => ({ ...s, sort_order: i }));
+    const previous = sectionsRef.current;
+    const oldIndex = previous.findIndex((s) => s.id === active.id);
+    const newIndex = previous.findIndex((s) => s.id === over.id);
+    const reordered = arrayMove(previous, oldIndex, newIndex).map((s, i) => ({ ...s, sort_order: i }));
     setSections(reordered);
     onChange(reordered);
-    await apiClient.reorderPageSections(token, pageId, reordered.map((s, i) => ({ id: s.id, sort_order: i })));
+    try {
+      await apiClient.reorderPageSections(token, pageId, reordered.map((s, i) => ({ id: s.id, sort_order: i })));
+      await maybeRevalidatePublic();
+    } catch {
+      setSections(previous);
+      onChange(previous);
+    }
   };
 
   return (

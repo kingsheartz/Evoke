@@ -1,3 +1,5 @@
+import { CMS_CACHE_TAGS } from "@/lib/cms-cache-tags";
+
 function getApiUrl(): string {
   // Browser must use localhost — "backend" only resolves inside Docker network
   if (typeof window !== "undefined") {
@@ -23,10 +25,11 @@ export class ApiError extends Error {
 type ApiOptions = RequestInit & {
   token?: string | null;
   cache?: RequestCache;
+  next?: { revalidate?: number | false; tags?: string[] };
 };
 
 export async function api<T>(endpoint: string, options: ApiOptions = {}): Promise<T> {
-  const { token, cache, ...init } = options;
+  const { token, cache, next: nextCache, ...init } = options;
   const url = `${getApiUrl()}${endpoint}`;
 
   const headers: Record<string, string> = {
@@ -43,19 +46,39 @@ export async function api<T>(endpoint: string, options: ApiOptions = {}): Promis
     ...init,
     headers,
     cache: cache ?? (token ? "no-store" : undefined),
-    next: token ? undefined : { revalidate: 60 },
+    next: token ? undefined : (nextCache ?? { revalidate: 60 }),
   });
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ message: "Request failed" }));
-    throw new ApiError(response.status, error.message ?? "Request failed");
+    const message = formatApiErrorMessage(error);
+    throw new ApiError(response.status, message);
   }
 
   return response.json();
 }
 
+function formatApiErrorMessage(error: {
+  message?: string;
+  errors?: Record<string, string[]>;
+}): string {
+  if (error.errors) {
+    const fieldMessages = Object.entries(error.errors).flatMap(([field, messages]) =>
+      messages.map((msg) => (field === "email" || field === "phone" ? msg : `${field}: ${msg}`)),
+    );
+    if (fieldMessages.length > 0) {
+      return fieldMessages.join(" ");
+    }
+  }
+
+  return error.message ?? "Request failed";
+}
+
 export const apiClient = {
-  getHomepage: () => api<{ data: HomepageData | null }>("/homepage"),
+  getHomepage: () =>
+    api<{ data: HomepageData | null }>("/homepage", {
+      next: { revalidate: 60, tags: [CMS_CACHE_TAGS.homepage] },
+    }),
   getModules: () => api<{ data: BusinessModule[] }>("/modules"),
   search: (q: string, module?: string) =>
     api<{ data: SearchResult[] }>(
@@ -148,10 +171,15 @@ export const apiClient = {
       body: JSON.stringify(payload),
     }),
 
-  getDivisionNav: () => api<{ data: DivisionNavItem[] }>("/divisions"),
+  getDivisionNav: () =>
+    api<{ data: DivisionNavItem[] }>("/divisions", {
+      next: { revalidate: 60, tags: [CMS_CACHE_TAGS.divisions] },
+    }),
 
   getDivisionPage: (slug: string) =>
-    api<{ data: DivisionPageData }>(`/divisions/${slug}`),
+    api<{ data: DivisionPageData }>(`/divisions/${slug}`, {
+      next: { revalidate: 60, tags: [CMS_CACHE_TAGS.divisions, CMS_CACHE_TAGS.division(slug)] },
+    }),
 
   getAdminDivisionPages: (token: string) =>
     api<{ data: DivisionPageData[] }>("/cms/admin/divisions", { token }),
@@ -319,12 +347,23 @@ export const apiClient = {
     }),
   getPublicAds: (placement?: string) => {
     const qs = placement ? `?placement=${encodeURIComponent(placement)}` : "";
-    return api<{ data: Advertisement[] }>(`/ads${qs}`, { cache: "no-store" });
+    return api<{ data: Advertisement[]; revision?: string | null }>(`/ads${qs}`, { cache: "no-store" });
   },
+  getBrand: () => api<{ data: BrandOverride | null; revision?: string | null }>("/brand", { cache: "no-store" }),
+  getAdminBrand: (token: string) =>
+    api<{ data: BrandOverride | null }>("/admin/settings/brand", { token }),
+  updateAdminBrand: (token: string, value: BrandOverride) =>
+    api<{ data: BrandOverride }>("/admin/settings/brand", {
+      method: "PUT",
+      token,
+      body: JSON.stringify({ value }),
+    }),
 
   // CMS Pages
   getPublicPage: (slug: string) =>
-    api<{ data: CmsPage }>(`/cms/pages/${encodeURIComponent(slug)}`),
+    api<{ data: CmsPage }>(`/cms/pages/${encodeURIComponent(slug)}`, {
+      next: { revalidate: 60, tags: [CMS_CACHE_TAGS.pages, CMS_CACHE_TAGS.page(slug)] },
+    }),
   getAdminPages: (token: string) =>
     api<Paginated<CmsPage>>(`/cms/admin/pages`, { token }),
   getAdminPage: (token: string, id: number) =>
@@ -333,6 +372,8 @@ export const apiClient = {
     api<{ data: CmsPage }>("/cms/pages", { method: "POST", token, body: JSON.stringify(payload) }),
   updatePage: (token: string, id: number, payload: Partial<PagePayload>) =>
     api<{ data: CmsPage }>(`/cms/pages/${id}`, { method: "PUT", token, body: JSON.stringify(payload) }),
+  deletePage: (token: string, id: number) =>
+    api<{ message: string }>(`/cms/pages/${id}`, { method: "DELETE", token }),
   createPageSection: (token: string, pageId: number, payload: SectionPayload) =>
     api<{ data: PageSection }>(`/cms/admin/pages/${pageId}/sections`, { method: "POST", token, body: JSON.stringify(payload) }),
   updatePageSection: (token: string, pageId: number, sectionId: number, payload: Partial<SectionPayload>) =>
@@ -408,6 +449,8 @@ export interface DivisionHighlightCard {
   title: string;
   description: string;
   icon: string;
+  link_url?: string;
+  link_label?: string;
 }
 
 export interface DivisionPageData {
@@ -756,7 +799,23 @@ export interface AdminPreferencesPayload {
   };
 }
 
-export type AdPlacement = "admin_sidebar" | "site_header" | "homepage" | "footer";
+export type AdPlacement = "floating_left" | "floating_right" | "top_strip" | "homepage" | "footer";
+
+export interface BrandOverride {
+  name?: string;
+  shortName?: string;
+  tagline?: string;
+  description?: string;
+  logos?: {
+    horizontal?: string;
+    vertical?: string;
+    icon?: string;
+    mobile?: string;
+  };
+  logoDisplay?: {
+    iconBlend?: boolean;
+  };
+}
 
 export interface Advertisement {
   id: string;
@@ -766,6 +825,8 @@ export interface Advertisement {
   placement: AdPlacement;
   enabled: boolean;
   sort_order: number;
+  /** When true (default), visitors can dismiss the ad; stored in localStorage per browser. */
+  dismissible?: boolean;
 }
 
 export interface UserPayload {
@@ -847,6 +908,8 @@ export const SECTION_TYPES = [
   { value: "faq", label: "FAQ" },
   { value: "video", label: "Video" },
   { value: "cards", label: "Cards" },
+  { value: "stats", label: "Quick facts" },
+  { value: "itinerary", label: "Itinerary" },
   { value: "testimonials", label: "Testimonials" },
   { value: "map", label: "Map" },
   { value: "forms", label: "Forms" },

@@ -1,7 +1,8 @@
 "use client";
 
+import { EvokeLogo } from "@/components/brand/evoke-logo";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Blocks,
@@ -73,6 +74,7 @@ const childIconByHref: Record<string, LucideIcon> = {
   "/admin/tasks": CalendarDays,
   "/admin/settings/modules": Blocks,
   "/admin/settings/users": Users,
+  "/admin/settings/brand": SlidersHorizontal,
   "/admin/settings/preferences": SlidersHorizontal,
   "/admin/settings/advertisements": Megaphone,
 };
@@ -121,6 +123,7 @@ function SectionDivider({ collapsed }: { collapsed: boolean }) {
 
 export function AdminSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { token, navigation, logout, user } = useAuthStore();
   const { collapsed, width, toggleCollapsed, setWidth, getSidebarWidth } = useAdminSidebarStore();
   const resizing = useRef(false);
@@ -186,7 +189,7 @@ export function AdminSidebar() {
       }
     }
     logout();
-    window.location.href = "/login";
+    router.push("/login");
   };
 
   const userInitial = user?.name?.charAt(0)?.toUpperCase() ?? "?";
@@ -200,25 +203,7 @@ export function AdminSidebar() {
       >
         <div className="shrink-0 border-b border-app-border px-4 py-4">
           <div className={cn("flex items-center", collapsed ? "flex-col gap-3" : "justify-between gap-2")}>
-            {collapsed ? (
-              <Link
-                href="/admin"
-                className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10 font-display text-sm font-bold text-accent ring-1 ring-accent/25"
-                title="Dashboard"
-                aria-label="Dashboard"
-              >
-                E
-              </Link>
-            ) : (
-              <div className="min-w-0">
-                <Link href="/admin" className="font-display text-lg font-semibold tracking-tight text-app-text">
-                  Evoke
-                </Link>
-                <p className="mt-0.5 text-[10px] font-medium uppercase tracking-[0.15em] text-app-muted">
-                  Admin Console
-                </p>
-              </div>
-            )}
+            <EvokeLogo variant="admin-icon" href="/admin" />
             <Button
               type="button"
               variant="ghost"

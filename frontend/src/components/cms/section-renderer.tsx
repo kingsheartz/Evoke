@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { ArrowUpRight, ChevronDown, Mail, MapPin } from "lucide-react";
+import { FormFieldPreview } from "@/components/cms/form-fields-editor";
 import { GalleryView } from "@/components/cms/gallery-view";
+import { ItinerarySection } from "@/components/cms/itinerary-section";
 import type { PageSection } from "@/lib/api";
+import { resolveDivisionIcon } from "@/lib/division-page";
 import {
   mapsLink,
   resolveVideoEmbed,
@@ -12,8 +15,10 @@ import {
   type FaqItem,
   type FormsContent,
   type GalleryContent,
+  type ItineraryContent,
   type MapContent,
   type SectionType,
+  type StatsContent,
   type TestimonialItem,
   type TestimonialsContent,
   type TextContent,
@@ -249,8 +254,14 @@ function CardsSection({ content }: { content: CardsContent }) {
 }
 
 function CardBlock({ item }: { item: CardItem }) {
+  const CardIcon = item.icon?.trim() ? resolveDivisionIcon(item.icon) : null;
   const inner = (
     <>
+      {CardIcon && (
+        <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-accent/15 text-accent-soft ring-1 ring-accent/20">
+          <CardIcon className="h-5 w-5" />
+        </div>
+      )}
       {item.image_url?.trim() && (
         <div className="relative mb-4 aspect-[16/10] overflow-hidden rounded-lg">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -357,6 +368,39 @@ function MapSection({ content }: { content: MapContent }) {
   );
 }
 
+function StatsSection({ content }: { content: StatsContent }) {
+  const items = (content.items ?? []).filter((item) => item.label?.trim() && item.value?.trim());
+  if (items.length === 0 && !content.heading?.trim()) return null;
+
+  const cols = content.columns ?? 3;
+  const gridClass =
+    cols === 2 ? "sm:grid-cols-2" : cols === 4 ? "sm:grid-cols-2 lg:grid-cols-4" : "sm:grid-cols-2 lg:grid-cols-3";
+
+  return (
+    <SectionShell wide>
+      <SectionHeading>{content.heading?.trim()}</SectionHeading>
+      {items.length > 0 && (
+        <div className={cn("mt-8 grid gap-6", gridClass)}>
+          {items.map((item, index) => {
+            const Icon = resolveDivisionIcon(item.icon ?? "clock");
+            return (
+              <div key={`${item.label}-${index}`} className="flex items-start gap-4">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent/15 text-accent-soft">
+                  <Icon className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wider text-app-muted">{item.label}</p>
+                  <p className="mt-1 font-display text-lg font-semibold text-app-text">{item.value}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </SectionShell>
+  );
+}
+
 function FormsSection({ content }: { content: FormsContent }) {
   const fields = (content.fields ?? []).filter((field) => field.label?.trim());
   const heading = content.heading?.trim();
@@ -374,29 +418,14 @@ function FormsSection({ content }: { content: FormsContent }) {
           className={cn("space-y-4", heading || body ? "mt-6" : undefined)}
           action={email ? `mailto:${email}` : undefined}
           method="get"
+          encType="multipart/form-data"
         >
           {fields.map((field, index) => (
-            <div key={`${field.label}-${index}`} className="space-y-2">
-              <label className="text-sm font-medium text-app-text">
-                {field.label}
-                {field.required && <span className="text-status-error"> *</span>}
-              </label>
-              {field.type === "textarea" ? (
-                <textarea
-                  name={field.label.toLowerCase().replace(/\s+/g, "_")}
-                  required={field.required}
-                  rows={4}
-                  className="w-full rounded-lg border border-app-border bg-app-surface-muted/60 px-3 py-2 text-sm text-app-text"
-                />
-              ) : (
-                <input
-                  type={field.type}
-                  name={field.label.toLowerCase().replace(/\s+/g, "_")}
-                  required={field.required}
-                  className="h-10 w-full rounded-lg border border-app-border bg-app-surface-muted/60 px-3 text-sm text-app-text"
-                />
-              )}
-            </div>
+            <FormFieldPreview
+              key={`${field.label}-${index}`}
+              field={field}
+              name={field.label.toLowerCase().replace(/\s+/g, "_")}
+            />
           ))}
           <button
             type="submit"
@@ -433,6 +462,10 @@ function renderSection(section: PageSection) {
       return <VideoSection content={content as unknown as VideoContent} />;
     case "cards":
       return <CardsSection content={content as unknown as CardsContent} />;
+    case "stats":
+      return <StatsSection content={content as unknown as StatsContent} />;
+    case "itinerary":
+      return <ItinerarySection content={content as unknown as ItineraryContent} />;
     case "testimonials":
       return <TestimonialsSection content={content as unknown as TestimonialsContent} />;
     case "map":

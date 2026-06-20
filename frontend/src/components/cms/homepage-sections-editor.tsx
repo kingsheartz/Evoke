@@ -24,7 +24,7 @@ import { SectionTypeBadge } from "@/components/cms/cms-page-view";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { SECTION_TYPES } from "@/lib/api";
-import { isSectionType } from "@/lib/cms-sections";
+import { defaultSectionContent, isSectionType, type SectionType } from "@/lib/cms-sections";
 import { createHomepageSection, type HomepageSection } from "@/lib/homepage-meta";
 import { cn } from "@/lib/utils";
 
@@ -32,10 +32,12 @@ function SortableHomepageSection({
   section,
   onUpdate,
   onDelete,
+  onTypeChange,
 }: {
   section: HomepageSection;
   onUpdate: (id: string, content: Record<string, unknown>) => void;
   onDelete: (id: string) => void;
+  onTypeChange: (id: string, type: SectionType) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: section.id });
   const style = { transform: CSS.Transform.toString(transform), transition };
@@ -44,11 +46,26 @@ function SortableHomepageSection({
   return (
     <div ref={setNodeRef} style={style} className="rounded-xl border border-app-border bg-app-surface p-5 ring-1 ring-app-border">
       <div className="mb-5 flex items-center justify-between gap-3 border-b border-app-border/60 pb-4">
-        <div className="flex min-w-0 items-center gap-3">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-3">
           <button type="button" className="cursor-grab shrink-0 text-app-muted hover:text-accent-soft" {...attributes} {...listeners}>
             <GripVertical className="h-5 w-5" />
           </button>
           <SectionTypeBadge type={section.component_type} />
+          <select
+            value={sectionType}
+            onChange={(e) => {
+              const next = e.target.value;
+              if (isSectionType(next)) onTypeChange(section.id, next);
+            }}
+            className="form-select h-9 min-w-[10rem] rounded-lg border border-app-border bg-app-surface-muted/60 px-3 text-sm text-app-text"
+            aria-label="Change section type"
+          >
+            {SECTION_TYPES.map((t) => (
+              <option key={t.value} value={t.value}>
+                {t.label}
+              </option>
+            ))}
+          </select>
         </div>
         <Button variant="ghost" size="sm" className="shrink-0" onClick={() => onDelete(section.id)}>
           <Trash2 className="h-4 w-4 text-status-error" />
@@ -90,6 +107,14 @@ export function HomepageSectionsEditor({
     onChange(sections.filter((s) => s.id !== id).map((s, i) => ({ ...s, sort_order: i })));
   };
 
+  const changeSectionType = (id: string, type: SectionType) => {
+    onChange(
+      sections.map((s) =>
+        s.id === id ? { ...s, component_type: type, content: defaultSectionContent(type) } : s,
+      ),
+    );
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
@@ -109,6 +134,7 @@ export function HomepageSectionsEditor({
                 section={section}
                 onUpdate={updateSection}
                 onDelete={deleteSection}
+                onTypeChange={changeSectionType}
               />
             ))}
           </div>

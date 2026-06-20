@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AdminHotkeysHelper } from "@/components/admin/admin-hotkeys-helper";
 import { AdminIntroTour } from "@/components/admin/admin-tour";
 import { useNotifications } from "@/lib/notifications";
-import { apiClient, type Advertisement } from "@/lib/api";
+import { apiClient } from "@/lib/api";
 import { eventMatchesHotkey, selectEffectiveHotkeys, useAdminPreferencesStore } from "@/stores/admin-preferences";
 import { useAdminSidebarStore } from "@/stores/admin-sidebar";
 import { useAuthStore } from "@/stores/app";
@@ -20,7 +19,6 @@ export function AdminShellExtras() {
   const resetTour = useAdminPreferencesStore((s) => s.resetTour);
   const toggleSidebar = useAdminSidebarStore((s) => s.toggleCollapsed);
   const { info } = useNotifications();
-  const [sidebarAd, setSidebarAd] = useState<Advertisement | null>(null);
   const [hotkeysOpen, setHotkeysOpen] = useState(false);
 
   useEffect(() => {
@@ -32,12 +30,6 @@ export function AdminShellExtras() {
       }
     }).catch(() => {});
   }, [token, mergeFromServer]);
-
-  useEffect(() => {
-    apiClient.getPublicAds("admin_sidebar").then((r) => {
-      setSidebarAd(r.data[0] ?? null);
-    }).catch(() => {});
-  }, []);
 
   useEffect(() => {
     const onOpenHotkeys = () => setHotkeysOpen(true);
@@ -108,21 +100,6 @@ export function AdminShellExtras() {
     <>
       <AdminIntroTour />
       <AdminHotkeysHelper open={hotkeysOpen} onClose={() => setHotkeysOpen(false)} />
-      {sidebarAd && (
-        <div className="admin-sidebar-ad pointer-events-none fixed bottom-20 z-30 hidden lg:block" style={{ left: "1rem", width: "calc(var(--admin-sidebar-width, 260px) - 2rem)" }}>
-          <Link
-            href={sidebarAd.link_url || "#"}
-            target={sidebarAd.link_url ? "_blank" : undefined}
-            className="pointer-events-auto block overflow-hidden rounded-xl border border-app-border bg-app-surface/90 ring-1 ring-accent/10 transition hover:ring-accent/30"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={sidebarAd.image_url} alt={sidebarAd.title} className="aspect-[16/9] w-full object-cover" />
-            {sidebarAd.title && (
-              <p className="truncate px-3 py-2 text-xs font-medium text-app-text">{sidebarAd.title}</p>
-            )}
-          </Link>
-        </div>
-      )}
     </>
   );
 }

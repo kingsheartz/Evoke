@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Support\UserValidation;
 use Illuminate\Foundation\Http\FormRequest;
 
 class RegisterRequest extends FormRequest
@@ -11,12 +12,19 @@ class RegisterRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'phone' => UserValidation::normalizePhone($this->input('phone')),
+        ]);
+    }
+
     public function rules(): array
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'phone' => ['nullable', 'string', 'max:20', 'unique:users,phone'],
+            'email' => UserValidation::emailRules(),
+            'phone' => UserValidation::phoneRules(),
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ];
     }

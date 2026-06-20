@@ -2,12 +2,15 @@
 
 import { useRef, useState } from "react";
 import { Camera, Trash2, User as UserIcon } from "lucide-react";
+import { ImageCropModal } from "@/components/ui/image-crop-modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { FormError, FormSuccess } from "@/components/admin/admin-form-primitives";
+import { useImageCropFlow } from "@/hooks/use-image-crop-flow";
 import { apiClient, type ProfilePayload, type User } from "@/lib/api";
+import { UPLOADABLE_IMAGE_ACCEPT } from "@/lib/media";
 import { useNotifications } from "@/lib/notifications";
 import { useAuthStore } from "@/stores/app";
 
@@ -20,6 +23,7 @@ export function ProfileEditor({ user, token }: ProfileEditorProps) {
   const { setAuth } = useAuthStore();
   const { success, error: notifyError } = useNotifications();
   const fileRef = useRef<HTMLInputElement>(null);
+  const { pendingCrop, startCrop, cancelCrop } = useImageCropFlow();
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -72,9 +76,7 @@ export function ProfileEditor({ user, token }: ProfileEditorProps) {
     }
   };
 
-  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const uploadAvatarFile = async (file: File) => {
     setUploading(true);
     setError(null);
     try {
@@ -89,6 +91,16 @@ export function ProfileEditor({ user, token }: ProfileEditorProps) {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = "";
     }
+  };
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (startCrop(file)) {
+      if (fileRef.current) fileRef.current.value = "";
+      return;
+    }
+    void uploadAvatarFile(file);
   };
 
   const handleRemoveAvatar = async () => {
@@ -141,9 +153,21 @@ export function ProfileEditor({ user, token }: ProfileEditorProps) {
               </Button>
             )}
           </div>
-          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => void handleAvatarChange(e)} />
+          <input ref={fileRef} type="file" accept={UPLOADABLE_IMAGE_ACCEPT} className="hidden" onChange={handleAvatarChange} />
         </div>
       </div>
+
+      <ImageCropModal
+        open={Boolean(pendingCrop)}
+        imageSrc={pendingCrop?.src ?? null}
+        fileName={pendingCrop?.fileName ?? "avatar.jpg"}
+        mimeType={pendingCrop?.mimeType ?? "image/jpeg"}
+        aspect={1}
+        title="Crop profile photo"
+        confirmLabel="Crop & upload"
+        onClose={cancelCrop}
+        onConfirm={uploadAvatarFile}
+      />
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2 sm:col-span-2">

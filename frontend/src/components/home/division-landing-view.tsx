@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { DivisionContent, DivisionHero } from "@/components/layout/division-hero";
 import { HomepageExtraSections } from "@/components/home/homepage-extra-sections";
 import {
@@ -27,13 +28,10 @@ export function DivisionLandingView({
       />
       <DivisionContent>
         <div className="grid gap-4 sm:grid-cols-3">
-          {page.highlight_cards.map((card) => {
+          {page.highlight_cards.map((card, index) => {
             const CardIcon = resolveDivisionIcon(card.icon);
-            return (
-              <div
-                key={card.title}
-                className="rounded-2xl border border-app-border bg-app-surface/80 p-6 ring-1 ring-app-border transition-colors hover:border-accent/25 hover:bg-app-surface"
-              >
+            const inner = (
+              <>
                 <div
                   className={cn(
                     "mb-3 flex h-10 w-10 items-center justify-center rounded-xl ring-1",
@@ -45,13 +43,34 @@ export function DivisionLandingView({
                 </div>
                 <h3 className="font-display font-semibold text-app-text">{card.title}</h3>
                 <p className="mt-1 text-sm text-app-muted">{card.description}</p>
+                {card.link_url?.trim() && (
+                  <span className="mt-3 inline-block text-sm font-medium text-accent-soft">
+                    {card.link_label?.trim() || "Learn more"} →
+                  </span>
+                )}
+              </>
+            );
+            const className =
+              "rounded-2xl border border-app-border bg-app-surface/80 p-6 ring-1 ring-app-border transition-colors hover:border-accent/25 hover:bg-app-surface";
+
+            if (card.link_url?.trim()) {
+              return (
+                <Link key={`${card.title}-${index}`} href={card.link_url} className={className}>
+                  {inner}
+                </Link>
+              );
+            }
+
+            return (
+              <div key={`${card.title}-${index}`} className={className}>
+                {inner}
               </div>
             );
           })}
         </div>
-        {page.footer_note && (
-          <p className="mt-12 text-center text-sm text-app-muted">{page.footer_note}</p>
-        )}
+        {page.footer_note?.trim() ? (
+          <p className="mt-12 text-center text-sm text-app-muted">{page.footer_note.trim()}</p>
+        ) : null}
       </DivisionContent>
       {sections.length > 0 && <HomepageExtraSections sections={sections} />}
     </>

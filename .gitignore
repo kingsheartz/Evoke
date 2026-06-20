@@ -43,3 +43,6 @@ npm-debug.log*
 
 # Docker volumes (local)
 postgres_data/
+
+# Backend storage
+backend/public/storage

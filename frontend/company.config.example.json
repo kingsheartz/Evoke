@@ -1,0 +1,16 @@
+{
+  "name": "EOKE Groups",
+  "shortName": "Company",
+  "tagline": "Your company tagline",
+  "description": "Short description shown in the site footer.",
+  "allowRuntimeBrandEdit": true,
+  "logos": {
+    "horizontal": "/logo-hr.png",
+    "vertical": "/logo-vr.png",
+    "icon": "/logo-icon.png",
+    "mobile": "/logo-icon.png"
+  },
+  "logoDisplay": {
+    "iconBlend": false
+  }
+}

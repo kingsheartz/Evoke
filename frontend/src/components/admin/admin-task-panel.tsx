@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { StatusBadge } from "@/components/ui/status-badge";
 import type { AdminTask, AdminTaskPayload, AdminTaskPriority, AdminTaskStatus } from "@/lib/api";
+import { useConfirm } from "@/lib/process-modal";
 import { cn } from "@/lib/utils";
 
 const emptyForm: AdminTaskPayload = {
@@ -40,6 +41,7 @@ export function AdminTaskPanel({
   onDelete,
   onToggleComplete,
 }: AdminTaskPanelProps) {
+  const confirm = useConfirm();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<AdminTaskPayload>({ ...emptyForm });
@@ -113,7 +115,13 @@ export function AdminTaskPanel({
   };
 
   const handleDelete = async (id: number) => {
-    if (!window.confirm("Delete this task?")) return;
+    const confirmed = await confirm({
+      title: "Are you sure?",
+      description: "This task will be permanently deleted. This action cannot be undone.",
+      confirmLabel: "Delete task",
+      variant: "danger",
+    });
+    if (!confirmed) return;
     setSaving(true);
     try {
       await onDelete(id);

@@ -6,8 +6,8 @@ export const DEFAULT_HERO_VIDEO = "/videos/EVOKE-videoplayback.mp4";
 
 export const defaultHomepageFallback: HomepageData = {
   hero: {
-    heading: "Welcome to Evoke",
-    subheading: "Academy · Sports Shop · Tours & Travels",
+    heading: "Welcome to EOKE Groups",
+    subheading: "EVOKE Academy · EOKE Sports · EVOKE Tours",
     background_type: "video",
     background_url: null,
     video_url: DEFAULT_HERO_VIDEO,
@@ -17,7 +17,7 @@ export const defaultHomepageFallback: HomepageData = {
   entry_cards: [
     {
       slug: "academy",
-      title: "Evoke Academy",
+      title: "EVOKE Academy",
       description: "Karate, Yoga, Swimming, Dance & more",
       icon: "graduation-cap",
       url: "/academy",
@@ -25,7 +25,7 @@ export const defaultHomepageFallback: HomepageData = {
     },
     {
       slug: "shop",
-      title: "Sports Shop",
+      title: "EOKE Sports",
       description: "Equipment, apparel & fitness accessories",
       icon: "shopping-bag",
       url: "/shop",
@@ -33,7 +33,7 @@ export const defaultHomepageFallback: HomepageData = {
     },
     {
       slug: "tours",
-      title: "Tours & Travels",
+      title: "EVOKE Tours",
       description: "Domestic, international & adventure packages",
       icon: "plane",
       url: "/tours",

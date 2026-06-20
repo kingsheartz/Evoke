@@ -30,6 +30,7 @@ import {
   type HomepageSection,
   type HomepageStat,
 } from "@/lib/homepage-meta";
+import { revalidateHomepagePublicCache } from "@/lib/revalidate-cms";
 import { useNotifications } from "@/lib/notifications";
 import { useAuthStore } from "@/stores/app";
 
@@ -65,7 +66,7 @@ function toForm(data: HomepageData): HomepageForm {
     stats_enabled: meta.stats?.enabled ?? true,
     stats: meta.stats?.items ?? defaultHomepageMeta().stats!.items!,
     features_enabled: meta.features?.enabled ?? true,
-    features_eyebrow: meta.features?.eyebrow ?? "Why Evoke",
+    features_eyebrow: meta.features?.eyebrow ?? "Why EOKE",
     features_heading: meta.features?.heading ?? "Built for excellence",
     features: meta.features?.items ?? defaultHomepageMeta().features!.items!,
     sections: meta.sections ?? [],
@@ -112,7 +113,7 @@ export default function HomepageEditorPage() {
     },
   });
 
-  const { fields: cardFields } = useFieldArray({ control, name: "entry_cards" });
+  const { fields: cardFields, append: appendCard, remove: removeCard } = useFieldArray({ control, name: "entry_cards" });
   const { fields: statFields, append: appendStat, remove: removeStat } = useFieldArray({ control, name: "stats" });
   const { fields: featureFields, append: appendFeature, remove: removeFeature } = useFieldArray({ control, name: "features" });
 
@@ -135,15 +136,16 @@ export default function HomepageEditorPage() {
     if (!token) return;
     try {
       await apiClient.updateHomepage(token, toPayload(data));
+      await revalidateHomepagePublicCache();
       reset(data);
-      success("Homepage saved. Hard refresh the public site to preview.");
+      success("Homepage saved. Refresh the public site to preview.");
     } catch (e) {
       notifyError(e instanceof Error ? e.message : "Failed to save homepage.");
     }
   };
 
   if (loading) {
-    return <PageLoading label="Loading homepage settings..." />;
+    return <PageLoading label="Loading homepage settings..." layout="viewport" />;
   }
 
   return (
@@ -194,11 +196,11 @@ export default function HomepageEditorPage() {
             <CardContent className="grid gap-5 md:grid-cols-2">
               <div className="form-field md:col-span-2">
                 <Label htmlFor="hero_heading">Heading</Label>
-                <Input id="hero_heading" placeholder="Welcome to Evoke" {...register("hero_heading")} />
+                <Input id="hero_heading" placeholder="Welcome to EOKE Groups" {...register("hero_heading")} />
               </div>
               <div className="form-field md:col-span-2">
                 <Label htmlFor="hero_subheading">Subheading</Label>
-                <Input id="hero_subheading" placeholder="Academy · Sports Shop · Tours & Travels" {...register("hero_subheading")} />
+                <Input id="hero_subheading" placeholder="EVOKE Academy · EOKE Sports · EVOKE Tours" {...register("hero_subheading")} />
               </div>
               <div className="form-field">
                 <Label htmlFor="hero_background_type">Background type</Label>
@@ -253,7 +255,7 @@ export default function HomepageEditorPage() {
                 <CardDescription>Key numbers shown below the hero.</CardDescription>
               </div>
               <label className="flex items-center gap-2 text-sm text-app-muted">
-                <Switch checked={statsEnabled} onCheckedChange={(v) => setValue("stats_enabled", v)} />
+                <Switch checked={statsEnabled} onCheckedChange={(v) => setValue("stats_enabled", v, { shouldDirty: true })} />
                 Show on site
               </label>
             </CardHeader>
@@ -280,11 +282,36 @@ export default function HomepageEditorPage() {
           </Card>
 
           <Card>
-            <CardHeader>
-              <CardTitle>Division entry cards</CardTitle>
-              <CardDescription>Bento grid linking to Academy, Shop, and Tours.</CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between gap-4">
+              <div>
+                <CardTitle>Division entry cards</CardTitle>
+                <CardDescription>Bento grid linking to Academy, Shop, and Tours.</CardDescription>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  appendCard({
+                    slug: "",
+                    title: "",
+                    description: "",
+                    icon: "graduation-cap",
+                    url: "",
+                    gradient: "from-blue-600 to-indigo-700",
+                  })
+                }
+              >
+                <Plus className="h-4 w-4" />
+                Add card
+              </Button>
             </CardHeader>
             <CardContent className="space-y-4">
+              {cardFields.length === 0 && (
+                <p className="rounded-xl border border-dashed border-app-border px-4 py-6 text-center text-sm text-app-muted">
+                  No entry cards. Add one to show the division grid on the homepage.
+                </p>
+              )}
               {cardFields.map((field, index) => (
                 <div key={field.id} className="grid gap-4 rounded-xl border border-app-border bg-app-surface-muted/20 p-4 md:grid-cols-2">
                   <div className="form-field">
@@ -321,6 +348,12 @@ export default function HomepageEditorPage() {
                       )}
                     />
                   </div>
+                  <div className="md:col-span-2 flex justify-end">
+                    <Button type="button" variant="ghost" size="sm" onClick={() => removeCard(index)}>
+                      <Trash2 className="mr-1 h-4 w-4 text-status-error" />
+                      Remove card
+                    </Button>
+                  </div>
                 </div>
               ))}
             </CardContent>
@@ -330,10 +363,10 @@ export default function HomepageEditorPage() {
             <CardHeader className="flex flex-row items-center justify-between gap-4">
               <div>
                 <CardTitle>Features section</CardTitle>
-                <CardDescription>Why Evoke — icon cards below the divisions.</CardDescription>
+                <CardDescription>Why EOKE — icon cards below the divisions.</CardDescription>
               </div>
               <label className="flex items-center gap-2 text-sm text-app-muted">
-                <Switch checked={featuresEnabled} onCheckedChange={(v) => setValue("features_enabled", v)} />
+                <Switch checked={featuresEnabled} onCheckedChange={(v) => setValue("features_enabled", v, { shouldDirty: true })} />
                 Show on site
               </label>
             </CardHeader>
@@ -341,7 +374,7 @@ export default function HomepageEditorPage() {
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="form-field">
                   <Label>Eyebrow</Label>
-                  <Input {...register("features_eyebrow")} placeholder="Why Evoke" />
+                  <Input {...register("features_eyebrow")} placeholder="Why EOKE" />
                 </div>
                 <div className="form-field">
                   <Label>Heading</Label>

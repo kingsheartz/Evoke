@@ -1,0 +1,16 @@
+{
+  "name": "EOKE Groups",
+  "shortName": "EOKE",
+  "tagline": "Where dreams meet reality",
+  "description": "A premium multi-business platform uniting world-class academy training, curated sports equipment, and unforgettable travel experiences.",
+  "allowRuntimeBrandEdit": true,
+  "logos": {
+    "horizontal": "/logo-hr-dark.png",
+    "vertical": "/logo-vr-dark.png",
+    "icon": "/logo-icon.png",
+    "mobile": "/logo-icon.png"
+  },
+  "logoDisplay": {
+    "iconBlend": false
+  }
+}

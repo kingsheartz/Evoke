@@ -1,0 +1,5 @@
+import { PageLoading } from "@/components/ui/page-loading";
+
+export default function AdminLoading() {
+  return <PageLoading label="Loading page…" layout="viewport" />;
+}

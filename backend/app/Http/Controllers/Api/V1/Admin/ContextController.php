@@ -73,7 +73,7 @@ class ContextController extends Controller
 
         if (in_array('academy', $enabled, true) && $can('academy.courses.manage')) {
             $items[] = [
-                'label' => 'Academy',
+                'label' => 'EVOKE Academy',
                 'icon' => 'graduation-cap',
                 'children' => [
                     ['label' => 'Courses', 'href' => '/admin/academy/courses', 'icon' => 'book-open'],
@@ -84,7 +84,7 @@ class ContextController extends Controller
 
         if (in_array('shop', $enabled, true) && $can('shop.products.manage')) {
             $items[] = [
-                'label' => 'Sports Shop',
+                'label' => 'EOKE Sports',
                 'icon' => 'shopping-bag',
                 'children' => [
                     ['label' => 'Products', 'href' => '/admin/shop/products', 'icon' => 'package'],
@@ -101,11 +101,14 @@ class ContextController extends Controller
             if ($can('tours.bookings.manage')) {
                 $tourChildren[] = ['label' => 'Bookings', 'href' => '/admin/tours/bookings', 'icon' => 'calendar-check'];
             }
-            $items[] = ['label' => 'Tours & Travels', 'icon' => 'plane', 'children' => $tourChildren];
+            $items[] = ['label' => 'EVOKE Tours', 'icon' => 'plane', 'children' => $tourChildren];
         }
 
-        if ($can('platform.manage') || $can('users.manage')) {
+        if ($can('platform.manage') || $can('users.manage') || $can('cms.homepage.manage') || $can('cms.pages.manage')) {
             $settingsChildren = [];
+            if ($can('platform.manage') || $can('cms.homepage.manage') || $can('cms.pages.manage')) {
+                $settingsChildren[] = ['label' => 'Brand', 'href' => '/admin/settings/brand', 'icon' => 'image'];
+            }
             if ($can('platform.manage')) {
                 $settingsChildren[] = ['label' => 'Preferences', 'href' => '/admin/settings/preferences', 'icon' => 'sliders'];
                 $settingsChildren[] = ['label' => 'Advertisements', 'href' => '/admin/settings/advertisements', 'icon' => 'megaphone'];

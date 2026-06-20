@@ -24,9 +24,12 @@ services:
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
       - INTERNAL_API_URL=http://backend:8000/api/v1
-      # Windows bind mounts: reliable file watching + route discovery in Docker
+      - NEXT_TELEMETRY_DISABLED=1
+      # Turbopack (default in package.json dev script) — faster route compiles than webpack.
+      # Windows bind mounts: polling keeps HMR reliable inside Docker.
       - WATCHPACK_POLLING=true
       - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING_INTERVAL=1000
     volumes:
       - ./frontend:/app
       # Keep node_modules inside the container (Linux binaries). Do NOT mount

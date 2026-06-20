@@ -13,9 +13,9 @@ import { apiClient, hasAdminAccess } from "@/lib/api";
 import { useAuthStore } from "@/stores/app";
 
 const quickLinks = [
-  { href: "/academy", label: "Academy", description: "Browse courses and enrollments", icon: GraduationCap },
-  { href: "/shop", label: "Sports Shop", description: "Shop gear and track orders", icon: ShoppingBag },
-  { href: "/tours", label: "Tours & Travels", description: "Explore packages and bookings", icon: Plane },
+  { href: "/academy", label: "EVOKE Academy", description: "Browse courses and enrollments", icon: GraduationCap },
+  { href: "/shop", label: "EOKE Sports", description: "Shop gear and track orders", icon: ShoppingBag },
+  { href: "/tours", label: "EVOKE Tours", description: "Explore packages and bookings", icon: Plane },
 ];
 
 function AccountContent() {

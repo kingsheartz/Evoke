@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { PageHeader } from "@/components/ui/page-header";
 import { AdminBackLink } from "@/components/admin/admin-form-primitives";
+import { revalidateCmsPagePublicCache } from "@/lib/revalidate-cms";
 import { apiClient } from "@/lib/api";
 import { useAuthStore } from "@/stores/app";
 
@@ -16,11 +17,20 @@ export default function NewCmsPage() {
   const router = useRouter();
   const token = useAuthStore((s) => s.token);
   const [form, setForm] = useState({ title: "", type: "page", status: "draft" });
+  const [creating, setCreating] = useState(false);
 
   const create = async () => {
-    if (!token || !form.title) return;
-    const { data } = await apiClient.createPage(token, form);
-    router.push(`/admin/cms/pages/${data.id}`);
+    if (!token || !form.title || creating) return;
+    setCreating(true);
+    try {
+      const { data } = await apiClient.createPage(token, form);
+      if (form.status === "published") {
+        await revalidateCmsPagePublicCache(data.slug);
+      }
+      router.push(`/admin/cms/pages/${data.id}`);
+    } finally {
+      setCreating(false);
+    }
   };
 
   return (
@@ -51,7 +61,7 @@ export default function NewCmsPage() {
               <option value="published">Published</option>
             </Select>
           </div>
-          <div className="md:col-span-2"><Button onClick={create}>Create & Build Page</Button></div>
+          <div className="md:col-span-2"><Button onClick={create} disabled={creating || !form.title}>{creating ? "Creating…" : "Create & Build Page"}</Button></div>
         </CardContent>
       </Card>
     </div>

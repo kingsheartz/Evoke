@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { AdminContext, NavItem, User } from "@/lib/api";
+import { ALLOW_RUNTIME_BRAND_EDIT } from "@/lib/brand-defaults";
+import { filterBrandNavigation } from "@/lib/brand";
 
 interface AuthState {
   user: User | null;
@@ -34,7 +36,7 @@ export const useAuthStore = create<AuthState>()(
           user: context.user,
           roles: context.roles,
           permissions: context.permissions,
-          navigation: context.navigation,
+          navigation: filterBrandNavigation(context.navigation, ALLOW_RUNTIME_BRAND_EDIT),
         }),
       logout: () =>
         set({ user: null, token: null, roles: [], permissions: [], navigation: [] }),

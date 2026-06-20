@@ -74,7 +74,7 @@ export function LoginForm() {
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
       <CardHeader>
         <CardTitle>Admin Sign In</CardTitle>
-        <p className="text-sm text-app-muted">Sign in to manage the Evoke platform</p>
+        <p className="text-sm text-app-muted">Sign in to manage the EOKE platform</p>
       </CardHeader>
       <CardContent>
         {!mounted ? (

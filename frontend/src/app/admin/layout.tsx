@@ -11,7 +11,7 @@ export const metadata = {
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
-    <AdminAuthGuard>
+    <>
       <AdminScrollLock />
       <AdminShellExtras />
       <div className="admin-shell" data-admin-layout="fixed-sidebar-v2">
@@ -19,10 +19,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="admin-main-column">
           <AdminHeader />
           <main className="admin-main" data-tour="main">
-            <AdminContent>{children}</AdminContent>
+            <AdminContent>
+              <AdminAuthGuard>{children}</AdminAuthGuard>
+            </AdminContent>
           </main>
         </div>
       </div>
-    </AdminAuthGuard>
+    </>
   );
 }

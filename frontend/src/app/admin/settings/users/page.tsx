@@ -23,6 +23,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { apiClient, type AdminUser, type UserListParams, type UserListStats } from "@/lib/api";
 import { formatRole } from "@/lib/status-labels";
 import { useNotifications } from "@/lib/notifications";
+import { useConfirm } from "@/lib/process-modal";
 import { useAuthStore } from "@/stores/app";
 import { cn } from "@/lib/utils";
 
@@ -64,6 +65,7 @@ function SortHeader({
 export default function UsersSettingsPage() {
   const token = useAuthStore((s) => s.token);
   const { success, error } = useNotifications();
+  const confirm = useConfirm();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [roles, setRoles] = useState<string[]>([]);
   const [stats, setStats] = useState<UserListStats | null>(null);
@@ -135,7 +137,14 @@ export default function UsersSettingsPage() {
   };
 
   const remove = async (id: number, name: string) => {
-    if (!token || !confirm(`Delete ${name}?`)) return;
+    if (!token) return;
+    const confirmed = await confirm({
+      title: "Are you sure?",
+      description: `This will permanently delete ${name}. This action cannot be undone.`,
+      confirmLabel: "Delete user",
+      variant: "danger",
+    });
+    if (!confirmed) return;
     try {
       await apiClient.deleteUser(token, id);
       if (selectedUserId === id) setPanelOpen(false);

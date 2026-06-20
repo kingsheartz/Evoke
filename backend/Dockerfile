@@ -9,6 +9,9 @@ RUN apk add --no-cache \
     git \
     curl \
     oniguruma-dev \
+    imagemagick \
+    libheif \
+    libheif-tools \
     && docker-php-ext-install pdo pdo_pgsql pdo_mysql zip mbstring bcmath
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer

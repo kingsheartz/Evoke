@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\Admin\ModuleController;
 use App\Http\Controllers\Api\V1\Admin\PlatformSettingsController;
 use App\Http\Controllers\Api\V1\Admin\TaskController;
 use App\Http\Controllers\Api\V1\Admin\UserController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('admin')->middleware(['auth:sanctum'])->group(function () {
@@ -37,7 +38,14 @@ Route::prefix('admin')->middleware(['auth:sanctum'])->group(function () {
     });
 
     Route::middleware('permission:platform.manage')->group(function () {
-        Route::get('/settings/{key}', [PlatformSettingsController::class, 'show']);
-        Route::put('/settings/{key}', [PlatformSettingsController::class, 'update']);
+        Route::get('/settings/{key}', [PlatformSettingsController::class, 'show'])
+            ->where('key', 'admin_preferences|advertisements');
+        Route::put('/settings/{key}', [PlatformSettingsController::class, 'update'])
+            ->where('key', 'admin_preferences|advertisements');
+    });
+
+    Route::middleware('permission:platform.manage|cms.homepage.manage|cms.pages.manage')->group(function () {
+        Route::get('/settings/brand', fn (Request $request, PlatformSettingsController $controller) => $controller->show($request, 'brand'));
+        Route::put('/settings/brand', fn (Request $request, PlatformSettingsController $controller) => $controller->update($request, 'brand'));
     });
 });

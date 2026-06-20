@@ -13,6 +13,8 @@ const buttonVariants = cva(
         outline:
           "border border-app-border bg-white/[0.02] text-app-text hover:border-accent/30 hover:bg-white/[0.05]",
         ghost: "text-app-muted hover:bg-white/[0.05] hover:text-app-text",
+        destructive:
+          "bg-[var(--color-error)] text-white hover:bg-red-500 focus-visible:ring-[var(--color-error)]/40",
         glow:
           "relative overflow-hidden bg-accent text-white before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent before:translate-x-[-200%] hover:before:translate-x-[200%] before:transition-transform before:duration-700 hover:bg-accent-hover",
       },

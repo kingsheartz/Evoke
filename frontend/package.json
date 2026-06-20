@@ -3,7 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --webpack",
+    "dev": "next dev --turbopack -H 0.0.0.0",
+    "dev:webpack": "next dev --webpack -H 0.0.0.0",
+    "generate:favicon": "node scripts/generate-favicon.mjs",
+    "validate:company": "node scripts/validate-company-config.mjs",
+    "prebuild": "node scripts/validate-company-config.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
@@ -20,6 +24,7 @@
     "next": "16.2.9",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "react-easy-crop": "^6.0.2",
     "react-hook-form": "^7.79.0",
     "tailwind-merge": "^3.6.0",
     "zod": "^4.4.3",

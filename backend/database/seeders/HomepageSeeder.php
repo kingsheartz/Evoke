@@ -21,7 +21,7 @@ class HomepageSeeder extends Seeder
             ],
             'features' => [
                 'enabled' => true,
-                'eyebrow' => 'Why Evoke',
+                'eyebrow' => 'Why EOKE',
                 'heading' => 'Built for excellence',
                 'items' => [
                     ['icon' => 'sparkles', 'title' => 'Premium Experience', 'description' => 'Every touchpoint designed with intention — from booking to delivery.'],
@@ -36,8 +36,8 @@ class HomepageSeeder extends Seeder
         ];
 
         $payload = [
-            'hero_heading' => 'Welcome to Evoke',
-            'hero_subheading' => 'Academy · Sports Shop · Tours & Travels',
+            'hero_heading' => 'Welcome to EOKE Groups',
+            'hero_subheading' => 'EVOKE Academy · EOKE Sports · EVOKE Tours',
             'hero_background_type' => 'video',
             'hero_background_url' => null,
             'hero_video_url' => '/videos/EVOKE-videoplayback.mp4',
@@ -46,7 +46,7 @@ class HomepageSeeder extends Seeder
             'entry_cards' => json_encode([
                 [
                     'slug' => 'academy',
-                    'title' => 'Evoke Academy',
+                    'title' => 'EVOKE Academy',
                     'description' => 'Karate, Yoga, Swimming, Dance & more',
                     'icon' => 'graduation-cap',
                     'url' => '/academy',
@@ -54,7 +54,7 @@ class HomepageSeeder extends Seeder
                 ],
                 [
                     'slug' => 'shop',
-                    'title' => 'Sports Shop',
+                    'title' => 'EOKE Sports',
                     'description' => 'Equipment, apparel & fitness accessories',
                     'icon' => 'shopping-bag',
                     'url' => '/shop',
@@ -62,7 +62,7 @@ class HomepageSeeder extends Seeder
                 ],
                 [
                     'slug' => 'tours',
-                    'title' => 'Tours & Travels',
+                    'title' => 'EVOKE Tours',
                     'description' => 'Domestic, international & adventure packages',
                     'icon' => 'plane',
                     'url' => '/tours',

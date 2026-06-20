@@ -3,10 +3,9 @@
 namespace App\Http\Controllers\Api\V1\CMS;
 
 use App\Http\Controllers\Controller;
+use App\Support\ImageNormalizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class MediaController extends Controller
 {
@@ -31,16 +30,21 @@ class MediaController extends Controller
             $rules['file'][] = 'mimetypes:video/mp4,video/webm,video/quicktime,video/x-msvideo';
             $rules['file'][] = 'max:51200';
         } else {
-            $rules['file'][] = 'image';
-            $rules['file'][] = 'max:5120';
+            $rules['file'] = ImageNormalizer::validationRules(5120);
         }
 
         $request->validate($rules);
 
         $file = $request->file('file');
         $folder = $type === 'video' ? 'cms/videos' : 'cms/images';
-        $filename = Str::uuid()->toString().'.'.$file->getClientOriginalExtension();
-        $path = $file->storeAs($folder, $filename, 'public');
+
+        try {
+            $path = $type === 'video'
+                ? $file->store($folder, 'public')
+                : ImageNormalizer::store($file, $folder);
+        } catch (\RuntimeException $e) {
+            abort(422, $e->getMessage());
+        }
 
         return response()->json([
             'data' => [

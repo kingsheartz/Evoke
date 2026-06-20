@@ -15,13 +15,15 @@ import { Button } from "@/components/ui/button";
 import { HeroIllustration } from "@/components/layout/page-illustration";
 import { AmbientGlow } from "@/components/ui/ambient-glow";
 import { usePrefersReducedMotion, useSaveData } from "@/hooks/use-media-preferences";
+import { useBrand } from "@/components/providers/brand-provider";
 import type { HomepageData } from "@/lib/api";
 import { DEFAULT_HERO_VIDEO } from "@/lib/homepage-defaults";
+import { cn } from "@/lib/utils";
 
 const divisionPills = [
-  { label: "Academy", href: "/academy", icon: GraduationCap },
-  { label: "Sports Shop", href: "/shop", icon: ShoppingBag },
-  { label: "Tours", href: "/tours", icon: Plane },
+  { label: "EVOKE Academy", href: "/academy", icon: GraduationCap },
+  { label: "EOKE Sports", href: "/shop", icon: ShoppingBag },
+  { label: "EVOKE Tours", href: "/tours", icon: Plane },
 ];
 
 interface HeroSectionProps {
@@ -43,6 +45,7 @@ function accentHeading(heading: string) {
 }
 
 export function HeroSection({ hero }: HeroSectionProps) {
+  const brand = useBrand();
   const sectionRef = useRef<HTMLElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -110,7 +113,10 @@ export function HeroSection({ hero }: HeroSectionProps) {
   return (
     <section
       ref={sectionRef}
-      className="relative flex min-h-[100svh] items-center justify-center overflow-hidden"
+      className={cn(
+        "hero-section relative flex min-h-[100svh] items-center justify-center overflow-hidden",
+        (isVideo || isImage) && "hero-section--media",
+      )}
       onMouseMove={onMouseMove}
     >
       {isVideo ? (
@@ -126,30 +132,31 @@ export function HeroSection({ hero }: HeroSectionProps) {
           >
             {loadVideo && <source src={videoSrc} type="video/mp4" />}
           </video>
-          <div className="absolute inset-0 bg-gradient-to-b from-app-bg/70 via-app-bg/50 to-app-bg" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(12,13,15,0.4)_100%)]" />
+          <div className="hero-media-scrim absolute inset-0" aria-hidden />
+          <div className="hero-media-vignette absolute inset-0" aria-hidden />
         </div>
       ) : isImage ? (
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: `url(${hero.background_url})` }}
         >
-          <div className="absolute inset-0 bg-gradient-to-b from-app-bg/70 via-app-bg/50 to-app-bg" />
+          <div className="hero-media-scrim absolute inset-0" aria-hidden />
+          <div className="hero-media-vignette absolute inset-0" aria-hidden />
         </div>
       ) : (
         <>
           <div className="absolute inset-0 mesh-bg" />
           {!reducedMotion && <AmbientGlow />}
           {!reducedMotion && <HeroIllustration />}
-          <div className="absolute inset-0 bg-gradient-to-b from-app-bg/40 via-app-bg/20 to-app-bg" />
+          <div className="hero-mesh-scrim absolute inset-0" aria-hidden />
         </>
       )}
 
       <div
         ref={contentRef}
-        className="relative z-10 mx-auto w-full max-w-5xl page-container pt-28 pb-28 text-center will-change-transform"
+        className="hero-copy relative z-10 mx-auto w-full max-w-5xl page-container pt-28 pb-28 text-center will-change-transform"
       >
-        <div className="animate-fade-up mx-auto mb-8 inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/40 px-4 py-1.5 text-xs font-medium text-white backdrop-blur-md">
+        <div className="hero-badge animate-fade-up mx-auto mb-8 inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-xs font-medium backdrop-blur-md">
           <span className="relative flex h-2 w-2">
             {!reducedMotion && (
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-60" />
@@ -159,12 +166,18 @@ export function HeroSection({ hero }: HeroSectionProps) {
           Premium Multi-Business Platform
         </div>
 
-        <h1 className="animate-fade-up-delay-1 font-display text-[2.75rem] font-semibold leading-[1.05] tracking-tight text-white sm:text-6xl md:text-7xl lg:text-[5.25rem]">
-          {accentHeading(hero.heading ?? "Welcome to Evoke")}
+        <h1 className="hero-title animate-fade-up-delay-1 font-display text-[2.75rem] font-semibold leading-[1.05] tracking-tight sm:text-6xl md:text-7xl lg:text-[5.25rem]">
+          {accentHeading(hero.heading?.trim() || `Welcome to ${brand.name}`)}
         </h1>
 
+        {brand.tagline?.trim() && (
+          <p className="hero-tagline animate-fade-up-delay-2 mx-auto mt-4 max-w-xl font-display text-lg italic tracking-wide text-white/90 md:text-xl">
+            {brand.tagline}
+          </p>
+        )}
+
         {hero.subheading && (
-          <p className="animate-fade-up-delay-2 mx-auto mt-6 max-w-2xl text-base leading-relaxed text-white/90 md:text-lg">
+          <p className="hero-subtitle animate-fade-up-delay-2 mx-auto mt-6 max-w-2xl text-base leading-relaxed md:text-lg">
             {hero.subheading}
           </p>
         )}
@@ -174,9 +187,9 @@ export function HeroSection({ hero }: HeroSectionProps) {
             <Link
               key={pill.href}
               href={pill.href}
-              className="group inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/35 px-4 py-2 text-sm text-white backdrop-blur-md transition-colors duration-300 hover:border-accent/40 hover:bg-accent/15 hover:text-white"
+              className="hero-pill group inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm backdrop-blur-md transition-colors duration-300 hover:border-accent/40 hover:bg-accent/15"
             >
-              <pill.icon className="h-4 w-4 text-accent-soft transition-transform duration-300 group-hover:scale-110" />
+              <pill.icon className="hero-pill-icon h-4 w-4 transition-transform duration-300 group-hover:scale-110" />
               {pill.label}
             </Link>
           ))}
@@ -195,9 +208,9 @@ export function HeroSection({ hero }: HeroSectionProps) {
             asChild
             size="lg"
             variant="outline"
-            className="min-w-[200px] border-white/15 bg-white/5 text-white backdrop-blur-md hover:border-white/25 hover:bg-white/10"
+            className="hero-cta-ghost min-w-[200px] border backdrop-blur-md"
           >
-            <Link href="/academy">Explore Academy</Link>
+            <Link href="/academy">Explore EVOKE Academy</Link>
           </Button>
         </div>
       </div>
@@ -215,7 +228,7 @@ export function HeroSection({ hero }: HeroSectionProps) {
 
       <a
         href="#divisions"
-        className="absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-1 text-white/80 transition-colors hover:text-accent-soft"
+        className="hero-scroll-hint absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-1 transition-colors hover:text-accent-soft"
         aria-label="Scroll to divisions"
       >
         <span className="text-[10px] font-medium uppercase tracking-[0.2em]">Scroll</span>

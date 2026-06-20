@@ -11,7 +11,7 @@ export default function RegisterPage() {
       badge={
         <div className="inline-flex items-center gap-2.5 rounded-full border border-app-border/80 bg-app-surface/60 px-4 py-1.5 text-xs text-app-muted backdrop-blur-sm">
           <UserPlus className="h-3.5 w-3.5 shrink-0 text-accent-soft" />
-          <span>Join the Evoke platform</span>
+          <span>Join the EOKE platform</span>
         </div>
       }
     >

@@ -12,9 +12,9 @@ class DivisionPageSeeder extends Seeder
         $pages = [
             [
                 'slug' => 'academy',
-                'nav_label' => 'Academy',
+                'nav_label' => 'EVOKE Academy',
                 'sort_order' => 1,
-                'badge' => 'Evoke Academy',
+                'badge' => 'EVOKE Academy',
                 'title' => 'Train with the best',
                 'description' => 'World-class instruction across martial arts, wellness, aquatics, and performing arts — all under one roof.',
                 'icon' => 'graduation-cap',
@@ -29,9 +29,9 @@ class DivisionPageSeeder extends Seeder
             ],
             [
                 'slug' => 'shop',
-                'nav_label' => 'Sports Shop',
+                'nav_label' => 'EOKE Sports',
                 'sort_order' => 2,
-                'badge' => 'Sports Shop',
+                'badge' => 'EOKE Sports',
                 'title' => 'Gear up to perform',
                 'description' => 'Curated equipment, apparel, and fitness accessories — quality-tested and ready to ship.',
                 'icon' => 'shopping-bag',
@@ -46,9 +46,9 @@ class DivisionPageSeeder extends Seeder
             ],
             [
                 'slug' => 'tours',
-                'nav_label' => 'Tours & Travels',
+                'nav_label' => 'EVOKE Tours',
                 'sort_order' => 3,
-                'badge' => 'Tours & Travels',
+                'badge' => 'EVOKE Tours',
                 'title' => 'Journeys worth remembering',
                 'description' => 'From serene domestic retreats to international adventures — every trip crafted with care.',
                 'icon' => 'plane',

@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Password;
 
 class AuthController extends Controller
 {
+    /** Register a customer account and return a Sanctum bearer token. */
     public function register(RegisterRequest $request): JsonResponse
     {
         $user = User::create([
@@ -34,6 +35,7 @@ class AuthController extends Controller
         ], 201);
     }
 
+    /** Authenticate with email/password and return a Sanctum bearer token. */
     public function login(LoginRequest $request): JsonResponse
     {
         $user = User::where('email', $request->validated('email'))->first();

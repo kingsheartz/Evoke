@@ -36,7 +36,7 @@ export function EntryCards({ cards }: EntryCardsProps) {
           Three worlds. <span className="text-accent-soft">One experience.</span>
         </h2>
         <p className="mx-auto mt-4 max-w-lg text-base text-app-muted">
-          Academy training, premium sports gear, and curated travel — unified under one premium brand.
+          EVOKE Academy, EOKE Sports, and EVOKE Tours — unified under EOKE Groups.
         </p>
       </div>
 

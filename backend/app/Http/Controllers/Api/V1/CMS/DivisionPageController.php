@@ -133,6 +133,8 @@ class DivisionPageController extends Controller
             'highlight_cards.*.title' => 'required_with:highlight_cards|string|max:255',
             'highlight_cards.*.description' => 'nullable|string|max:1000',
             'highlight_cards.*.icon' => 'nullable|string|max:64',
+            'highlight_cards.*.link_url' => 'nullable|string|max:2048',
+            'highlight_cards.*.link_label' => 'nullable|string|max:255',
             'footer_note' => 'nullable|string|max:500',
             'meta' => 'nullable|array',
             'is_active' => 'nullable|boolean',
@@ -145,13 +147,18 @@ class DivisionPageController extends Controller
             'description' => $validated['description'] ?? null,
             'icon' => $validated['icon'] ?? null,
             'accent_style' => $validated['accent_style'] ?? null,
-            'home_gradient' => $validated['home_gradient'] ?? null,
             'show_in_nav' => array_key_exists('show_in_nav', $validated) ? $validated['show_in_nav'] : null,
             'sort_order' => $validated['sort_order'] ?? null,
-            'footer_note' => array_key_exists('footer_note', $validated) ? $validated['footer_note'] : null,
             'is_active' => array_key_exists('is_active', $validated) ? $validated['is_active'] : null,
             'updated_at' => now(),
         ], fn ($v) => $v !== null);
+
+        if (array_key_exists('footer_note', $validated)) {
+            $payload['footer_note'] = filled($validated['footer_note']) ? $validated['footer_note'] : null;
+        }
+        if (array_key_exists('home_gradient', $validated)) {
+            $payload['home_gradient'] = filled($validated['home_gradient']) ? $validated['home_gradient'] : null;
+        }
 
         if (array_key_exists('highlight_cards', $validated)) {
             $payload['highlight_cards'] = json_encode($validated['highlight_cards'] ?? []);
@@ -210,7 +217,7 @@ class DivisionPageController extends Controller
             'accent_style' => $page->accent_style ?? 'accent',
             'home_gradient' => $page->home_gradient,
             'highlight_cards' => json_decode($page->highlight_cards ?? '[]', true),
-            'footer_note' => $page->footer_note,
+            'footer_note' => filled($page->footer_note ?? null) ? $page->footer_note : null,
             'meta' => json_decode($page->meta ?? '{}', true),
             'is_active' => (bool) ($page->is_active ?? true),
         ];

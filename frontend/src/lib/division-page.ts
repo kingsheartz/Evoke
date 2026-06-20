@@ -28,6 +28,8 @@ export interface DivisionHighlightCard {
   title: string;
   description: string;
   icon: string;
+  link_url?: string;
+  link_label?: string;
 }
 
 export interface DivisionNavItem {
@@ -171,7 +173,7 @@ export function emptyDivisionForm(slug: string, navLabel: string): DivisionPageD
 
 /** Fallback nav when API is unavailable. */
 export const FALLBACK_DIVISION_NAV: DivisionNavItem[] = [
-  { slug: "academy", nav_label: "Academy", icon: "graduation-cap", public_path: "/academy", sort_order: 1, show_in_nav: true },
-  { slug: "shop", nav_label: "Sports Shop", icon: "shopping-bag", public_path: "/shop", sort_order: 2, show_in_nav: true },
-  { slug: "tours", nav_label: "Tours & Travels", icon: "plane", public_path: "/tours", sort_order: 3, show_in_nav: true },
+  { slug: "academy", nav_label: "EVOKE Academy", icon: "graduation-cap", public_path: "/academy", sort_order: 1, show_in_nav: true },
+  { slug: "shop", nav_label: "EOKE Sports", icon: "shopping-bag", public_path: "/shop", sort_order: 2, show_in_nav: true },
+  { slug: "tours", nav_label: "EVOKE Tours", icon: "plane", public_path: "/tours", sort_order: 3, show_in_nav: true },
 ];

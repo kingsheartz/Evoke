@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { AmbientGlow } from "@/components/ui/ambient-glow";
+import { EvokeLogo } from "@/components/brand/evoke-logo";
 
 export function AuthPageShell({
   badge,
@@ -23,12 +23,7 @@ export function AuthPageShell({
 
       <div className="relative z-10 flex w-full max-w-md flex-col items-center">
         <header className="mb-12 flex flex-col items-center gap-6 text-center">
-          <Link
-            href="/"
-            className="font-display text-4xl font-semibold tracking-tight text-white transition-colors hover:text-accent-soft"
-          >
-            Evoke
-          </Link>
+          <EvokeLogo variant="auth" elevated />
           {badge}
         </header>
         {children}

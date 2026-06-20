@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ExternalLink, Save } from "lucide-react";
+import { ExternalLink, Save, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -16,13 +16,17 @@ import { PageLoading } from "@/components/ui/page-loading";
 import { PageSectionBuilder } from "@/components/cms/page-section-builder";
 import { useUnsavedChangesWarning } from "@/hooks/use-unsaved-changes";
 import { apiClient, type CmsPage, type PageSection } from "@/lib/api";
+import { revalidateCmsPagePublicCache } from "@/lib/revalidate-cms";
 import { useNotifications } from "@/lib/notifications";
+import { useConfirm } from "@/lib/process-modal";
 import { useAuthStore } from "@/stores/app";
 
 export default function EditCmsPage() {
   const params = useParams();
+  const router = useRouter();
   const token = useAuthStore((s) => s.token);
   const { success, error: notifyError } = useNotifications();
+  const confirm = useConfirm();
   const id = Number(params.id);
   const [page, setPage] = useState<CmsPage | null>(null);
   const [sections, setSections] = useState<PageSection[]>([]);
@@ -32,6 +36,7 @@ export default function EditCmsPage() {
   const [savedStatus, setSavedStatus] = useState("draft");
   const [sectionsDirty, setSectionsDirty] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [builderKey, setBuilderKey] = useState(0);
 
   useEffect(() => {
@@ -54,7 +59,7 @@ export default function EditCmsPage() {
   useUnsavedChangesWarning(isDirty);
 
   const save = useCallback(async () => {
-    if (!token) return;
+    if (!token || !page) return;
     setSaving(true);
     try {
       await apiClient.updatePage(token, id, { title, status });
@@ -63,6 +68,7 @@ export default function EditCmsPage() {
           apiClient.updatePageSection(token, id, section.id, { content: section.content }),
         ),
       );
+      await revalidateCmsPagePublicCache(page.slug);
       setSavedTitle(title);
       setSavedStatus(status);
       setSectionsDirty(false);
@@ -72,13 +78,35 @@ export default function EditCmsPage() {
     } finally {
       setSaving(false);
     }
-  }, [token, id, title, status, sections, success, notifyError]);
+  }, [token, id, title, status, sections, page, success, notifyError]);
 
   const handleSectionsChange = useCallback((next: PageSection[]) => {
     setSections(next);
   }, []);
 
-  if (!page) return <PageLoading label="Loading page..." />;
+  const deletePage = async () => {
+    if (!token || !page) return;
+    const confirmed = await confirm({
+      title: "Are you sure?",
+      description: `This will permanently delete “${page.title}”. This action cannot be undone.`,
+      confirmLabel: "Delete page",
+      variant: "danger",
+    });
+    if (!confirmed) return;
+    setDeleting(true);
+    try {
+      await apiClient.deletePage(token, id);
+      await revalidateCmsPagePublicCache(page.slug);
+      success("Page deleted.");
+      router.push("/admin/cms/pages");
+    } catch {
+      notifyError("Could not delete page.");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  if (!page) return <PageLoading label="Loading page..." layout="viewport" />;
 
   return (
     <div className="app-page">
@@ -104,6 +132,10 @@ export default function EditCmsPage() {
                 </Link>
               </Button>
             )}
+            <Button type="button" variant="ghost" size="sm" disabled={deleting} onClick={() => void deletePage()}>
+              <Trash2 className="h-4 w-4 text-status-error" />
+              {deleting ? "Deleting…" : "Delete page"}
+            </Button>
             <AdminBackLink href="/admin/cms/pages">← Back to pages</AdminBackLink>
           </div>
         }
@@ -136,6 +168,8 @@ export default function EditCmsPage() {
       <PageSectionBuilder
         key={builderKey}
         pageId={id}
+        pageSlug={page.slug}
+        pageStatus={status}
         sections={sections}
         onChange={handleSectionsChange}
         onDirtyChange={setSectionsDirty}

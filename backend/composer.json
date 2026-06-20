@@ -6,13 +6,14 @@
     "license": "proprietary",
     "require": {
         "php": "^8.4",
+        "barryvdh/laravel-dompdf": "^3.0",
+        "dedoc/scramble": "^0.13.28",
         "laravel/framework": "^12.0",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10",
-        "spatie/laravel-permission": "^6.0",
+        "predis/predis": "^2.0",
         "razorpay/razorpay": "^2.9",
-        "barryvdh/laravel-dompdf": "^3.0",
-        "predis/predis": "^2.0"
+        "spatie/laravel-permission": "^6.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -47,7 +48,8 @@
         ],
         "post-create-project-cmd": [
             "@php artisan key:generate --ansi"
-        ]
+        ],
+        "export-api-docs": "@php artisan scramble:export --path=storage/app/openapi.json"
     },
     "extra": {
         "laravel": {

@@ -34,7 +34,6 @@ export function AdminHeader() {
         >
           <PanelLeft className="h-4 w-4" />
         </Button>
-        <span className="text-sm font-medium text-app-muted">Evoke Admin</span>
       </div>
       <div className="flex items-center gap-2">
         <AdminHotkeysTrigger onClick={() => window.dispatchEvent(new CustomEvent("evoke-admin-hotkeys-open"))} />

@@ -2,6 +2,7 @@
 
 import { Plus, Trash2 } from "lucide-react";
 import { MediaUrlField } from "@/components/cms/media-url-field";
+import { FormFieldsEditor } from "@/components/cms/form-fields-editor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,9 +13,12 @@ import {
   type FaqItem,
   type FormField,
   type GalleryImage,
+  type ItineraryDay,
   type SectionType,
+  type StatItem,
   type TestimonialItem,
 } from "@/lib/cms-sections";
+import { DIVISION_ICONS } from "@/lib/division-page";
 import { cn } from "@/lib/utils";
 
 function FieldGroup({ label, children, className }: { label: string; children: React.ReactNode; className?: string }) {
@@ -170,25 +174,28 @@ export function SectionContentEditor({
             <div className="space-y-3">
               {images.map((image, index) => (
                 <ItemCard key={index} onRemove={() => patch({ images: images.filter((_, i) => i !== index) })}>
+                  <FieldGroup label="Image">
+                    <MediaUrlField
+                      kind="image"
+                      value={image.url}
+                      onChange={(url) => patch({ images: updateList(images, index, { url }) })}
+                    />
+                  </FieldGroup>
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="sm:col-span-2">
-                      <MediaUrlField
-                        kind="image"
-                        value={image.url}
-                        onChange={(url) => patch({ images: updateList(images, index, { url }) })}
+                    <FieldGroup label="Alt text">
+                      <Input
+                        placeholder="Describe the image"
+                        value={image.alt ?? ""}
+                        onChange={(e) => patch({ images: updateList(images, index, { alt: e.target.value }) })}
                       />
-                    </div>
-                    <Input
-                      placeholder="Alt text"
-                      value={image.alt ?? ""}
-                      onChange={(e) => patch({ images: updateList(images, index, { alt: e.target.value }) })}
-                    />
-                    <Input
-                      className="sm:col-span-2"
-                      placeholder="Caption (optional)"
-                      value={image.caption ?? ""}
-                      onChange={(e) => patch({ images: updateList(images, index, { caption: e.target.value }) })}
-                    />
+                    </FieldGroup>
+                    <FieldGroup label="Caption (optional)" className="sm:col-span-2">
+                      <Input
+                        placeholder="Optional caption"
+                        value={image.caption ?? ""}
+                        onChange={(e) => patch({ images: updateList(images, index, { caption: e.target.value }) })}
+                      />
+                    </FieldGroup>
                   </div>
                 </ItemCard>
               ))}
@@ -278,7 +285,7 @@ export function SectionContentEditor({
           <ListFieldGroup
             label="Cards"
             addLabel="Add card"
-            onAdd={() => patch({ items: [...items, { title: "", description: "", image_url: "", link_url: "", link_label: "" }] })}
+            onAdd={() => patch({ items: [...items, { title: "", description: "", image_url: "", icon: "book-open", link_url: "", link_label: "" }] })}
           >
             <div className="space-y-3">
               {items.map((item, index) => (
@@ -288,31 +295,47 @@ export function SectionContentEditor({
                     value={item.title}
                     onChange={(e) => patch({ items: updateList(items, index, { title: e.target.value }) })}
                   />
+                  <select
+                    value={item.icon ?? ""}
+                    onChange={(e) => patch({ items: updateList(items, index, { icon: e.target.value }) })}
+                    className="form-select h-11 w-full rounded-xl border border-app-border bg-app-surface-muted/60 px-3 text-sm text-app-text sm:max-w-xs"
+                  >
+                    <option value="">No icon</option>
+                    {DIVISION_ICONS.map((icon) => (
+                      <option key={icon.value} value={icon.value}>
+                        {icon.label}
+                      </option>
+                    ))}
+                  </select>
                   <Textarea
                     placeholder="Description"
                     value={item.description}
                     onChange={(e) => patch({ items: updateList(items, index, { description: e.target.value }) })}
                     rows={2}
                   />
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="sm:col-span-2">
-                      <MediaUrlField
-                        kind="image"
-                        value={item.image_url ?? ""}
-                        onChange={(url) => patch({ items: updateList(items, index, { image_url: url }) })}
-                      />
-                    </div>
-                    <Input
-                      placeholder="Link URL (optional)"
-                      value={item.link_url ?? ""}
-                      onChange={(e) => patch({ items: updateList(items, index, { link_url: e.target.value }) })}
+                  <FieldGroup label="Image">
+                    <MediaUrlField
+                      kind="image"
+                      value={item.image_url ?? ""}
+                      onChange={(url) => patch({ items: updateList(items, index, { image_url: url }) })}
                     />
+                  </FieldGroup>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <FieldGroup label="Link URL (optional)">
+                      <Input
+                        placeholder="https://... or /page"
+                        value={item.link_url ?? ""}
+                        onChange={(e) => patch({ items: updateList(items, index, { link_url: e.target.value }) })}
+                      />
+                    </FieldGroup>
+                    <FieldGroup label="Link label (optional)">
+                      <Input
+                        placeholder="Learn more"
+                        value={item.link_label ?? ""}
+                        onChange={(e) => patch({ items: updateList(items, index, { link_label: e.target.value }) })}
+                      />
+                    </FieldGroup>
                   </div>
-                  <Input
-                    placeholder="Link label (optional)"
-                    value={item.link_label ?? ""}
-                    onChange={(e) => patch({ items: updateList(items, index, { link_label: e.target.value }) })}
-                  />
                 </ItemCard>
               ))}
             </div>
@@ -403,43 +426,119 @@ export function SectionContentEditor({
               <Input value={String(content.contact_email ?? "")} onChange={(e) => patch({ contact_email: e.target.value })} placeholder="hello@example.com" />
             </FieldGroup>
           </div>
+          <FieldGroup label="Custom fields">
+            <FormFieldsEditor fields={fields} onChange={(next) => patch({ fields: next })} />
+          </FieldGroup>
+        </div>
+      );
+    }
+
+    case "stats": {
+      const items = (content.items as StatItem[] | undefined) ?? [];
+      const columns = Number(content.columns ?? 3) as 2 | 3 | 4;
+      return (
+        <div className={sectionStack}>
+          <FieldGroup label="Heading (optional)">
+            <Input value={String(content.heading ?? "")} onChange={(e) => patch({ heading: e.target.value })} />
+          </FieldGroup>
+          <FieldGroup label="Columns">
+            <select
+              value={columns}
+              onChange={(e) => patch({ columns: Number(e.target.value) as 2 | 3 | 4 })}
+              className="form-select h-10 w-full rounded-lg border border-app-border bg-app-surface-muted/60 px-3 text-sm text-app-text sm:max-w-[10rem]"
+            >
+              <option value={2}>2</option>
+              <option value={3}>3</option>
+              <option value={4}>4</option>
+            </select>
+          </FieldGroup>
           <ListFieldGroup
-            label="Form fields"
-            addLabel="Add field"
-            onAdd={() => patch({ fields: [...fields, { label: "New field", type: "text", required: false }] })}
+            label="Quick facts"
+            addLabel="Add fact"
+            onAdd={() => patch({ items: [...items, { label: "", value: "", icon: "clock" }] })}
           >
             <div className="space-y-3">
-              {fields.map((field, index) => (
-                <div
-                  key={index}
-                  className="flex flex-col gap-3 rounded-lg border border-app-border bg-app-surface-muted/40 p-4 sm:flex-row sm:flex-wrap sm:items-center"
-                >
+              {items.map((item, index) => (
+                <ItemCard key={index} onRemove={() => patch({ items: items.filter((_, i) => i !== index) })}>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <Input
+                      placeholder="Label (e.g. Duration)"
+                      value={item.label}
+                      onChange={(e) => patch({ items: updateList(items, index, { label: e.target.value }) })}
+                    />
+                    <Input
+                      placeholder="Value (e.g. 5 Days)"
+                      value={item.value}
+                      onChange={(e) => patch({ items: updateList(items, index, { value: e.target.value }) })}
+                    />
+                  </div>
+                  <select
+                    value={item.icon ?? "clock"}
+                    onChange={(e) => patch({ items: updateList(items, index, { icon: e.target.value }) })}
+                    className="form-select h-10 w-full rounded-lg border border-app-border bg-app-surface-muted/60 px-3 text-sm text-app-text sm:max-w-xs"
+                  >
+                    {DIVISION_ICONS.map((icon) => (
+                      <option key={icon.value} value={icon.value}>
+                        {icon.label}
+                      </option>
+                    ))}
+                  </select>
+                </ItemCard>
+              ))}
+            </div>
+          </ListFieldGroup>
+        </div>
+      );
+    }
+
+    case "itinerary": {
+      const items = (content.items as ItineraryDay[] | undefined) ?? [];
+      return (
+        <div className={sectionStack}>
+          <FieldGroup label="Itinerary tab heading">
+            <Input value={String(content.heading ?? "")} onChange={(e) => patch({ heading: e.target.value })} />
+          </FieldGroup>
+          <FieldGroup label="Cost tab heading">
+            <Input value={String(content.cost_heading ?? "")} onChange={(e) => patch({ cost_heading: e.target.value })} />
+          </FieldGroup>
+          <FieldGroup label="Cost tab content">
+            <Textarea value={String(content.cost_body ?? "")} onChange={(e) => patch({ cost_body: e.target.value })} rows={4} />
+          </FieldGroup>
+          <ListFieldGroup
+            label="Days"
+            addLabel="Add day"
+            onAdd={() => patch({ items: [...items, { title: "", body: "" }] })}
+          >
+            <div className="space-y-3">
+              {items.map((item, index) => (
+                <ItemCard key={index} onRemove={() => patch({ items: items.filter((_, i) => i !== index) })}>
                   <Input
-                    className="min-w-0 flex-1 sm:min-w-[10rem]"
-                    placeholder="Label"
-                    value={field.label}
-                    onChange={(e) => patch({ fields: updateList(fields, index, { label: e.target.value }) })}
+                    placeholder="Day title (e.g. Day 01: Arrival)"
+                    value={item.title}
+                    onChange={(e) => patch({ items: updateList(items, index, { title: e.target.value }) })}
+                  />
+                  <Textarea
+                    placeholder="Day details"
+                    value={item.body ?? ""}
+                    onChange={(e) => patch({ items: updateList(items, index, { body: e.target.value }) })}
+                    rows={3}
                   />
                   <select
-                    value={field.type}
-                    onChange={(e) => patch({ fields: updateList(fields, index, { type: e.target.value as FormField["type"] }) })}
-                    className="form-select h-10 w-full rounded-lg border border-app-border bg-app-surface-muted/60 px-3 text-sm text-app-text sm:w-auto"
+                    value={item.milestone ?? ""}
+                    onChange={(e) =>
+                      patch({
+                        items: updateList(items, index, {
+                          milestone: (e.target.value || undefined) as ItineraryDay["milestone"],
+                        }),
+                      })
+                    }
+                    className="form-select h-10 w-full rounded-lg border border-app-border bg-app-surface-muted/60 px-3 text-sm text-app-text sm:max-w-xs"
                   >
-                    <option value="text">Text</option>
-                    <option value="email">Email</option>
-                    <option value="tel">Phone</option>
-                    <option value="textarea">Long text</option>
+                    <option value="">Regular day</option>
+                    <option value="start">Trip start</option>
+                    <option value="end">Departure / end</option>
                   </select>
-                  <label className="flex items-center gap-2 text-sm text-app-muted">
-                    <input
-                      type="checkbox"
-                      checked={field.required ?? false}
-                      onChange={(e) => patch({ fields: updateList(fields, index, { required: e.target.checked }) })}
-                    />
-                    Required
-                  </label>
-                  <ItemActions onRemove={() => patch({ fields: fields.filter((_, i) => i !== index) })} />
-                </div>
+                </ItemCard>
               ))}
             </div>
           </ListFieldGroup>

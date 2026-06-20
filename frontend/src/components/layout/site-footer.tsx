@@ -2,24 +2,24 @@
 
 import Link from "next/link";
 import { resolveDivisionIcon } from "@/lib/division-page";
+import { CompanyLogo } from "@/components/brand/company-logo";
+import { useBrand } from "@/components/providers/brand-provider";
 import { PageContainer } from "@/components/layout/app-shell";
 import { SiteThemeToggle } from "@/components/theme/site-theme-toggle";
 import { useDivisionNav } from "@/hooks/use-division-nav";
 
 export function SiteFooter() {
   const { items: divisions } = useDivisionNav();
+  const brand = useBrand();
 
   return (
     <footer className="relative border-t border-app-border bg-app-surface/50">
       <PageContainer className="py-16">
         <div className="grid gap-12 md:grid-cols-5">
           <div className="md:col-span-2">
-            <Link href="/" className="font-display text-2xl font-semibold text-app-text">
-              Evoke
-            </Link>
+            <CompanyLogo variant="footer" />
             <p className="mt-4 max-w-sm text-sm leading-relaxed text-app-muted">
-              A premium multi-business platform uniting world-class academy training,
-              curated sports equipment, and unforgettable travel experiences.
+              {brand.description}
             </p>
           </div>
 
@@ -79,7 +79,7 @@ export function SiteFooter() {
 
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-app-border pt-8 sm:flex-row">
           <p className="text-xs text-app-muted">
-            © {new Date().getFullYear()} Evoke Platform. All rights reserved.
+            © {new Date().getFullYear()} {brand.name}. All rights reserved.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
             <SiteThemeToggle />

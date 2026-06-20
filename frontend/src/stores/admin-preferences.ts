@@ -54,7 +54,7 @@ export const HOTKEY_CATALOG: {
 export const DEFAULT_ADMIN_PREFERENCES: AdminPreferences = {
   notifications: {
     enabled: true,
-    position: "top-right",
+    position: "top-center",
     defaultDurationMs: 5000,
     showProgressBar: true,
     showCountdown: false,
@@ -138,10 +138,13 @@ export const useAdminPreferencesStore = create<AdminPreferencesState>()(
           const validPositions: NotificationPosition[] = [
             "top-right", "top-left", "bottom-right", "bottom-left", "top-center", "bottom-center",
           ];
-          const position =
+          const positionRaw =
             n.position && validPositions.includes(n.position as NotificationPosition)
               ? (n.position as NotificationPosition)
               : s.notifications.position;
+          const position = positionRaw.startsWith("bottom")
+            ? (positionRaw.replace("bottom", "top") as NotificationPosition)
+            : positionRaw;
           return {
             notifications: { ...s.notifications, ...n, position },
             hotkeys: { ...DEFAULT_ADMIN_PREFERENCES.hotkeys, ...s.hotkeys, ...(server.hotkeys ?? {}) },
@@ -159,6 +162,12 @@ export const useAdminPreferencesStore = create<AdminPreferencesState>()(
       onRehydrateStorage: () => (state) => {
         if (state) {
           state.hotkeys = { ...DEFAULT_ADMIN_PREFERENCES.hotkeys, ...state.hotkeys };
+          if (state.notifications.position.startsWith("bottom")) {
+            state.notifications.position = state.notifications.position.replace(
+              "bottom",
+              "top",
+            ) as NotificationPosition;
+          }
           state.hydrated = true;
         }
       },

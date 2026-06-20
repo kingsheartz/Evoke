@@ -33,7 +33,9 @@ import {
   slugifyDivision,
 } from "@/lib/division-page";
 import type { HomepageSection } from "@/lib/homepage-meta";
+import { revalidateDivisionPublicCache } from "@/lib/revalidate-cms";
 import { useNotifications } from "@/lib/notifications";
+import { useConfirm } from "@/lib/process-modal";
 import { useAuthStore } from "@/stores/app";
 
 interface DivisionForm {
@@ -50,6 +52,21 @@ interface DivisionForm {
   footer_note: string;
   sections: HomepageSection[];
 }
+
+const EMPTY_DIVISION_FORM: DivisionForm = {
+  nav_label: "",
+  sort_order: 0,
+  show_in_nav: true,
+  badge: "",
+  title: "",
+  description: "",
+  icon: "graduation-cap",
+  accent_style: "accent",
+  home_gradient: "",
+  highlight_cards: [],
+  footer_note: "",
+  sections: [],
+};
 
 function toForm(data: DivisionPageData): DivisionForm {
   const meta = parseDivisionMeta(data.meta);
@@ -72,6 +89,7 @@ function toForm(data: DivisionPageData): DivisionForm {
 export default function DivisionPagesEditorPage() {
   const token = useAuthStore((s) => s.token);
   const { success, error: notifyError } = useNotifications();
+  const confirm = useConfirm();
   const [loading, setLoading] = useState(true);
   const [divisions, setDivisions] = useState<DivisionPageData[]>([]);
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
@@ -79,7 +97,9 @@ export default function DivisionPagesEditorPage() {
   const [newSlug, setNewSlug] = useState("");
   const [newNavLabel, setNewNavLabel] = useState("");
 
-  const { register, control, handleSubmit, reset, setValue, formState: { isDirty, isSubmitting } } = useForm<DivisionForm>();
+  const { register, control, handleSubmit, reset, setValue, formState: { isDirty, isSubmitting } } = useForm<DivisionForm>({
+    defaultValues: EMPTY_DIVISION_FORM,
+  });
   const sections = useWatch({ control, name: "sections" }) ?? [];
   const showInNav = useWatch({ control, name: "show_in_nav" });
 
@@ -120,7 +140,7 @@ export default function DivisionPagesEditorPage() {
   const onSubmit = handleSubmit(async (data) => {
     if (!token || !selectedSlug) return;
     try {
-      await apiClient.updateDivisionPage(token, selectedSlug, {
+      const res = await apiClient.updateDivisionPage(token, selectedSlug, {
         nav_label: data.nav_label,
         sort_order: Number(data.sort_order),
         show_in_nav: data.show_in_nav,
@@ -131,12 +151,13 @@ export default function DivisionPagesEditorPage() {
         accent_style: data.accent_style as DivisionPageData["accent_style"],
         home_gradient: data.home_gradient || null,
         highlight_cards: data.highlight_cards,
-        footer_note: data.footer_note || null,
+        footer_note: data.footer_note.trim() || null,
         meta: { sections: data.sections },
       });
       invalidateDivisionNavCache();
+      await revalidateDivisionPublicCache(selectedSlug);
       await loadDivisions();
-      reset(data);
+      reset(toForm(res.data));
       success("Division saved.");
     } catch {
       notifyError("Could not save division.");
@@ -162,6 +183,7 @@ export default function DivisionPagesEditorPage() {
         nav_label: label,
       });
       invalidateDivisionNavCache();
+      await revalidateDivisionPublicCache(data.slug);
       const list = await loadDivisions();
       setSelectedSlug(data.slug);
       setShowCreate(false);
@@ -178,10 +200,17 @@ export default function DivisionPagesEditorPage() {
 
   const deleteDivision = async () => {
     if (!token || !selectedSlug) return;
-    if (!window.confirm(`Delete division “${current?.nav_label}” and its page at /${selectedSlug}?`)) return;
+    const confirmed = await confirm({
+      title: "Are you sure?",
+      description: `This will permanently delete “${current?.nav_label}” and its public page at /${selectedSlug}. This action cannot be undone.`,
+      confirmLabel: "Delete division",
+      variant: "danger",
+    });
+    if (!confirmed) return;
     try {
       await apiClient.deleteDivisionPage(token, selectedSlug);
       invalidateDivisionNavCache();
+      await revalidateDivisionPublicCache(selectedSlug);
       const list = await loadDivisions();
       setSelectedSlug(list?.[0]?.slug ?? null);
       success("Division deleted.");
@@ -191,7 +220,7 @@ export default function DivisionPagesEditorPage() {
   };
 
   if (loading) {
-    return <PageLoading label="Loading divisions…" />;
+    return <PageLoading label="Loading divisions…" layout="viewport" />;
   }
 
   return (
@@ -338,7 +367,7 @@ export default function DivisionPagesEditorPage() {
                     <Switch
                       id="show-in-nav"
                       checked={showInNav ?? true}
-                      onCheckedChange={(v) => setValue("show_in_nav", v)}
+                      onCheckedChange={(v) => setValue("show_in_nav", v, { shouldDirty: true })}
                       className="shrink-0"
                     />
                   </div>
@@ -402,7 +431,7 @@ export default function DivisionPagesEditorPage() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => append({ title: "", description: "", icon: "book-open" })}
+                    onClick={() => append({ title: "", description: "", icon: "book-open", link_url: "", link_label: "" })}
                   >
                     <Plus className="mr-1 h-4 w-4" />
                     Add card
@@ -432,6 +461,14 @@ export default function DivisionPagesEditorPage() {
                         <Label>Description</Label>
                         <Input {...register(`highlight_cards.${index}.description`)} />
                       </div>
+                      <div className="form-field">
+                        <Label>Link URL (optional)</Label>
+                        <Input {...register(`highlight_cards.${index}.link_url`)} placeholder="/academy or https://..." />
+                      </div>
+                      <div className="form-field">
+                        <Label>Link label (optional)</Label>
+                        <Input {...register(`highlight_cards.${index}.link_label`)} placeholder="Learn more" />
+                      </div>
                       <div className="md:col-span-2 flex justify-end">
                         <Button type="button" variant="ghost" size="sm" onClick={() => remove(index)}>
                           <Trash2 className="mr-1 h-4 w-4 text-status-error" />
@@ -444,11 +481,33 @@ export default function DivisionPagesEditorPage() {
               </Card>
 
               <Card>
-                <CardHeader>
-                  <CardTitle>Footer note</CardTitle>
+                <CardHeader className="flex flex-row items-start justify-between gap-4">
+                  <div>
+                    <CardTitle>Footer note</CardTitle>
+                    <CardDescription>
+                      Optional message at the bottom of this division page. Edit below, or clear to remove it from the site.
+                    </CardDescription>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setValue("footer_note", "", { shouldDirty: true })}
+                  >
+                    <Trash2 className="mr-1 h-4 w-4 text-status-error" />
+                    Clear
+                  </Button>
                 </CardHeader>
                 <CardContent>
-                  <Input {...register("footer_note")} />
+                  <div className="form-field">
+                    <Label htmlFor="footer_note">Note text</Label>
+                    <Textarea
+                      id="footer_note"
+                      rows={2}
+                      placeholder="e.g. Online storefront launching soon."
+                      {...register("footer_note")}
+                    />
+                  </div>
                 </CardContent>
               </Card>
 

@@ -63,8 +63,13 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
     };
   }, [hydrated, token, router, setContext]);
 
-  if (!hydrated || !ready || !user) {
-    return <PageLoading label="Loading admin panel..." fullScreen />;
+  if (!hydrated || !token || !ready || !user) {
+    return (
+      <PageLoading
+        label={token ? "Loading admin panel..." : "Signing out..."}
+        layout="viewport"
+      />
+    );
   }
 
   return <>{children}</>;

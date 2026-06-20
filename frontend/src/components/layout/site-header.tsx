@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { SiteAuthActions } from "@/components/layout/site-auth-actions";
 import { PageContainer } from "@/components/layout/app-shell";
+import { EvokeLogo } from "@/components/brand/evoke-logo";
 import { useDivisionNav } from "@/hooks/use-division-nav";
 import { cn } from "@/lib/utils";
 
@@ -37,12 +38,7 @@ export function SiteHeader() {
       )}
     >
       <PageContainer className="relative z-[1] flex h-[4.5rem] items-center justify-between">
-        <Link
-          href="/"
-          className="site-header-brand font-display text-xl font-semibold tracking-tight transition-opacity hover:opacity-80"
-        >
-          Evoke
-        </Link>
+        <EvokeLogo variant="header" elevated={onHero} />
 
         <nav className="hidden items-center gap-1 md:flex">
           {navItems.map((link) => {

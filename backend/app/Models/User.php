@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\UserValidation;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -50,6 +51,39 @@ class User extends Authenticatable
             'password' => 'hashed',
             'two_factor_enabled' => 'boolean',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::deleting(function (self $user): void {
+            if ($user->isForceDeleting()) {
+                return;
+            }
+
+            $user->email = self::scrubUniqueValue($user->email, $user->id);
+            if ($user->phone) {
+                $user->phone = self::scrubUniqueValue($user->phone, $user->id);
+            }
+            $user->saveQuietly();
+        });
+    }
+
+    protected function phone(): Attribute
+    {
+        return Attribute::make(
+            set: fn (?string $value) => UserValidation::normalizePhone($value),
+        );
+    }
+
+    private static function scrubUniqueValue(string $value, int $userId): string
+    {
+        $suffix = ".deleted.{$userId}";
+
+        if (str_ends_with($value, $suffix)) {
+            return $value;
+        }
+
+        return $value.$suffix;
     }
 
     public function branch(): BelongsTo

@@ -1,45 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import { apiClient, type AdPlacement, type Advertisement } from "@/lib/api";
+import { SiteAdCarousel } from "@/components/site/site-ad-carousel";
+import { useSiteAds, adsForPlacement } from "@/hooks/use-site-ads";
+import type { AdPlacement } from "@/lib/api";
 
 export function SiteAdBanner({ placement }: { placement: AdPlacement }) {
-  const [ads, setAds] = useState<Advertisement[]>([]);
+  const ads = useSiteAds();
+  const placementAds = adsForPlacement(ads, placement);
 
-  useEffect(() => {
-    apiClient.getPublicAds(placement).then((r) => setAds(r.data)).catch(() => setAds([]));
-  }, [placement]);
+  if (placementAds.length === 0) return null;
 
-  if (ads.length === 0) return null;
-
-  const ad = ads[0];
-  const inner = (
-    <>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={ad.image_url} alt={ad.title} className="h-full w-full object-cover" />
-      {ad.title && placement !== "site_header" && (
-        <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-3 py-2 text-xs font-medium text-white">
-          {ad.title}
-        </span>
-      )}
-    </>
+  return (
+    <div className="mx-auto max-w-4xl">
+      <SiteAdCarousel ads={placementAds} variant="inline" />
+    </div>
   );
-
-  const className =
-    placement === "site_header"
-      ? "relative block h-10 overflow-hidden md:h-12"
-      : placement === "footer"
-        ? "relative block aspect-[6/1] overflow-hidden rounded-lg"
-        : "relative block aspect-[21/9] overflow-hidden rounded-2xl";
-
-  if (ad.link_url) {
-    return (
-      <Link href={ad.link_url} target="_blank" rel="noopener noreferrer" className={className}>
-        {inner}
-      </Link>
-    );
-  }
-
-  return <div className={className}>{inner}</div>;
 }

@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api\V1\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Models\User;
+use App\Support\ImageNormalizer;
+use App\Support\UserValidation;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -65,14 +67,18 @@ class UserController extends Controller
     public function uploadAvatar(Request $request, User $user): JsonResponse
     {
         $request->validate([
-            'avatar' => ['required', 'image', 'max:2048'],
+            'avatar' => ImageNormalizer::validationRules(2048),
         ]);
 
         if ($user->avatar) {
             Storage::disk('public')->delete($user->avatar);
         }
 
-        $path = $request->file('avatar')->store('avatars/'.$user->id, 'public');
+        try {
+            $path = ImageNormalizer::store($request->file('avatar'), 'avatars/'.$user->id);
+        } catch (\RuntimeException $e) {
+            abort(422, $e->getMessage());
+        }
         $user->update(['avatar' => $path]);
 
         return response()->json(['data' => $user->fresh(['roles', 'branch', 'permissions'])]);
@@ -90,10 +96,14 @@ class UserController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        $request->merge([
+            'phone' => UserValidation::normalizePhone($request->input('phone')),
+        ]);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'phone' => 'nullable|string|max:20|unique:users,phone',
+            'email' => UserValidation::emailRules(),
+            'phone' => UserValidation::phoneRules(),
             'password' => 'required|string|min:8',
             'role' => 'required|string|exists:roles,name',
             'branch_id' => 'nullable|exists:branches,id',
@@ -110,6 +120,7 @@ class UserController extends Controller
 
         $user = User::create([
             ...$validated,
+            'phone' => $validated['phone'] ?? null,
             'password' => Hash::make($validated['password']),
             'email_verified_at' => now(),
         ]);
@@ -121,10 +132,16 @@ class UserController extends Controller
 
     public function update(Request $request, User $user): JsonResponse
     {
+        if ($request->has('phone')) {
+            $request->merge([
+                'phone' => UserValidation::normalizePhone($request->input('phone')),
+            ]);
+        }
+
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
-            'email' => 'sometimes|email|unique:users,email,'.$user->id,
-            'phone' => 'nullable|string|max:20|unique:users,phone,'.$user->id,
+            'email' => UserValidation::emailRules($user->id, required: false),
+            'phone' => UserValidation::phoneRules($user->id),
             'password' => 'nullable|string|min:8',
             'role' => 'sometimes|string|exists:roles,name',
             'branch_id' => 'nullable|exists:branches,id',
@@ -140,6 +157,10 @@ class UserController extends Controller
             $validated['password'] = Hash::make($validated['password']);
         } else {
             unset($validated['password']);
+        }
+
+        if (array_key_exists('phone', $validated)) {
+            $validated['phone'] = $validated['phone'] ?? null;
         }
 
         $role = $validated['role'] ?? null;
