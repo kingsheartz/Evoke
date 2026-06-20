@@ -64,6 +64,13 @@ class DivisionPageSeeder extends Seeder
         ];
 
         foreach ($pages as $index => $page) {
+            $vertical = $page['slug'];
+            $catalogLabel = match ($vertical) {
+                'tours' => 'tour packages',
+                'shop' => 'products',
+                default => 'courses',
+            };
+
             DB::table('division_page_settings')->updateOrInsert(
                 ['slug' => $page['slug']],
                 [
@@ -78,7 +85,17 @@ class DivisionPageSeeder extends Seeder
                     'home_gradient' => $page['home_gradient'],
                     'highlight_cards' => json_encode($page['highlight_cards']),
                     'footer_note' => $page['footer_note'],
-                    'meta' => json_encode(['sections' => []]),
+                    'meta' => json_encode([
+                        'sections' => [],
+                        'featured_catalog' => [
+                            'enabled' => true,
+                            'vertical' => $vertical,
+                            'featured_only' => $vertical !== 'academy',
+                            'limit' => 6,
+                            'heading' => "Featured {$catalogLabel}",
+                            'view_all_label' => "Browse all {$catalogLabel}",
+                        ],
+                    ]),
                     'is_active' => true,
                     'updated_at' => now(),
                 ],

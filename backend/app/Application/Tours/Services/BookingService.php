@@ -35,4 +35,19 @@ class BookingService
             ->latest()
             ->paginate($perPage);
     }
+
+    public function listAll(int $perPage = 20, ?string $status = null)
+    {
+        return Booking::with(['user', 'package'])
+            ->when($status, fn ($query, $value) => $query->where('status', $value))
+            ->latest()
+            ->paginate($perPage);
+    }
+
+    public function update(Booking $booking, array $data): Booking
+    {
+        $booking->update($data);
+
+        return $booking->fresh(['user', 'package']);
+    }
 }

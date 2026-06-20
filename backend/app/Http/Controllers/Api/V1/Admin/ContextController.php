@@ -86,15 +86,21 @@ class ContextController extends Controller
             ];
         }
 
-        if (in_array('shop', $enabled, true) && $can('shop.products.manage')) {
-            $items[] = [
-                'label' => 'EOKE Sports',
-                'icon' => 'shopping-bag',
-                'children' => [
-                    ['label' => 'Products', 'href' => '/admin/shop/products', 'icon' => 'package'],
-                    ['label' => 'Orders', 'href' => '/admin/shop/orders', 'icon' => 'shopping-cart'],
-                ],
-            ];
+        if (in_array('shop', $enabled, true) && ($can('shop.products.manage') || $can('shop.orders.manage'))) {
+            $shopChildren = [];
+            if ($can('shop.products.manage')) {
+                $shopChildren[] = ['label' => 'Products', 'href' => '/admin/shop/products', 'icon' => 'package'];
+            }
+            if ($can('shop.orders.manage')) {
+                $shopChildren[] = ['label' => 'Orders', 'href' => '/admin/shop/orders', 'icon' => 'shopping-cart'];
+            }
+            if ($shopChildren !== []) {
+                $items[] = [
+                    'label' => 'EOKE Sports',
+                    'icon' => 'shopping-bag',
+                    'children' => $shopChildren,
+                ];
+            }
         }
 
         if (in_array('tours', $enabled, true) && ($can('tours.packages.manage') || $can('tours.bookings.manage'))) {

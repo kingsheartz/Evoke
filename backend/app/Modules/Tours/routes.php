@@ -27,4 +27,9 @@ Route::prefix('tours')->middleware(['module.enabled:tours'])->group(function () 
         Route::put('/admin/packages/{package}/itinerary/{day}', [ItineraryController::class, 'update']);
         Route::delete('/admin/packages/{package}/itinerary/{day}', [ItineraryController::class, 'destroy']);
     });
+
+    Route::middleware(['auth:sanctum', 'permission:tours.bookings.manage'])->group(function () {
+        Route::get('/admin/bookings', [BookingController::class, 'adminIndex']);
+        Route::put('/admin/bookings/{booking}', [BookingController::class, 'adminUpdate']);
+    });
 });

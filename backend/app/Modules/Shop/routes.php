@@ -33,4 +33,9 @@ Route::prefix('shop')->middleware(['module.enabled:shop'])->group(function () {
         Route::put('/admin/products/{product}/variants/{variant}', [ProductVariantController::class, 'update']);
         Route::delete('/admin/products/{product}/variants/{variant}', [ProductVariantController::class, 'destroy']);
     });
+
+    Route::middleware(['auth:sanctum', 'permission:shop.orders.manage'])->group(function () {
+        Route::get('/admin/orders', [OrderController::class, 'adminIndex']);
+        Route::put('/admin/orders/{order}', [OrderController::class, 'adminUpdate']);
+    });
 });

@@ -1,5 +1,5 @@
-import type { Course, Product, TourPackage } from "@/lib/api";
-import { apiClient } from "@/lib/api";
+import type { DivisionFeaturedCatalogConfig } from "@/lib/division-page";
+import { apiClient, type Course, type Product, type TourPackage } from "@/lib/api";
 import type { StatItem } from "@/lib/cms-sections";
 import type { GalleryImage } from "@/lib/cms-sections";
 
@@ -258,6 +258,16 @@ export async function loadCatalogForCms(content: {
       );
     }
   }
+}
+
+export async function loadDivisionFeaturedCatalog(
+  config: DivisionFeaturedCatalogConfig,
+): Promise<OfferingCardData[]> {
+  return loadCatalogForCms({
+    vertical: config.vertical,
+    featured_only: config.featured_only,
+    limit: config.limit,
+  });
 }
 
 export function offeringCta(vertical: OfferingVertical): { label: string; href: string } {

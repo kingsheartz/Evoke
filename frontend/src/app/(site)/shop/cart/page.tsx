@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { apiClient, type Cart } from "@/lib/api";
 import { formatOfferingPrice } from "@/lib/offerings";
+import { revalidateShopPublicCache } from "@/lib/revalidate-cms";
 import { useAuthStore } from "@/stores/app";
 
 function CartContent() {
@@ -58,8 +59,9 @@ function CartContent() {
         country: user.country ?? "IN",
         phone: user.phone ?? "",
       };
-      await apiClient.createOrder(token, { shipping_address });
-      setMessage("Order placed successfully.");
+      const response = await apiClient.createOrder(token, { shipping_address });
+      await revalidateShopPublicCache();
+      setMessage(`Order ${response.data.order_number} placed successfully.`);
       await load();
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "Checkout failed.");
@@ -134,6 +136,14 @@ function CartContent() {
         {message && (
           <p className={`mt-4 text-sm ${message.includes("success") ? "text-status-success" : "text-status-error"}`}>
             {message}
+            {message.includes("placed") && (
+              <>
+                {" "}
+                <Link href="/account" className="font-medium text-accent-soft hover:text-accent">
+                  View account
+                </Link>
+              </>
+            )}
             {message.includes("address") && (
               <>
                 {" "}

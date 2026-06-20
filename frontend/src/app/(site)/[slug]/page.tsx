@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
-import { DivisionLandingView } from "@/components/home/division-landing-view";
-import { apiClient } from "@/lib/api";
+import { DivisionLandingPage } from "@/components/home/division-landing-page";
 import { RESERVED_SITE_SLUGS } from "@/lib/division-page";
 
 export default async function DynamicDivisionPage({
@@ -14,11 +13,5 @@ export default async function DynamicDivisionPage({
     notFound();
   }
 
-  try {
-    const response = await apiClient.getDivisionPage(slug);
-    if (!response.data) notFound();
-    return <DivisionLandingView page={response.data} />;
-  } catch {
-    notFound();
-  }
+  return <DivisionLandingPage slug={slug} />;
 }

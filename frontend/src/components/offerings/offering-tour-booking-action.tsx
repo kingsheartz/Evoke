@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { apiClient } from "@/lib/api";
+import { revalidateTourPublicCache } from "@/lib/revalidate-cms";
 import { useAuthStore } from "@/stores/app";
 
 export function TourBookingAction({
@@ -40,13 +41,14 @@ export function TourBookingAction({
     setSubmitting(true);
     setMessage(null);
     try {
-      await apiClient.createBooking(token, {
+      const response = await apiClient.createBooking(token, {
         package_id: packageId,
         travel_date: travelDate,
         travelers_count: travelers,
         special_requests: requests.trim() || undefined,
       });
-      setMessage("Booking request submitted. We will confirm shortly.");
+      await revalidateTourPublicCache();
+      setMessage(`Booking ${response.data.booking_number} submitted. We will confirm shortly.`);
       setOpen(false);
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "Could not submit booking.");

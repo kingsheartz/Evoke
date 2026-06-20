@@ -307,6 +307,17 @@ export const apiClient = {
   getEnrollments: (token: string) =>
     api<{ data: Enrollment[] } | Paginated<Enrollment>>("/academy/enrollments", { token }),
 
+  updateEnrollment: (
+    token: string,
+    id: number,
+    payload: Partial<{ status: string; payment_status: string; payment_reference: string; amount_paid: number }>,
+  ) =>
+    api<{ data: Enrollment }>(`/academy/admin/enrollments/${id}`, {
+      method: "PUT",
+      token,
+      body: JSON.stringify(payload),
+    }),
+
   createEnrollment: (token: string, payload: { batch_id: number }) =>
     api<{ data: Enrollment }>("/academy/enrollments", {
       method: "POST",
@@ -420,6 +431,25 @@ export const apiClient = {
 
   getOrders: (token: string) => api<Paginated<ShopOrder>>("/shop/orders", { token }),
 
+  getAdminOrders: (token: string, params?: { status?: string; page?: number }) => {
+    const query = new URLSearchParams();
+    if (params?.status) query.set("status", params.status);
+    if (params?.page) query.set("page", String(params.page));
+    const qs = query.toString();
+    return api<Paginated<ShopOrder>>(`/shop/admin/orders${qs ? `?${qs}` : ""}`, { token });
+  },
+
+  updateAdminOrder: (
+    token: string,
+    id: number,
+    payload: Partial<{ status: string; payment_status: string; payment_reference: string; tracking_number: string }>,
+  ) =>
+    api<{ data: ShopOrder }>(`/shop/admin/orders/${id}`, {
+      method: "PUT",
+      token,
+      body: JSON.stringify(payload),
+    }),
+
   // Tours
   getAdminPackages: (token: string) =>
     api<Paginated<TourPackage>>(`/tours/admin/packages`, { token }),
@@ -455,6 +485,25 @@ export const apiClient = {
     }),
 
   getBookings: (token: string) => api<Paginated<TourBooking>>("/tours/bookings", { token }),
+
+  getAdminBookings: (token: string, params?: { status?: string; page?: number }) => {
+    const query = new URLSearchParams();
+    if (params?.status) query.set("status", params.status);
+    if (params?.page) query.set("page", String(params.page));
+    const qs = query.toString();
+    return api<Paginated<TourBooking>>(`/tours/admin/bookings${qs ? `?${qs}` : ""}`, { token });
+  },
+
+  updateAdminBooking: (
+    token: string,
+    id: number,
+    payload: Partial<{ status: string; payment_status: string; payment_reference: string }>,
+  ) =>
+    api<{ data: TourBooking }>(`/tours/admin/bookings/${id}`, {
+      method: "PUT",
+      token,
+      body: JSON.stringify(payload),
+    }),
 
   // Settings
   getAdminModules: (token: string) =>
@@ -850,8 +899,15 @@ export interface Enrollment {
   id: number;
   status: string;
   payment_status: string;
+  amount_paid?: string;
+  enrolled_at?: string | null;
+  created_at?: string;
   user?: User;
-  batch?: { course?: { title: string } };
+  batch?: {
+    name?: string;
+    course?: { title: string; slug?: string };
+    trainer?: { name: string } | null;
+  };
 }
 
 export interface CartItem {
@@ -870,18 +926,24 @@ export interface ShopOrder {
   id: number;
   order_number: string;
   status: string;
-  total_amount: string;
+  payment_status?: string;
+  total: string;
+  total_amount?: string;
   created_at: string;
+  user?: User;
+  items?: Array<{ product_name: string; quantity: number; total: string }>;
 }
 
 export interface TourBooking {
   id: number;
   booking_number: string;
   status: string;
+  payment_status?: string;
   total_amount: string;
   travel_date: string;
   travelers_count: number;
   package?: { title: string; slug: string };
+  user?: User;
   created_at: string;
 }
 

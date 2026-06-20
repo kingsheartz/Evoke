@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import type { CourseBatch } from "@/lib/api";
 import { apiClient } from "@/lib/api";
+import { revalidateAcademyPublicCache } from "@/lib/revalidate-cms";
 import { useAuthStore } from "@/stores/app";
 
 const enrollableStatuses = new Set<CourseBatch["status"]>(["upcoming", "open", "active"]);
@@ -43,8 +44,11 @@ export function AcademyEnrollAction({
     setSubmitting(true);
     setMessage(null);
     try {
-      await apiClient.createEnrollment(token, { batch_id: batchId });
-      setMessage("Enrollment submitted successfully.");
+      const response = await apiClient.createEnrollment(token, { batch_id: batchId });
+      await revalidateAcademyPublicCache();
+      const statusNote =
+        response.data.status === "pending" ? " Pending approval." : "";
+      setMessage(`Enrollment submitted successfully.${statusNote}`);
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "Could not enroll.");
     } finally {

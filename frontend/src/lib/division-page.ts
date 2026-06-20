@@ -15,6 +15,17 @@ import {
 } from "lucide-react";
 import type { HomepageSection } from "@/lib/homepage-meta";
 
+export type SectionDefaultsDivision = "tours" | "shop" | "academy";
+
+export interface DivisionFeaturedCatalogConfig {
+  enabled: boolean;
+  vertical: SectionDefaultsDivision;
+  featured_only?: boolean;
+  limit?: number;
+  heading?: string;
+  view_all_label?: string;
+}
+
 export type DivisionAccentStyle =
   | "accent"
   | "emerald"
@@ -149,9 +160,56 @@ export function slugifyDivision(input: string): string {
 
 export function parseDivisionMeta(meta: Record<string, unknown> | undefined | null) {
   const sections = meta?.sections;
+  const featuredCatalog = meta?.featured_catalog;
   return {
     sections: Array.isArray(sections) ? (sections as HomepageSection[]) : [],
+    featured_catalog:
+      featuredCatalog && typeof featuredCatalog === "object"
+        ? (featuredCatalog as DivisionFeaturedCatalogConfig)
+        : null,
   };
+}
+
+const catalogLabels: Record<SectionDefaultsDivision, string> = {
+  tours: "tour packages",
+  shop: "products",
+  academy: "courses",
+};
+
+export function defaultFeaturedCatalogForVertical(
+  vertical: SectionDefaultsDivision,
+): DivisionFeaturedCatalogConfig {
+  const label = catalogLabels[vertical];
+  return {
+    enabled: true,
+    vertical,
+    featured_only: vertical !== "academy",
+    limit: 6,
+    heading: `Featured ${label}`,
+    view_all_label: `Browse all ${label}`,
+  };
+}
+
+export function resolveDivisionFeaturedCatalog(page: DivisionPageData): DivisionFeaturedCatalogConfig | null {
+  const { featured_catalog: fromMeta } = parseDivisionMeta(page.meta);
+
+  if (fromMeta?.enabled === false) {
+    return null;
+  }
+
+  if (fromMeta?.vertical && fromMeta.enabled) {
+    return {
+      ...defaultFeaturedCatalogForVertical(fromMeta.vertical),
+      ...fromMeta,
+      enabled: true,
+    };
+  }
+
+  if (page.slug === "tours" || page.slug === "shop" || page.slug === "academy") {
+    return defaultFeaturedCatalogForVertical(page.slug);
+  }
+
+  return null;
 }
 
 export function emptyDivisionForm(slug: string, navLabel: string): DivisionPageData {
@@ -169,7 +227,15 @@ export function emptyDivisionForm(slug: string, navLabel: string): DivisionPageD
     home_gradient: null,
     highlight_cards: [],
     footer_note: null,
-    meta: { sections: [] },
+    meta: {
+      sections: [],
+      featured_catalog: {
+        enabled: false,
+        vertical: "academy",
+        featured_only: true,
+        limit: 6,
+      },
+    },
     is_active: true,
   };
 }

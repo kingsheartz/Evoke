@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { GraduationCap, LogOut, Plane, Palette, ShoppingBag } from "lucide-react";
 import { CustomerAuthGuard } from "@/components/auth/customer-auth-guard";
+import { AccountActivity } from "@/components/account/account-activity";
 import { ProfileEditor } from "@/components/account/profile-editor";
 import { PageContainer } from "@/components/layout/app-shell";
 import { ThemeSettings } from "@/components/theme/theme-settings";
@@ -84,6 +85,9 @@ function AccountContent() {
         </Card>
 
         <h2 className="mb-4 font-display text-xl font-semibold text-app-text">Your activity</h2>
+        <AccountActivity token={token} />
+
+        <h2 className="mb-4 mt-10 font-display text-xl font-semibold text-app-text">Explore divisions</h2>
         <div className="grid gap-4 sm:grid-cols-3">
           {quickLinks.map((link) => (
             <Link

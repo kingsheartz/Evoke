@@ -41,4 +41,15 @@ class EnrollmentService
             ->latest()
             ->paginate($perPage);
     }
+
+    public function update(Enrollment $enrollment, array $data): Enrollment
+    {
+        if (($data['status'] ?? null) === 'approved' && ! $enrollment->enrolled_at) {
+            $data['enrolled_at'] = now();
+        }
+
+        $enrollment->update($data);
+
+        return $enrollment->fresh(['user', 'batch.course', 'batch.trainer']);
+    }
 }

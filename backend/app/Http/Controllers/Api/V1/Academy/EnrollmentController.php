@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1\Academy;
 use App\Application\Academy\Services\EnrollmentService;
 use App\Events\Academy\EnrollmentCreated;
 use App\Http\Controllers\Controller;
+use App\Models\Academy\Enrollment;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -16,12 +17,15 @@ class EnrollmentController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $enrollments = $request->user()
-            ->hasRole(['super-admin', 'academy-manager'])
-            ? $this->enrollmentService->listAll($request->integer('per_page', 15))
-            : $this->enrollmentService->listForUser($request->user()->id);
+        if ($request->user()->hasRole(['super-admin', 'academy-manager'])) {
+            $enrollments = $this->enrollmentService->listAll($request->integer('per_page', 15));
 
-        return response()->json($enrollments);
+            return response()->json($enrollments);
+        }
+
+        $enrollments = $this->enrollmentService->listForUser($request->user()->id);
+
+        return response()->json(['data' => $enrollments]);
     }
 
     public function store(Request $request): JsonResponse
@@ -35,5 +39,19 @@ class EnrollmentController extends Controller
         EnrollmentCreated::dispatch($enrollment);
 
         return response()->json(['data' => $enrollment->load('batch.course')], 201);
+    }
+
+    public function adminUpdate(Request $request, Enrollment $enrollment): JsonResponse
+    {
+        $validated = $request->validate([
+            'status' => 'sometimes|string|in:pending,approved,rejected,cancelled,completed',
+            'payment_status' => 'sometimes|string|in:unpaid,paid,refunded',
+            'payment_reference' => 'nullable|string|max:255',
+            'amount_paid' => 'sometimes|numeric|min:0',
+        ]);
+
+        $enrollment = $this->enrollmentService->update($enrollment, $validated);
+
+        return response()->json(['data' => $enrollment]);
     }
 }

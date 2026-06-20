@@ -34,4 +34,8 @@ Route::prefix('academy')->middleware(['module.enabled:academy'])->group(function
         Route::put('/admin/trainers/{trainer}', [TrainerController::class, 'update']);
         Route::delete('/admin/trainers/{trainer}', [TrainerController::class, 'destroy']);
     });
+
+    Route::middleware(['auth:sanctum', 'permission:academy.enrollments.manage'])->group(function () {
+        Route::put('/admin/enrollments/{enrollment}', [EnrollmentController::class, 'adminUpdate']);
+    });
 });

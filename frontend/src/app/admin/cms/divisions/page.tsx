@@ -32,6 +32,7 @@ import {
   emptyDivisionForm,
   parseDivisionMeta,
   slugifyDivision,
+  type DivisionFeaturedCatalogConfig,
 } from "@/lib/division-page";
 import { inferDivisionFromSlug } from "@/lib/cms-sections";
 import type { HomepageSection } from "@/lib/homepage-meta";
@@ -53,6 +54,12 @@ interface DivisionForm {
   highlight_cards: DivisionHighlightCard[];
   footer_note: string;
   sections: HomepageSection[];
+  featured_catalog_enabled: boolean;
+  featured_catalog_vertical: DivisionFeaturedCatalogConfig["vertical"];
+  featured_catalog_featured_only: boolean;
+  featured_catalog_limit: number;
+  featured_catalog_heading: string;
+  featured_catalog_view_all_label: string;
 }
 
 const EMPTY_DIVISION_FORM: DivisionForm = {
@@ -68,10 +75,17 @@ const EMPTY_DIVISION_FORM: DivisionForm = {
   highlight_cards: [],
   footer_note: "",
   sections: [],
+  featured_catalog_enabled: false,
+  featured_catalog_vertical: "academy",
+  featured_catalog_featured_only: true,
+  featured_catalog_limit: 6,
+  featured_catalog_heading: "",
+  featured_catalog_view_all_label: "",
 };
 
 function toForm(data: DivisionPageData): DivisionForm {
   const meta = parseDivisionMeta(data.meta);
+  const catalog = meta.featured_catalog;
   return {
     nav_label: data.nav_label,
     sort_order: data.sort_order ?? 0,
@@ -85,6 +99,12 @@ function toForm(data: DivisionPageData): DivisionForm {
     highlight_cards: data.highlight_cards?.length ? data.highlight_cards : [],
     footer_note: data.footer_note ?? "",
     sections: meta.sections,
+    featured_catalog_enabled: catalog?.enabled ?? (data.slug === "tours" || data.slug === "shop" || data.slug === "academy"),
+    featured_catalog_vertical: catalog?.vertical ?? (data.slug === "tours" || data.slug === "shop" || data.slug === "academy" ? data.slug : "academy"),
+    featured_catalog_featured_only: catalog?.featured_only ?? true,
+    featured_catalog_limit: catalog?.limit ?? 6,
+    featured_catalog_heading: catalog?.heading ?? "",
+    featured_catalog_view_all_label: catalog?.view_all_label ?? "",
   };
 }
 
@@ -104,6 +124,8 @@ export default function DivisionPagesEditorPage() {
   });
   const sections = useWatch({ control, name: "sections" }) ?? [];
   const showInNav = useWatch({ control, name: "show_in_nav" });
+  const featuredCatalogEnabled = useWatch({ control, name: "featured_catalog_enabled" });
+  const featuredCatalogFeaturedOnly = useWatch({ control, name: "featured_catalog_featured_only" });
 
   const { fields, append, remove } = useFieldArray({ control, name: "highlight_cards" });
 
@@ -154,7 +176,17 @@ export default function DivisionPagesEditorPage() {
         home_gradient: data.home_gradient || null,
         highlight_cards: data.highlight_cards,
         footer_note: data.footer_note.trim() || null,
-        meta: { sections: data.sections },
+        meta: {
+          sections: data.sections,
+          featured_catalog: {
+            enabled: data.featured_catalog_enabled,
+            vertical: data.featured_catalog_vertical,
+            featured_only: data.featured_catalog_featured_only,
+            limit: data.featured_catalog_limit,
+            heading: data.featured_catalog_heading || undefined,
+            view_all_label: data.featured_catalog_view_all_label || undefined,
+          },
+        },
       });
       invalidateDivisionNavCache();
       await revalidateDivisionPublicCache(selectedSlug);
@@ -487,6 +519,82 @@ export default function DivisionPagesEditorPage() {
                       </div>
                     </div>
                   ))}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Featured catalog</CardTitle>
+                  <CardDescription>
+                    Show a grid of tours, shop products, or academy courses on this division landing page.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="grid gap-5 md:grid-cols-2">
+                  <div className="md:col-span-2 flex flex-col gap-3 rounded-lg border border-app-border px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0 flex-1">
+                      <Label htmlFor="featured-catalog-enabled">Show featured catalog</Label>
+                      <p className="mt-0.5 text-xs text-app-muted">
+                        Custom divisions can pull from any vertical catalog
+                      </p>
+                    </div>
+                    <Switch
+                      id="featured-catalog-enabled"
+                      checked={featuredCatalogEnabled ?? false}
+                      onCheckedChange={(value) =>
+                        setValue("featured_catalog_enabled", value, { shouldDirty: true })
+                      }
+                      className="shrink-0"
+                    />
+                  </div>
+                  {featuredCatalogEnabled && (
+                    <>
+                      <div className="form-field">
+                        <Label>Catalog source</Label>
+                        <Select {...register("featured_catalog_vertical")}>
+                          <option value="tours">EVOKE Tours</option>
+                          <option value="shop">EOKE Sports</option>
+                          <option value="academy">EVOKE Academy</option>
+                        </Select>
+                      </div>
+                      <div className="form-field">
+                        <Label>Item limit</Label>
+                        <Input
+                          type="number"
+                          min={1}
+                          max={24}
+                          {...register("featured_catalog_limit", { valueAsNumber: true })}
+                        />
+                      </div>
+                      <div className="md:col-span-2 flex flex-col gap-3 rounded-lg border border-app-border px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="min-w-0 flex-1">
+                          <Label htmlFor="featured-catalog-featured-only">Featured items only</Label>
+                          <p className="mt-0.5 text-xs text-app-muted">When off, shows the latest catalog items</p>
+                        </div>
+                        <Switch
+                          id="featured-catalog-featured-only"
+                          checked={featuredCatalogFeaturedOnly ?? true}
+                          onCheckedChange={(value) =>
+                            setValue("featured_catalog_featured_only", value, { shouldDirty: true })
+                          }
+                          className="shrink-0"
+                        />
+                      </div>
+                      <div className="form-field md:col-span-2">
+                        <Label>Section heading (optional)</Label>
+                        <Input
+                          {...register("featured_catalog_heading")}
+                          placeholder="Featured courses"
+                        />
+                      </div>
+                      <div className="form-field md:col-span-2">
+                        <Label>View all label (optional)</Label>
+                        <Input
+                          {...register("featured_catalog_view_all_label")}
+                          placeholder="Browse all courses"
+                        />
+                      </div>
+                    </>
+                  )}
                 </CardContent>
               </Card>
 
