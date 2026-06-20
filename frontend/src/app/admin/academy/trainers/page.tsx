@@ -6,7 +6,7 @@ import { Pencil, Plus } from "lucide-react";
 import { PermissionGate } from "@/components/admin/permission-gate";
 import { ActionButton } from "@/components/ui/action-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DataTable, TableEmpty, TableLoading } from "@/components/ui/data-table";
+import { ConfigurableDataTable, TableEmpty, TableLoading } from "@/components/ui/data-table";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { apiClient, type Trainer } from "@/lib/api";
@@ -51,32 +51,52 @@ export default function AcademyTrainersPage() {
             ) : trainers.length === 0 ? (
               <TableEmpty inset message="No trainers yet." />
             ) : (
-              <DataTable inset>
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Specializations</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {trainers.map((trainer) => (
-                    <tr key={trainer.id}>
-                      <td className="font-medium">{trainer.name}</td>
-                      <td>{(trainer.specializations ?? []).slice(0, 2).join(", ") || "—"}</td>
-                      <td>
-                        <StatusBadge status={trainer.is_active} />
-                      </td>
-                      <td>
+              <ConfigurableDataTable
+                tableId="admin-academy-trainers"
+                inset
+                data={trainers}
+                keyField="id"
+                searchPlaceholder="Search trainers…"
+                searchText={(trainer) =>
+                  [trainer.name, ...(trainer.specializations ?? []), trainer.is_active ? "active" : "inactive"]
+                    .filter(Boolean)
+                    .join(" ")
+                }
+                columns={[
+                  {
+                    key: "name",
+                    header: "Name",
+                    width: 200,
+                    render: (trainer) => <span className="font-medium">{trainer.name}</span>,
+                  },
+                  {
+                    key: "specializations",
+                    header: "Specializations",
+                    width: 240,
+                    render: (trainer) => (trainer.specializations ?? []).slice(0, 2).join(", ") || "—",
+                  },
+                  {
+                    key: "status",
+                    header: "Status",
+                    width: 120,
+                    render: (trainer) => <StatusBadge status={trainer.is_active} />,
+                  },
+                  {
+                    key: "actions",
+                    header: "Actions",
+                    width: 120,
+                    hideable: false,
+                    pinnable: false,
+                    render: (trainer) => (
+                      <div className="table-actions">
                         <ActionButton asChild variant="outline" size="sm" icon={Pencil}>
                           <Link href={`/admin/academy/trainers/${trainer.id}`}>Edit</Link>
                         </ActionButton>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </DataTable>
+                      </div>
+                    ),
+                  },
+                ]}
+              />
             )}
           </CardContent>
         </Card>

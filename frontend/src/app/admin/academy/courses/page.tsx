@@ -6,7 +6,7 @@ import { Pencil, Plus } from "lucide-react";
 import { PermissionGate } from "@/components/admin/permission-gate";
 import { ActionButton } from "@/components/ui/action-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DataTable, TableEmpty, TableLoading } from "@/components/ui/data-table";
+import { ConfigurableDataTable, TableEmpty, TableLoading } from "@/components/ui/data-table";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { apiClient, type Course } from "@/lib/api";
@@ -51,32 +51,56 @@ export default function AcademyCoursesPage() {
           ) : courses.length === 0 ? (
             <TableEmpty inset message="No courses yet. Create your first course." />
           ) : (
-            <DataTable inset>
-              <thead>
-                <tr>
-                  <th>Title</th>
-                  <th>Category</th>
-                  <th>Fees</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {courses.map((course) => (
-                  <tr key={course.id}>
-                    <td className="font-medium">{course.title}</td>
-                    <td>{course.category?.name ?? "—"}</td>
-                    <td>₹{course.fees}</td>
-                    <td><StatusBadge status={course.status} /></td>
-                    <td>
+            <ConfigurableDataTable
+              tableId="admin-academy-courses"
+              inset
+              data={courses}
+              keyField="id"
+              searchPlaceholder="Search courses…"
+              searchText={(course) =>
+                [course.title, course.category?.name, course.status, course.fees].filter(Boolean).join(" ")
+              }
+              columns={[
+                {
+                  key: "title",
+                  header: "Title",
+                  width: 220,
+                  render: (course) => <span className="font-medium">{course.title}</span>,
+                },
+                {
+                  key: "category",
+                  header: "Category",
+                  width: 160,
+                  render: (course) => course.category?.name ?? "—",
+                },
+                {
+                  key: "fees",
+                  header: "Fees",
+                  width: 100,
+                  render: (course) => `₹${course.fees}`,
+                },
+                {
+                  key: "status",
+                  header: "Status",
+                  width: 120,
+                  render: (course) => <StatusBadge status={course.status} />,
+                },
+                {
+                  key: "actions",
+                  header: "Actions",
+                  width: 120,
+                  hideable: false,
+                  pinnable: false,
+                  render: (course) => (
+                    <div className="table-actions">
                       <ActionButton asChild variant="outline" size="sm" icon={Pencil}>
                         <Link href={`/admin/academy/courses/${course.id}`}>Edit</Link>
                       </ActionButton>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </DataTable>
+                    </div>
+                  ),
+                },
+              ]}
+            />
           )}
         </CardContent>
       </Card>

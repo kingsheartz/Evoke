@@ -2,6 +2,11 @@ import type { ReactNode } from "react";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+export {
+  ConfigurableDataTable,
+  type TableColumn,
+} from "@/components/ui/configurable-data-table";
+
 export function DataTable({
   children,
   className,

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { PermissionGate } from "@/components/admin/permission-gate";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DataTable, TableEmpty, TableLoading } from "@/components/ui/data-table";
+import { ConfigurableDataTable, TableEmpty, TableLoading } from "@/components/ui/data-table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageHeader } from "@/components/ui/page-header";
@@ -87,26 +87,51 @@ export default function AcademyCertificatesAdminPage() {
             ) : certificates.length === 0 ? (
               <TableEmpty inset message="No certificates issued yet." />
             ) : (
-              <DataTable inset>
-                <thead>
-                  <tr>
-                    <th>Number</th>
-                    <th>Student</th>
-                    <th>Course</th>
-                    <th>Issued</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {certificates.map((certificate) => (
-                    <tr key={certificate.id}>
-                      <td className="font-mono text-xs">{certificate.certificate_number}</td>
-                      <td>{certificate.enrollment?.user?.name ?? "—"}</td>
-                      <td>{certificate.enrollment?.batch?.course?.title ?? "—"}</td>
-                      <td>{certificate.issued_at?.slice(0, 10) ?? "—"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </DataTable>
+              <ConfigurableDataTable
+                tableId="admin-academy-certificates"
+                inset
+                data={certificates}
+                keyField="id"
+                searchPlaceholder="Search certificates…"
+                searchText={(certificate) =>
+                  [
+                    certificate.certificate_number,
+                    certificate.enrollment?.user?.name,
+                    certificate.enrollment?.batch?.course?.title,
+                    certificate.issued_at,
+                  ]
+                    .filter(Boolean)
+                    .join(" ")
+                }
+                columns={[
+                  {
+                    key: "number",
+                    header: "Number",
+                    width: 160,
+                    render: (certificate) => (
+                      <span className="font-mono text-xs">{certificate.certificate_number}</span>
+                    ),
+                  },
+                  {
+                    key: "student",
+                    header: "Student",
+                    width: 180,
+                    render: (certificate) => certificate.enrollment?.user?.name ?? "—",
+                  },
+                  {
+                    key: "course",
+                    header: "Course",
+                    width: 220,
+                    render: (certificate) => certificate.enrollment?.batch?.course?.title ?? "—",
+                  },
+                  {
+                    key: "issued",
+                    header: "Issued",
+                    width: 120,
+                    render: (certificate) => certificate.issued_at?.slice(0, 10) ?? "—",
+                  },
+                ]}
+              />
             )}
           </CardContent>
         </Card>

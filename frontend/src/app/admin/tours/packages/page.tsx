@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Pencil, Plus } from "lucide-react";
 import { ActionButton } from "@/components/ui/action-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DataTable, TableEmpty } from "@/components/ui/data-table";
+import { ConfigurableDataTable, TableEmpty } from "@/components/ui/data-table";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { apiClient, type TourPackage } from "@/lib/api";
@@ -37,34 +37,64 @@ export default function TourPackagesPage() {
           {packages.length === 0 ? (
             <TableEmpty inset message="No packages yet. Add your first package." />
           ) : (
-            <DataTable inset>
-              <thead>
-                <tr>
-                  <th>Title</th>
-                  <th>Destination</th>
-                  <th>Days</th>
-                  <th>Price</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {packages.map((p) => (
-                  <tr key={p.id}>
-                    <td className="font-medium">{p.title}</td>
-                    <td>{p.destination}</td>
-                    <td>{p.duration_days}</td>
-                    <td>₹{p.price}</td>
-                    <td><StatusBadge status={p.is_active} /></td>
-                    <td>
+            <ConfigurableDataTable
+              tableId="admin-tours-packages"
+              inset
+              data={packages}
+              keyField="id"
+              searchPlaceholder="Search packages…"
+              searchText={(pkg) =>
+                [pkg.title, pkg.destination, pkg.duration_days, pkg.price, pkg.is_active ? "active" : "inactive"]
+                  .filter(Boolean)
+                  .join(" ")
+              }
+              columns={[
+                {
+                  key: "title",
+                  header: "Title",
+                  width: 220,
+                  render: (pkg) => <span className="font-medium">{pkg.title}</span>,
+                },
+                {
+                  key: "destination",
+                  header: "Destination",
+                  width: 160,
+                  render: (pkg) => pkg.destination,
+                },
+                {
+                  key: "days",
+                  header: "Days",
+                  width: 80,
+                  render: (pkg) => pkg.duration_days,
+                },
+                {
+                  key: "price",
+                  header: "Price",
+                  width: 100,
+                  render: (pkg) => `₹${pkg.price}`,
+                },
+                {
+                  key: "status",
+                  header: "Status",
+                  width: 120,
+                  render: (pkg) => <StatusBadge status={pkg.is_active} />,
+                },
+                {
+                  key: "actions",
+                  header: "Actions",
+                  width: 120,
+                  hideable: false,
+                  pinnable: false,
+                  render: (pkg) => (
+                    <div className="table-actions">
                       <ActionButton asChild variant="outline" size="sm" icon={Pencil}>
-                        <Link href={`/admin/tours/packages/${p.id}`}>Edit</Link>
+                        <Link href={`/admin/tours/packages/${pkg.id}`}>Edit</Link>
                       </ActionButton>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </DataTable>
+                    </div>
+                  ),
+                },
+              ]}
+            />
           )}
         </CardContent>
       </Card>

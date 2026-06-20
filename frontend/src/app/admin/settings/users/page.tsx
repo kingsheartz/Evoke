@@ -16,7 +16,7 @@ import {
 import { UserAvatar, UserDetailPanel } from "@/components/admin/user-detail-panel";
 import { ActionButton } from "@/components/ui/action-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DataTable, TableEmpty } from "@/components/ui/data-table";
+import { ConfigurableDataTable, TableEmpty } from "@/components/ui/data-table";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { PageHeader } from "@/components/ui/page-header";
@@ -230,58 +230,104 @@ export default function UsersSettingsPage() {
             <TableEmpty inset message="No users match your filters." />
           ) : (
             <>
-              <DataTable inset>
-                <thead>
-                  <tr>
-                    <th className="w-12">Photo</th>
-                    <th><SortHeader label="Name" field="name" current={sort} dir={dir} onSort={toggleSort} /></th>
-                    <th><SortHeader label="Email" field="email" current={sort} dir={dir} onSort={toggleSort} /></th>
-                    <th>Phone</th>
-                    <th>Role</th>
-                    <th>Branch</th>
-                    <th><SortHeader label="Joined" field="created_at" current={sort} dir={dir} onSort={toggleSort} /></th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.map((u) => (
-                    <tr
-                      key={u.id}
-                      className={cn(selectedUserId === u.id && panelOpen && "bg-accent/5")}
-                    >
-                      <td>
-                        <button type="button" onClick={() => openView(u)} className="rounded-full">
-                          <UserAvatar user={u} size="sm" />
-                        </button>
-                      </td>
-                      <td>
-                        <button
-                          type="button"
-                          onClick={() => openView(u)}
-                          className="font-medium text-app-text hover:text-accent-soft"
-                        >
-                          {u.name}
-                        </button>
-                      </td>
-                      <td className="text-app-muted">{u.email}</td>
-                      <td className="text-app-muted">{u.phone || "—"}</td>
-                      <td>{u.roles?.[0]?.name ? formatRole(u.roles[0].name) : "—"}</td>
-                      <td className="text-app-muted">{u.branch?.name ?? "—"}</td>
-                      <td className="text-xs text-app-muted">{formatDate(u.created_at)}</td>
-                      <td>
-                        <div className="flex gap-1">
-                          <ActionButton variant="outline" size="sm" icon={Eye} onClick={() => openView(u)}>
-                            View
-                          </ActionButton>
-                          <ActionButton variant="outline" size="sm" icon={Trash2} onClick={() => remove(u.id, u.name)}>
-                            Delete
-                          </ActionButton>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </DataTable>
+              <ConfigurableDataTable
+                tableId="admin-settings-users"
+                inset
+                searchable={false}
+                data={users}
+                keyField="id"
+                rowClassName={(u) => (selectedUserId === u.id && panelOpen ? "bg-accent/5" : undefined)}
+                columns={[
+                  {
+                    key: "photo",
+                    header: "Photo",
+                    width: 72,
+                    hideable: false,
+                    pinnable: false,
+                    render: (u) => (
+                      <button type="button" onClick={() => openView(u)} className="rounded-full">
+                        <UserAvatar user={u} size="sm" />
+                      </button>
+                    ),
+                  },
+                  {
+                    key: "name",
+                    header: "Name",
+                    width: 180,
+                    headerRender: () => (
+                      <SortHeader label="Name" field="name" current={sort} dir={dir} onSort={toggleSort} />
+                    ),
+                    render: (u) => (
+                      <button
+                        type="button"
+                        onClick={() => openView(u)}
+                        className="font-medium text-app-text hover:text-accent-soft"
+                      >
+                        {u.name}
+                      </button>
+                    ),
+                  },
+                  {
+                    key: "email",
+                    header: "Email",
+                    width: 220,
+                    headerRender: () => (
+                      <SortHeader label="Email" field="email" current={sort} dir={dir} onSort={toggleSort} />
+                    ),
+                    render: (u) => <span className="text-app-muted">{u.email}</span>,
+                  },
+                  {
+                    key: "phone",
+                    header: "Phone",
+                    width: 140,
+                    render: (u) => <span className="text-app-muted">{u.phone || "—"}</span>,
+                  },
+                  {
+                    key: "role",
+                    header: "Role",
+                    width: 140,
+                    render: (u) => (u.roles?.[0]?.name ? formatRole(u.roles[0].name) : "—"),
+                  },
+                  {
+                    key: "branch",
+                    header: "Branch",
+                    width: 140,
+                    render: (u) => <span className="text-app-muted">{u.branch?.name ?? "—"}</span>,
+                  },
+                  {
+                    key: "created_at",
+                    header: "Joined",
+                    width: 120,
+                    headerRender: () => (
+                      <SortHeader
+                        label="Joined"
+                        field="created_at"
+                        current={sort}
+                        dir={dir}
+                        onSort={toggleSort}
+                      />
+                    ),
+                    render: (u) => <span className="text-xs text-app-muted">{formatDate(u.created_at)}</span>,
+                  },
+                  {
+                    key: "actions",
+                    header: "Actions",
+                    width: 180,
+                    hideable: false,
+                    pinnable: false,
+                    render: (u) => (
+                      <div className="table-actions flex gap-1">
+                        <ActionButton variant="outline" size="sm" icon={Eye} onClick={() => openView(u)}>
+                          View
+                        </ActionButton>
+                        <ActionButton variant="outline" size="sm" icon={Trash2} onClick={() => remove(u.id, u.name)}>
+                          Delete
+                        </ActionButton>
+                      </div>
+                    ),
+                  },
+                ]}
+              />
               {lastPage > 1 && (
                 <div className="flex items-center justify-between border-t border-app-border px-4 py-3">
                   <p className="text-xs text-app-muted">Page {page} of {lastPage}</p>

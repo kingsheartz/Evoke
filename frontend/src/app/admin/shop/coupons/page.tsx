@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Trash2 } from "lucide-react";
 import { PermissionGate } from "@/components/admin/permission-gate";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DataTable, TableEmpty, TableLoading } from "@/components/ui/data-table";
+import { ConfigurableDataTable, TableEmpty, TableLoading } from "@/components/ui/data-table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageHeader } from "@/components/ui/page-header";
@@ -76,6 +76,61 @@ export default function ShopCouponsAdminPage() {
     }
   };
 
+  const columns = useMemo(
+    () => [
+      {
+        key: "code",
+        header: "Code",
+        width: 140,
+        render: (coupon: ShopCoupon) => <span className="font-mono text-xs">{coupon.code}</span>,
+      },
+      {
+        key: "type",
+        header: "Type",
+        width: 120,
+        render: (coupon: ShopCoupon) => <span className="capitalize">{coupon.type}</span>,
+      },
+      {
+        key: "value",
+        header: "Value",
+        width: 100,
+        render: (coupon: ShopCoupon) =>
+          coupon.type === "percentage" ? `${coupon.value}%` : `₹${coupon.value}`,
+      },
+      {
+        key: "used",
+        header: "Used",
+        width: 100,
+        render: (coupon: ShopCoupon) =>
+          `${coupon.used_count ?? 0}${coupon.usage_limit != null ? ` / ${coupon.usage_limit}` : ""}`,
+      },
+      {
+        key: "status",
+        header: "Status",
+        width: 120,
+        render: (coupon: ShopCoupon) => (
+          <StatusBadge status={coupon.is_active ? "active" : "inactive"} />
+        ),
+      },
+      {
+        key: "actions",
+        header: "Actions",
+        width: 120,
+        hideable: false,
+        pinnable: false,
+        render: (coupon: ShopCoupon) => (
+          <div className="table-actions">
+            <Button type="button" size="sm" variant="outline" onClick={() => remove(coupon)}>
+              <Trash2 className="h-4 w-4" />
+              Delete
+            </Button>
+          </div>
+        ),
+      },
+    ],
+    [],
+  );
+
   return (
     <PermissionGate permission="shop.coupons.manage">
       <div className="app-page">
@@ -144,38 +199,19 @@ export default function ShopCouponsAdminPage() {
             ) : coupons.length === 0 ? (
               <TableEmpty inset message="No coupons yet." />
             ) : (
-              <DataTable inset>
-                <thead>
-                  <tr>
-                    <th>Code</th>
-                    <th>Type</th>
-                    <th>Value</th>
-                    <th>Used</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {coupons.map((coupon) => (
-                    <tr key={coupon.id}>
-                      <td className="font-mono text-xs">{coupon.code}</td>
-                      <td className="capitalize">{coupon.type}</td>
-                      <td>{coupon.type === "percentage" ? `${coupon.value}%` : `₹${coupon.value}`}</td>
-                      <td>
-                        {coupon.used_count ?? 0}
-                        {coupon.usage_limit != null ? ` / ${coupon.usage_limit}` : ""}
-                      </td>
-                      <td><StatusBadge status={coupon.is_active ? "active" : "inactive"} /></td>
-                      <td>
-                        <Button type="button" size="sm" variant="outline" onClick={() => remove(coupon)}>
-                          <Trash2 className="h-4 w-4" />
-                          Delete
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </DataTable>
+              <ConfigurableDataTable
+                tableId="admin-shop-coupons"
+                inset
+                data={coupons}
+                keyField="id"
+                searchPlaceholder="Search coupons…"
+                searchText={(coupon) =>
+                  [coupon.code, coupon.type, coupon.value, coupon.is_active ? "active" : "inactive"]
+                    .filter(Boolean)
+                    .join(" ")
+                }
+                columns={columns}
+              />
             )}
           </CardContent>
         </Card>

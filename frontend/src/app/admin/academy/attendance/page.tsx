@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { PermissionGate } from "@/components/admin/permission-gate";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DataTable, TableEmpty, TableLoading } from "@/components/ui/data-table";
+import { ConfigurableDataTable, TableEmpty, TableLoading } from "@/components/ui/data-table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageHeader } from "@/components/ui/page-header";
@@ -70,6 +70,17 @@ export default function AcademyAttendanceAdminPage() {
     }
   };
 
+  const rows = useMemo(
+    () =>
+      enrollments.map((enrollment) => ({
+        id: enrollment.id,
+        enrollment,
+        record: recordByEnrollment.get(enrollment.id),
+        busy: markingId === enrollment.id,
+      })),
+    [enrollments, recordByEnrollment, markingId],
+  );
+
   return (
     <PermissionGate permission="academy.attendance.manage">
       <div className="app-page">
@@ -96,58 +107,84 @@ export default function AcademyAttendanceAdminPage() {
             ) : enrollments.length === 0 ? (
               <TableEmpty inset message="No approved enrollments to mark." />
             ) : (
-              <DataTable inset>
-                <thead>
-                  <tr>
-                    <th>Student</th>
-                    <th>Course</th>
-                    <th>Batch</th>
-                    <th>Today</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {enrollments.map((enrollment) => {
-                    const record = recordByEnrollment.get(enrollment.id);
-                    const busy = markingId === enrollment.id;
-                    return (
-                      <tr key={enrollment.id}>
-                        <td className="font-medium">{enrollment.user?.name ?? "—"}</td>
-                        <td>{enrollment.batch?.course?.title ?? "—"}</td>
-                        <td>{enrollment.batch?.name ?? "—"}</td>
-                        <td>
-                          {record ? (
-                            <StatusBadge status={record.status} />
-                          ) : (
-                            <span className="text-app-muted">Not marked</span>
-                          )}
-                        </td>
-                        <td>
-                          <div className="flex flex-wrap gap-1">
-                            <Button
-                              type="button"
-                              size="sm"
-                              disabled={busy}
-                              onClick={() => mark(enrollment, "present")}
-                            >
-                              Present
-                            </Button>
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="outline"
-                              disabled={busy}
-                              onClick={() => mark(enrollment, "absent")}
-                            >
-                              Absent
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </DataTable>
+              <ConfigurableDataTable
+                tableId="admin-academy-attendance"
+                inset
+                data={rows}
+                keyField="id"
+                searchPlaceholder="Search students…"
+                searchText={(row) =>
+                  [
+                    row.enrollment.user?.name,
+                    row.enrollment.batch?.course?.title,
+                    row.enrollment.batch?.name,
+                    row.record?.status,
+                  ]
+                    .filter(Boolean)
+                    .join(" ")
+                }
+                columns={[
+                  {
+                    key: "student",
+                    header: "Student",
+                    width: 180,
+                    render: (row) => (
+                      <span className="font-medium">{row.enrollment.user?.name ?? "—"}</span>
+                    ),
+                  },
+                  {
+                    key: "course",
+                    header: "Course",
+                    width: 200,
+                    render: (row) => row.enrollment.batch?.course?.title ?? "—",
+                  },
+                  {
+                    key: "batch",
+                    header: "Batch",
+                    width: 140,
+                    render: (row) => row.enrollment.batch?.name ?? "—",
+                  },
+                  {
+                    key: "today",
+                    header: "Today",
+                    width: 120,
+                    render: (row) =>
+                      row.record ? (
+                        <StatusBadge status={row.record.status} />
+                      ) : (
+                        <span className="text-app-muted">Not marked</span>
+                      ),
+                  },
+                  {
+                    key: "actions",
+                    header: "Actions",
+                    width: 180,
+                    hideable: false,
+                    pinnable: false,
+                    render: (row) => (
+                      <div className="table-actions flex flex-wrap gap-1">
+                        <Button
+                          type="button"
+                          size="sm"
+                          disabled={row.busy}
+                          onClick={() => mark(row.enrollment, "present")}
+                        >
+                          Present
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          disabled={row.busy}
+                          onClick={() => mark(row.enrollment, "absent")}
+                        >
+                          Absent
+                        </Button>
+                      </div>
+                    ),
+                  },
+                ]}
+              />
             )}
           </CardContent>
         </Card>

@@ -6,7 +6,7 @@ import { ExternalLink, Pencil, Plus, Trash2 } from "lucide-react";
 import { ActionButton } from "@/components/ui/action-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DataTable, TableEmpty } from "@/components/ui/data-table";
+import { ConfigurableDataTable, TableEmpty } from "@/components/ui/data-table";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { revalidateCmsPagePublicCache } from "@/lib/revalidate-cms";
@@ -70,61 +70,86 @@ export default function CmsPagesListPage() {
           {pages.length === 0 ? (
             <TableEmpty inset message="No pages yet. Create your first page." />
           ) : (
-            <DataTable inset>
-              <thead>
-                <tr>
-                  <th>Title</th>
-                  <th>Slug</th>
-                  <th>Type</th>
-                  <th>Status</th>
-                  <th>Public</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pages.map((p) => (
-                  <tr key={p.id}>
-                    <td className="font-medium text-app-text">{p.title}</td>
-                    <td className="max-w-[10rem] truncate font-mono text-xs text-app-muted" title={p.slug}>
-                      {p.slug}
-                    </td>
-                    <td className="capitalize text-app-muted">{p.type}</td>
-                    <td><StatusBadge status={p.status} /></td>
-                    <td>
-                      {p.status === "published" ? (
-                        <Link
-                          href={`/p/${p.slug}`}
-                          target="_blank"
-                          className="inline-flex items-center gap-1 text-xs font-medium text-accent-soft hover:text-accent"
-                        >
-                          View
-                          <ExternalLink className="h-3 w-3" />
-                        </Link>
-                      ) : (
-                        <span className="text-xs text-app-muted">Draft</span>
-                      )}
-                    </td>
-                    <td>
-                      <div className="flex flex-wrap gap-2">
-                        <ActionButton asChild variant="outline" size="sm" icon={Pencil}>
-                          <Link href={`/admin/cms/pages/${p.id}`}>Edit</Link>
-                        </ActionButton>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          disabled={deletingId === p.id}
-                          onClick={() => void deletePage(p)}
-                        >
-                          <Trash2 className="h-4 w-4 text-status-error" />
-                          Delete
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </DataTable>
+            <ConfigurableDataTable
+              tableId="admin-cms-pages"
+              inset
+              data={pages}
+              keyField="id"
+              searchPlaceholder="Search pages…"
+              searchText={(page) => [page.title, page.slug, page.type, page.status].filter(Boolean).join(" ")}
+              columns={[
+                {
+                  key: "title",
+                  header: "Title",
+                  width: 220,
+                  render: (page) => <span className="font-medium text-app-text">{page.title}</span>,
+                },
+                {
+                  key: "slug",
+                  header: "Slug",
+                  width: 160,
+                  render: (page) => (
+                    <span className="max-w-[10rem] truncate font-mono text-xs text-app-muted" title={page.slug}>
+                      {page.slug}
+                    </span>
+                  ),
+                },
+                {
+                  key: "type",
+                  header: "Type",
+                  width: 100,
+                  render: (page) => <span className="capitalize text-app-muted">{page.type}</span>,
+                },
+                {
+                  key: "status",
+                  header: "Status",
+                  width: 120,
+                  render: (page) => <StatusBadge status={page.status} />,
+                },
+                {
+                  key: "public",
+                  header: "Public",
+                  width: 100,
+                  render: (page) =>
+                    page.status === "published" ? (
+                      <Link
+                        href={`/p/${page.slug}`}
+                        target="_blank"
+                        className="inline-flex items-center gap-1 text-xs font-medium text-accent-soft hover:text-accent"
+                      >
+                        View
+                        <ExternalLink className="h-3 w-3" />
+                      </Link>
+                    ) : (
+                      <span className="text-xs text-app-muted">Draft</span>
+                    ),
+                },
+                {
+                  key: "actions",
+                  header: "Actions",
+                  width: 180,
+                  hideable: false,
+                  pinnable: false,
+                  render: (page) => (
+                    <div className="table-actions flex flex-wrap gap-2">
+                      <ActionButton asChild variant="outline" size="sm" icon={Pencil}>
+                        <Link href={`/admin/cms/pages/${page.id}`}>Edit</Link>
+                      </ActionButton>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        disabled={deletingId === page.id}
+                        onClick={() => void deletePage(page)}
+                      >
+                        <Trash2 className="h-4 w-4 text-status-error" />
+                        Delete
+                      </Button>
+                    </div>
+                  ),
+                },
+              ]}
+            />
           )}
         </CardContent>
       </Card>

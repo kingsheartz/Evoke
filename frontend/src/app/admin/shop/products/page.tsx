@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Pencil, Plus } from "lucide-react";
 import { ActionButton } from "@/components/ui/action-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DataTable, TableEmpty, TableLoading } from "@/components/ui/data-table";
+import { ConfigurableDataTable, TableEmpty, TableLoading } from "@/components/ui/data-table";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { apiClient, type Product } from "@/lib/api";
@@ -40,34 +40,64 @@ export default function ShopProductsPage() {
           ) : products.length === 0 ? (
             <TableEmpty inset message="No products yet. Add your first product." />
           ) : (
-            <DataTable inset>
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>SKU</th>
-                  <th>Price</th>
-                  <th>Stock</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {products.map((p) => (
-                  <tr key={p.id}>
-                    <td className="font-medium">{p.name}</td>
-                    <td>{p.sku}</td>
-                    <td>₹{p.price}</td>
-                    <td>{p.stock}</td>
-                    <td><StatusBadge status={p.is_active} /></td>
-                    <td>
+            <ConfigurableDataTable
+              tableId="admin-shop-products"
+              inset
+              data={products}
+              keyField="id"
+              searchPlaceholder="Search products…"
+              searchText={(product) =>
+                [product.name, product.sku, product.price, product.stock, product.is_active ? "active" : "inactive"]
+                  .filter(Boolean)
+                  .join(" ")
+              }
+              columns={[
+                {
+                  key: "name",
+                  header: "Name",
+                  width: 220,
+                  render: (product) => <span className="font-medium">{product.name}</span>,
+                },
+                {
+                  key: "sku",
+                  header: "SKU",
+                  width: 120,
+                  render: (product) => product.sku,
+                },
+                {
+                  key: "price",
+                  header: "Price",
+                  width: 100,
+                  render: (product) => `₹${product.price}`,
+                },
+                {
+                  key: "stock",
+                  header: "Stock",
+                  width: 80,
+                  render: (product) => product.stock,
+                },
+                {
+                  key: "status",
+                  header: "Status",
+                  width: 120,
+                  render: (product) => <StatusBadge status={product.is_active} />,
+                },
+                {
+                  key: "actions",
+                  header: "Actions",
+                  width: 120,
+                  hideable: false,
+                  pinnable: false,
+                  render: (product) => (
+                    <div className="table-actions">
                       <ActionButton asChild variant="outline" size="sm" icon={Pencil}>
-                        <Link href={`/admin/shop/products/${p.id}`}>Edit</Link>
+                        <Link href={`/admin/shop/products/${product.id}`}>Edit</Link>
                       </ActionButton>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </DataTable>
+                    </div>
+                  ),
+                },
+              ]}
+            />
           )}
         </CardContent>
       </Card>
