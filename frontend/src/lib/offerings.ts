@@ -270,14 +270,14 @@ export async function loadDivisionFeaturedCatalog(
   });
 }
 
-export function offeringCta(vertical: OfferingVertical): { label: string; href: string } {
+export function offeringCta(vertical: OfferingVertical): { label: string } {
   switch (vertical) {
     case "tours":
-      return { label: "Book now", href: "/sign-in" };
+      return { label: "Book now" };
     case "shop":
-      return { label: "Sign in to buy", href: "/sign-in" };
+      return { label: "Add to cart" };
     case "academy":
-      return { label: "Enroll now", href: "/sign-in" };
+      return { label: "Enroll now" };
   }
 }
 

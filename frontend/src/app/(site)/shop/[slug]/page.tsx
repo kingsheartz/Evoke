@@ -51,7 +51,7 @@ export default async function ShopProductDetailPage({
         description={product.description}
         priceLabel={formatOfferingPrice(product.price, { prefix: false })}
         ctaLabel={product.stock > 0 ? cta.label : "Out of stock"}
-        ctaHref={product.stock > 0 ? cta.href : catalogPath("shop")}
+        ctaHref={product.stock > 0 ? undefined : catalogPath("shop")}
         ctaAction={
           product.stock > 0 ? (
             <ShopBuyAction

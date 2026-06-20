@@ -97,7 +97,10 @@ export default function BrandSettingsPage() {
       .finally(() => setLoaded(true));
   }, [token, canEdit]);
 
-  const patch = (updates: Partial<BrandConfig>) => {
+  const patch = (updates: Partial<Omit<BrandConfig, "logos" | "logoDisplay">> & {
+    logos?: Partial<BrandConfig["logos"]>;
+    logoDisplay?: Partial<BrandConfig["logoDisplay"]>;
+  }) => {
     setForm((prev) => ({
       ...prev,
       ...updates,

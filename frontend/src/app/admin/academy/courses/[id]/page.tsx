@@ -28,6 +28,8 @@ interface EditForm {
   duration: string;
   fees: number;
   status: string;
+  seo_title: string;
+  seo_description: string;
 }
 
 export default function EditCoursePage() {
@@ -54,6 +56,8 @@ export default function EditCoursePage() {
         duration: courseRes.data.duration ?? "",
         fees: Number(courseRes.data.fees),
         status: courseRes.data.status,
+        seo_title: courseRes.data.seo_title ?? "",
+        seo_description: courseRes.data.seo_description ?? "",
       });
     });
   };
@@ -68,8 +72,10 @@ export default function EditCoursePage() {
         ...data,
         thumbnail: thumbnail.trim() || undefined,
         gallery: normalizeUrlList(gallery),
+        seo_title: data.seo_title || undefined,
+        seo_description: data.seo_description || undefined,
       });
-      await revalidateAcademyPublicCache(course.slug);
+      if (course?.slug) await revalidateAcademyPublicCache(course.slug);
       setMessage("Course updated successfully.");
       router.refresh();
       load();
@@ -126,6 +132,17 @@ export default function EditCoursePage() {
               values={gallery.length ? gallery : [""]}
               onChange={(next) => setGallery(next.filter(Boolean))}
             />
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2 md:col-span-2">
+                <Label>SEO title</Label>
+                <Input {...register("seo_title")} placeholder="Optional page title for search engines" />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label>SEO description</Label>
+                <Textarea rows={2} {...register("seo_description")} placeholder="Optional meta description" />
+              </div>
+            </div>
 
             {message && (
               <p className={cn("text-sm", message.includes("success") ? "text-status-success" : "text-status-error")}>

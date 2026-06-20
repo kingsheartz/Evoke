@@ -53,7 +53,6 @@ export default async function AcademyCourseDetailPage({
         description={course.description}
         priceLabel={formatOfferingPrice(course.fees)}
         ctaLabel={cta.label}
-        ctaHref={cta.href}
         ctaAction={<AcademyEnrollAction batches={course.batches ?? []} redirectPath={redirectPath} />}
         backHref={catalogPath("academy")}
         backLabel="All courses"

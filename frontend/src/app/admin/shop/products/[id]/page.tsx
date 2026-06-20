@@ -74,7 +74,7 @@ export default function EditProductPage() {
         seo_title: data.seo_title || undefined,
         seo_description: data.seo_description || undefined,
       });
-      await revalidateShopPublicCache(product.slug);
+      await revalidateShopPublicCache(product?.slug);
       setMessage("Product updated.");
       load();
     } catch (e) {

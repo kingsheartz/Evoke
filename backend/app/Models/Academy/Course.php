@@ -15,8 +15,8 @@ class Course extends Model
     protected $table = 'academy_courses';
 
     protected $fillable = [
-        'category_id', 'branch_id', 'title', 'slug', 'description', 'duration',
-        'fees', 'thumbnail', 'gallery', 'status', 'requires_approval',
+        'category_id', 'branch_id', 'title', 'slug', 'description', 'seo_title', 'seo_description',
+        'duration', 'fees', 'thumbnail', 'gallery', 'status', 'requires_approval',
     ];
 
     protected function casts(): array

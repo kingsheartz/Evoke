@@ -22,8 +22,8 @@ export type OfferingDetailShellProps = {
   title: string;
   description?: string | null;
   priceLabel: string;
-  ctaLabel: string;
-  ctaHref: string;
+  ctaLabel?: string;
+  ctaHref?: string;
   ctaAction?: React.ReactNode;
   backHref: string;
   backLabel: string;
@@ -86,12 +86,14 @@ export function OfferingDetailShell({
             </h1>
           </div>
           {ctaAction ?? (
-            <Link
-              href={ctaHref}
-              className="inline-flex h-12 items-center justify-center rounded-xl bg-accent px-6 text-sm font-semibold text-white transition-colors hover:bg-accent-hover"
-            >
-              {ctaLabel}
-            </Link>
+            ctaHref ? (
+              <Link
+                href={ctaHref}
+                className="inline-flex h-12 items-center justify-center rounded-xl bg-accent px-6 text-sm font-semibold text-white transition-colors hover:bg-accent-hover"
+              >
+                {ctaLabel ?? "Learn more"}
+              </Link>
+            ) : null
           )}
         </div>
       </PageContainer>

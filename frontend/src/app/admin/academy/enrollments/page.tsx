@@ -25,10 +25,13 @@ export default function EnrollmentsPage() {
 
   useEffect(load, [token]);
 
-  const updateEnrollment = async (enrollment: Enrollment, status: string) => {
+  const updateEnrollment = async (
+    enrollment: Enrollment,
+    payload: Partial<{ status: string; payment_status: string; payment_reference: string }>,
+  ) => {
     if (!token) return;
     try {
-      await apiClient.updateEnrollment(token, enrollment.id, { status });
+      await apiClient.updateEnrollment(token, enrollment.id, payload);
       success("Enrollment updated.");
       load();
     } catch (e) {
@@ -68,16 +71,37 @@ export default function EnrollmentsPage() {
                       <td><StatusBadge status={enrollment.status} /></td>
                       <td><StatusBadge status={enrollment.payment_status} /></td>
                       <td>
-                        {enrollment.status === "pending" && (
-                          <div className="flex flex-wrap gap-1">
-                            <Button type="button" size="sm" onClick={() => updateEnrollment(enrollment, "approved")}>
-                              Approve
+                        <div className="flex flex-wrap gap-1">
+                          {enrollment.status === "pending" && (
+                            <>
+                              <Button
+                                type="button"
+                                size="sm"
+                                onClick={() => updateEnrollment(enrollment, { status: "approved" })}
+                              >
+                                Approve
+                              </Button>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                onClick={() => updateEnrollment(enrollment, { status: "rejected" })}
+                              >
+                                Reject
+                              </Button>
+                            </>
+                          )}
+                          {enrollment.payment_status === "unpaid" && enrollment.status === "approved" && (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={() => updateEnrollment(enrollment, { payment_status: "paid" })}
+                            >
+                              Mark paid
                             </Button>
-                            <Button type="button" size="sm" variant="outline" onClick={() => updateEnrollment(enrollment, "rejected")}>
-                              Reject
-                            </Button>
-                          </div>
-                        )}
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}

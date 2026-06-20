@@ -55,7 +55,6 @@ export default async function TourPackageDetailPage({
         description={pkg.description}
         priceLabel={formatOfferingPrice(pkg.price)}
         ctaLabel={cta.label}
-        ctaHref={cta.href}
         ctaAction={<TourBookingAction packageId={pkg.id} redirectPath={redirectPath} />}
         backHref={catalogPath("tours")}
         backLabel="All tour packages"

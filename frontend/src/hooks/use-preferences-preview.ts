@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useAdminPreferencesStore } from "@/stores/admin-preferences";
+import { useAdminPreferencesStore, type AdminHotkeys, type NotificationPosition } from "@/stores/admin-preferences";
 import { previewThemeOnDocument, applyThemePreferences, type ThemePreferences } from "@/stores/theme";
 
 type PreviewDraft = {
@@ -46,8 +46,11 @@ export function usePreferencesPreview(
   useEffect(() => {
     if (!draft) return;
     setPreferencesPreview({
-      notifications: draft.notifications,
-      hotkeys: draft.hotkeys,
+      notifications: {
+        ...draft.notifications,
+        position: draft.notifications.position as NotificationPosition,
+      },
+      hotkeys: draft.hotkeys as AdminHotkeys,
     });
   }, [draft, setPreferencesPreview]);
 

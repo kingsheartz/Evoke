@@ -265,7 +265,7 @@ export const apiClient = {
       body: JSON.stringify(payload),
     }),
 
-  updateCourse: (token: string, id: number, payload: Partial<CoursePayload & { status: string; gallery?: string[]; thumbnail?: string }>) =>
+  updateCourse: (token: string, id: number, payload: Partial<CoursePayload & { status: string; gallery?: string[]; thumbnail?: string; seo_title?: string; seo_description?: string }>) =>
     api<{ data: Course }>(`/academy/courses/${id}`, {
       method: "PUT",
       token,

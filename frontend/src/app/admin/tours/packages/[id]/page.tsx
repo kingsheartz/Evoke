@@ -82,7 +82,7 @@ export default function EditPackagePage() {
         seo_title: data.seo_title || undefined,
         seo_description: data.seo_description || undefined,
       });
-      await revalidateTourPublicCache(pkg.slug);
+      await revalidateTourPublicCache(pkg?.slug);
       setMessage("Package updated.");
       load();
     } catch (e) {

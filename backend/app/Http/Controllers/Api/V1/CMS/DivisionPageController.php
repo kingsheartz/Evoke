@@ -31,8 +31,6 @@ class DivisionPageController extends Controller
 
     public function show(string $slug): JsonResponse
     {
-        $this->assertValidSlug($slug);
-
         $page = DB::table('division_page_settings')
             ->where('slug', $slug)
             ->where('is_active', true)
