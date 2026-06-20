@@ -28,8 +28,10 @@ function getSnapshot(): Advertisement[] {
   return cache.ads;
 }
 
+const EMPTY_ADS: Advertisement[] = [];
+
 function getServerSnapshot(): Advertisement[] {
-  return [];
+  return EMPTY_ADS;
 }
 
 async function fetchAds(force = false): Promise<void> {
