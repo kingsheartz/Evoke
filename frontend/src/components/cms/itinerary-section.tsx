@@ -2,6 +2,7 @@
 
 import type { ItineraryContent } from "@/lib/cms-sections";
 import { TimelineSection } from "@/components/offerings/timeline-section";
+import type { TimelineVariant } from "@/lib/offerings";
 
 export function ItinerarySection({ content }: { content: ItineraryContent }) {
   return (
@@ -10,7 +11,7 @@ export function ItinerarySection({ content }: { content: ItineraryContent }) {
       cost_heading={content.cost_heading}
       cost_body={content.cost_body}
       items={content.items}
-      variant="travel"
+      variant={(content.variant as TimelineVariant | undefined) ?? "travel"}
     />
   );
 }

@@ -25,7 +25,7 @@ import { Label } from "@/components/ui/label";
 import { SectionTypeBadge } from "@/components/cms/cms-page-view";
 import { createSectionContent, SectionContentEditor } from "@/components/cms/section-content-editor";
 import { apiClient, SECTION_TYPES, type PageSection } from "@/lib/api";
-import { isSectionType } from "@/lib/cms-sections";
+import { inferDivisionFromSlug, isSectionType } from "@/lib/cms-sections";
 import { revalidateCmsPagePublicCache } from "@/lib/revalidate-cms";
 import { useAuthStore } from "@/stores/app";
 
@@ -113,7 +113,7 @@ export function PageSectionBuilder({
     const type = isSectionType(newType) ? newType : "text";
     const { data } = await apiClient.createPageSection(token, pageId, {
       component_type: type,
-      content: createSectionContent(type),
+      content: createSectionContent(type, { division: inferDivisionFromSlug(pageSlug) }),
     });
     const next = [...sectionsRef.current, data];
     setSections(next);

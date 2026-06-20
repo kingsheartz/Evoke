@@ -24,7 +24,7 @@ import { SectionTypeBadge } from "@/components/cms/cms-page-view";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { SECTION_TYPES } from "@/lib/api";
-import { defaultSectionContent, isSectionType, type SectionType } from "@/lib/cms-sections";
+import { defaultSectionContent, inferDivisionFromSlug, isSectionType, type SectionDefaultsContext, type SectionType } from "@/lib/cms-sections";
 import { createHomepageSection, type HomepageSection } from "@/lib/homepage-meta";
 import { cn } from "@/lib/utils";
 
@@ -83,9 +83,11 @@ function SortableHomepageSection({
 export function HomepageSectionsEditor({
   sections,
   onChange,
+  defaultsContext,
 }: {
   sections: HomepageSection[];
   onChange: (sections: HomepageSection[]) => void;
+  defaultsContext?: SectionDefaultsContext;
 }) {
   const [newType, setNewType] = useState("text");
   const sensors = useSensors(
@@ -95,7 +97,7 @@ export function HomepageSectionsEditor({
 
   const addSection = () => {
     const type = isSectionType(newType) ? newType : "text";
-    const next = [...sections, { ...createHomepageSection(type), sort_order: sections.length }];
+    const next = [...sections, { ...createHomepageSection(type, defaultsContext), sort_order: sections.length }];
     onChange(next);
   };
 
@@ -110,7 +112,7 @@ export function HomepageSectionsEditor({
   const changeSectionType = (id: string, type: SectionType) => {
     onChange(
       sections.map((s) =>
-        s.id === id ? { ...s, component_type: type, content: defaultSectionContent(type) } : s,
+        s.id === id ? { ...s, component_type: type, content: defaultSectionContent(type, defaultsContext) } : s,
       ),
     );
   };

@@ -1,4 +1,4 @@
-import type { SectionType } from "@/lib/cms-sections";
+import type { SectionType, SectionDefaultsContext } from "@/lib/cms-sections";
 import { defaultSectionContent } from "@/lib/cms-sections";
 
 export interface HomepageStat {
@@ -86,11 +86,14 @@ export function parseHomepageMeta(meta: Record<string, unknown> | undefined | nu
   };
 }
 
-export function createHomepageSection(type: SectionType): HomepageSection {
+export function createHomepageSection(
+  type: SectionType,
+  context: SectionDefaultsContext = {},
+): HomepageSection {
   return {
     id: `section-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     component_type: type,
-    content: defaultSectionContent(type),
+    content: defaultSectionContent(type, context),
     is_visible: true,
     sort_order: 0,
   };

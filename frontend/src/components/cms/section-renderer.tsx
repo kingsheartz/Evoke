@@ -3,6 +3,7 @@ import { ArrowUpRight, ChevronDown, Mail, MapPin } from "lucide-react";
 import { FormFieldPreview } from "@/components/cms/form-fields-editor";
 import { GalleryView } from "@/components/cms/gallery-view";
 import { ItinerarySection } from "@/components/cms/itinerary-section";
+import { InclusionsSection } from "@/components/offerings/inclusions-section";
 import type { PageSection } from "@/lib/api";
 import { resolveDivisionIcon } from "@/lib/division-page";
 import {
@@ -15,6 +16,7 @@ import {
   type FaqItem,
   type FormsContent,
   type GalleryContent,
+  type InclusionsContent,
   type ItineraryContent,
   type MapContent,
   type SectionType,
@@ -257,6 +259,11 @@ function CardBlock({ item }: { item: CardItem }) {
   const CardIcon = item.icon?.trim() ? resolveDivisionIcon(item.icon) : null;
   const inner = (
     <>
+      {item.badge?.trim() && (
+        <span className="mb-3 inline-flex rounded-full border border-accent/25 bg-accent/10 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-accent-soft">
+          {item.badge}
+        </span>
+      )}
       {CardIcon && (
         <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-accent/15 text-accent-soft ring-1 ring-accent/20">
           <CardIcon className="h-5 w-5" />
@@ -269,6 +276,8 @@ function CardBlock({ item }: { item: CardItem }) {
         </div>
       )}
       {item.title?.trim() && <h3 className="font-display text-lg font-semibold text-app-text">{item.title}</h3>}
+      {item.price?.trim() && <p className="mt-1 text-sm font-semibold text-accent-soft">{item.price}</p>}
+      {item.meta_line?.trim() && <p className="mt-1 text-xs text-app-muted">{item.meta_line}</p>}
       {item.description?.trim() && <p className="mt-2 text-sm leading-relaxed text-app-muted">{item.description}</p>}
       {item.link_url?.trim() && (
         <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-accent-soft">
@@ -445,6 +454,21 @@ function FormsSection({ content }: { content: FormsContent }) {
   );
 }
 
+function InclusionsCmsSection({ content }: { content: InclusionsContent }) {
+  return (
+    <SectionShell wide className="border-0 bg-transparent p-0 ring-0">
+      <InclusionsSection
+        heading={content.heading}
+        included={content.included}
+        excluded={content.excluded}
+        included_label={content.included_label}
+        excluded_label={content.excluded_label}
+        className="px-0"
+      />
+    </SectionShell>
+  );
+}
+
 function renderSection(section: PageSection) {
   const type = section.component_type as SectionType;
   const content = section.content;
@@ -464,6 +488,8 @@ function renderSection(section: PageSection) {
       return <CardsSection content={content as unknown as CardsContent} />;
     case "stats":
       return <StatsSection content={content as unknown as StatsContent} />;
+    case "inclusions":
+      return <InclusionsCmsSection content={content as unknown as InclusionsContent} />;
     case "itinerary":
       return <ItinerarySection content={content as unknown as ItineraryContent} />;
     case "testimonials":

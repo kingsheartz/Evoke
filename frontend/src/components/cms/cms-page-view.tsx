@@ -1,4 +1,5 @@
 import type { PageSection } from "@/lib/api";
+import { sectionTypeLabel } from "@/lib/api";
 import { isSectionEmpty } from "@/lib/cms-sections";
 import { cn } from "@/lib/utils";
 import { CmsSectionRenderer } from "@/components/cms/section-renderer";
@@ -27,7 +28,7 @@ export function SectionTypeBadge({ type, className }: { type: string; className?
         className,
       )}
     >
-      {type}
+      {sectionTypeLabel(type)}
     </span>
   );
 }

@@ -1,6 +1,13 @@
 import { SECTION_TYPES } from "@/lib/api";
+import type { TimelineVariant } from "@/lib/offerings";
 
 export type SectionType = (typeof SECTION_TYPES)[number]["value"];
+
+export type SectionDefaultsDivision = "tours" | "shop" | "academy";
+
+export interface SectionDefaultsContext {
+  division?: SectionDefaultsDivision;
+}
 
 export interface GalleryImage {
   url: string;
@@ -20,6 +27,9 @@ export interface CardItem {
   icon?: string;
   link_url?: string;
   link_label?: string;
+  price?: string;
+  badge?: string;
+  meta_line?: string;
 }
 
 export interface TestimonialItem {
@@ -74,6 +84,16 @@ export interface ItineraryContent {
   cost_heading?: string;
   cost_body?: string;
   items?: ItineraryDay[];
+  /** Controls timeline labels and milestone icons (travel, course, product). */
+  variant?: TimelineVariant;
+}
+
+export interface InclusionsContent {
+  heading?: string;
+  included?: string[];
+  excluded?: string[];
+  included_label?: string;
+  excluded_label?: string;
 }
 
 export interface BannerContent {
@@ -145,6 +165,7 @@ export type SectionContentByType = {
   video: VideoContent;
   cards: CardsContent;
   stats: StatsContent;
+  inclusions: InclusionsContent;
   itinerary: ItineraryContent;
   testimonials: TestimonialsContent;
   map: MapContent;
@@ -155,7 +176,124 @@ export function isSectionType(value: string): value is SectionType {
   return SECTION_TYPES.some((t) => t.value === value);
 }
 
-export function defaultSectionContent(type: SectionType): Record<string, unknown> {
+export function inferDivisionFromSlug(slug: string): SectionDefaultsDivision | undefined {
+  if (slug === "tours" || slug === "shop" || slug === "academy") return slug;
+  return undefined;
+}
+
+function defaultStatsItems(division?: SectionDefaultsDivision): StatItem[] {
+  switch (division) {
+    case "tours":
+      return [
+        { label: "Duration", value: "5 Days – 6 Nights", icon: "clock" },
+        { label: "Group size", value: "2–12", icon: "users" },
+        { label: "Tour type", value: "Custom trip", icon: "compass" },
+      ];
+    case "shop":
+      return [
+        { label: "Delivery", value: "2–5 business days", icon: "package" },
+        { label: "Warranty", value: "1 year", icon: "compass" },
+        { label: "Returns", value: "30 days", icon: "clock" },
+      ];
+    case "academy":
+      return [
+        { label: "Duration", value: "12 weeks", icon: "clock" },
+        { label: "Level", value: "All levels", icon: "users" },
+        { label: "Format", value: "In person", icon: "book-open" },
+      ];
+    default:
+      return [
+        { label: "Duration", value: "Flexible", icon: "clock" },
+        { label: "Capacity", value: "Small groups", icon: "users" },
+        { label: "Format", value: "In person", icon: "compass" },
+      ];
+  }
+}
+
+function defaultTimelineContent(division?: SectionDefaultsDivision): ItineraryContent {
+  switch (division) {
+    case "academy":
+      return {
+        heading: "Curriculum",
+        cost_heading: "Fees",
+        cost_body: "",
+        variant: "course",
+        items: [
+          { title: "Module 01: Foundations", body: "", milestone: "start" },
+          { title: "Module 02: Practice", body: "" },
+          { title: "Module 06: Assessment", body: "", milestone: "end" },
+        ],
+      };
+    case "shop":
+      return {
+        heading: "Details",
+        cost_heading: "Pricing",
+        cost_body: "",
+        variant: "product",
+        items: [
+          { title: "Overview", body: "", milestone: "start" },
+          { title: "Specifications", body: "" },
+          { title: "What's in the box", body: "", milestone: "end" },
+        ],
+      };
+    case "tours":
+    default:
+      return {
+        heading: "Itinerary",
+        cost_heading: "Cost",
+        cost_body: "",
+        variant: "travel",
+        items: [
+          { title: "Day 01: Arrival", body: "", milestone: "start" },
+          { title: "Day 02: Explore", body: "" },
+          { title: "Day 06: Departure", body: "", milestone: "end" },
+        ],
+      };
+  }
+}
+
+function defaultInclusionsContent(division?: SectionDefaultsDivision): InclusionsContent {
+  switch (division) {
+    case "academy":
+      return {
+        heading: "What's included",
+        included_label: "Included",
+        excluded_label: "Not included",
+        included: ["Course materials", "Certification on completion", "Practice sessions"],
+        excluded: ["Uniform or equipment", "Travel to venue"],
+      };
+    case "shop":
+      return {
+        heading: "Package contents",
+        included_label: "Included",
+        excluded_label: "Not included",
+        included: ["Product", "Standard packaging", "Warranty card"],
+        excluded: ["Accessories sold separately", "Extended warranty"],
+      };
+    case "tours":
+      return {
+        heading: "Inclusions & Exclusions",
+        included_label: "Inclusions",
+        excluded_label: "Excludes",
+        included: ["Accommodation", "Daily breakfast", "Airport transfers"],
+        excluded: ["Flights", "Personal expenses", "Travel insurance"],
+      };
+    default:
+      return {
+        heading: "Inclusions & Exclusions",
+        included_label: "Inclusions",
+        excluded_label: "Excludes",
+        included: ["Item one", "Item two"],
+        excluded: ["Item not included"],
+      };
+  }
+}
+
+export function defaultSectionContent(
+  type: SectionType,
+  context: SectionDefaultsContext = {},
+): Record<string, unknown> {
+  const division = context.division;
   switch (type) {
     case "banner":
       return {
@@ -180,23 +318,12 @@ export function defaultSectionContent(type: SectionType): Record<string, unknown
       return {
         heading: "",
         columns: 3,
-        items: [
-          { label: "Duration", value: "5 Days – 6 Nights", icon: "clock" },
-          { label: "Group size", value: "2–12", icon: "users" },
-          { label: "Tour type", value: "Custom trip", icon: "compass" },
-        ],
+        items: defaultStatsItems(division),
       };
+    case "inclusions":
+      return { ...defaultInclusionsContent(division) };
     case "itinerary":
-      return {
-        heading: "Itinerary",
-        cost_heading: "Cost",
-        cost_body: "",
-        items: [
-          { title: "Day 01: Arrival", body: "", milestone: "start" },
-          { title: "Day 02: Explore", body: "" },
-          { title: "Day 06: Departure", body: "", milestone: "end" },
-        ],
-      };
+      return { ...defaultTimelineContent(division) };
     case "testimonials":
       return { heading: "What people say", items: [] };
     case "map":
@@ -297,6 +424,12 @@ export function isSectionEmpty(section: { component_type: string; content: Recor
       const c = content as unknown as StatsContent;
       const items = (c.items ?? []).filter((item) => item.label?.trim() && item.value?.trim());
       return items.length === 0 && !c.heading?.trim();
+    }
+    case "inclusions": {
+      const c = content as unknown as InclusionsContent;
+      const included = (c.included ?? []).filter((item) => item.trim());
+      const excluded = (c.excluded ?? []).filter((item) => item.trim());
+      return included.length === 0 && excluded.length === 0 && !c.heading?.trim();
     }
     case "itinerary": {
       const c = content as unknown as ItineraryContent;

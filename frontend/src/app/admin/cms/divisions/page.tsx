@@ -32,6 +32,7 @@ import {
   parseDivisionMeta,
   slugifyDivision,
 } from "@/lib/division-page";
+import { inferDivisionFromSlug } from "@/lib/cms-sections";
 import type { HomepageSection } from "@/lib/homepage-meta";
 import { revalidateDivisionPublicCache } from "@/lib/revalidate-cms";
 import { useNotifications } from "@/lib/notifications";
@@ -519,6 +520,7 @@ export default function DivisionPagesEditorPage() {
                   <HomepageSectionsEditor
                     sections={sections}
                     onChange={(next) => setValue("sections", next, { shouldDirty: true })}
+                    defaultsContext={{ division: inferDivisionFromSlug(selectedSlug ?? "") }}
                   />
                 </CardContent>
               </Card>

@@ -914,11 +914,16 @@ export const SECTION_TYPES = [
   { value: "video", label: "Video" },
   { value: "cards", label: "Cards" },
   { value: "stats", label: "Quick facts" },
-  { value: "itinerary", label: "Itinerary" },
+  { value: "inclusions", label: "Inclusions & Exclusions" },
+  { value: "itinerary", label: "Timeline" },
   { value: "testimonials", label: "Testimonials" },
   { value: "map", label: "Map" },
   { value: "forms", label: "Forms" },
 ] as const;
+
+export function sectionTypeLabel(type: string): string {
+  return SECTION_TYPES.find((entry) => entry.value === type)?.label ?? type;
+}
 
 export function hasPermission(permissions: string[], required: string | string[]): boolean {
   const requiredList = Array.isArray(required) ? required : [required];

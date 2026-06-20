@@ -14,10 +14,12 @@ import {
   type FormField,
   type GalleryImage,
   type ItineraryDay,
+  type SectionDefaultsContext,
   type SectionType,
   type StatItem,
   type TestimonialItem,
 } from "@/lib/cms-sections";
+import type { TimelineVariant } from "@/lib/offerings";
 import { DIVISION_ICONS } from "@/lib/division-page";
 import { cn } from "@/lib/utils";
 
@@ -72,8 +74,53 @@ function ListFieldGroup({
   );
 }
 
+function StringListEditor({
+  label,
+  addLabel,
+  values,
+  onChange,
+  placeholder,
+}: {
+  label: string;
+  addLabel: string;
+  values: string[];
+  onChange: (next: string[]) => void;
+  placeholder?: string;
+}) {
+  return (
+    <ListFieldGroup label={label} addLabel={addLabel} onAdd={() => onChange([...values, ""])}>
+      <div className="space-y-3">
+        {values.map((value, index) => (
+          <ItemCard key={index} onRemove={() => onChange(values.filter((_, i) => i !== index))}>
+            <Input
+              placeholder={placeholder ?? "List item"}
+              value={value}
+              onChange={(e) => onChange(updateStringList(values, index, e.target.value))}
+            />
+          </ItemCard>
+        ))}
+      </div>
+    </ListFieldGroup>
+  );
+}
+
+function updateStringList(list: string[], index: number, value: string): string[] {
+  return list.map((item, i) => (i === index ? value : item));
+}
+
 function updateList<T>(list: T[], index: number, patch: Partial<T>): T[] {
   return list.map((item, i) => (i === index ? { ...item, ...patch } : item));
+}
+
+function timelineItemLabels(variant: TimelineVariant) {
+  switch (variant) {
+    case "course":
+      return { listLabel: "Modules", addLabel: "Add module", titlePlaceholder: "Module title (e.g. Module 01: Foundations)" };
+    case "product":
+      return { listLabel: "Steps", addLabel: "Add step", titlePlaceholder: "Step title (e.g. Specifications)" };
+    default:
+      return { listLabel: "Days", addLabel: "Add day", titlePlaceholder: "Day title (e.g. Day 01: Arrival)" };
+  }
 }
 
 const sectionStack = "space-y-4";
@@ -285,7 +332,7 @@ export function SectionContentEditor({
           <ListFieldGroup
             label="Cards"
             addLabel="Add card"
-            onAdd={() => patch({ items: [...items, { title: "", description: "", image_url: "", icon: "book-open", link_url: "", link_label: "" }] })}
+            onAdd={() => patch({ items: [...items, { title: "", description: "", image_url: "", icon: "book-open", link_url: "", link_label: "", price: "", badge: "", meta_line: "" }] })}
           >
             <div className="space-y-3">
               {items.map((item, index) => (
@@ -313,6 +360,29 @@ export function SectionContentEditor({
                     onChange={(e) => patch({ items: updateList(items, index, { description: e.target.value }) })}
                     rows={2}
                   />
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <FieldGroup label="Price (optional)">
+                      <Input
+                        placeholder="From ₹12,999"
+                        value={item.price ?? ""}
+                        onChange={(e) => patch({ items: updateList(items, index, { price: e.target.value }) })}
+                      />
+                    </FieldGroup>
+                    <FieldGroup label="Badge (optional)">
+                      <Input
+                        placeholder="Featured"
+                        value={item.badge ?? ""}
+                        onChange={(e) => patch({ items: updateList(items, index, { badge: e.target.value }) })}
+                      />
+                    </FieldGroup>
+                    <FieldGroup label="Meta line (optional)">
+                      <Input
+                        placeholder="5 days · 2–12 guests"
+                        value={item.meta_line ?? ""}
+                        onChange={(e) => patch({ items: updateList(items, index, { meta_line: e.target.value }) })}
+                      />
+                    </FieldGroup>
+                  </div>
                   <FieldGroup label="Image">
                     <MediaUrlField
                       kind="image"
@@ -491,34 +561,90 @@ export function SectionContentEditor({
       );
     }
 
-    case "itinerary": {
-      const items = (content.items as ItineraryDay[] | undefined) ?? [];
+    case "inclusions": {
+      const included = (content.included as string[] | undefined) ?? [];
+      const excluded = (content.excluded as string[] | undefined) ?? [];
       return (
         <div className={sectionStack}>
-          <FieldGroup label="Itinerary tab heading">
+          <FieldGroup label="Section heading">
             <Input value={String(content.heading ?? "")} onChange={(e) => patch({ heading: e.target.value })} />
           </FieldGroup>
-          <FieldGroup label="Cost tab heading">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FieldGroup label="Included column label">
+              <Input
+                value={String(content.included_label ?? "")}
+                onChange={(e) => patch({ included_label: e.target.value })}
+                placeholder="Inclusions"
+              />
+            </FieldGroup>
+            <FieldGroup label="Excluded column label">
+              <Input
+                value={String(content.excluded_label ?? "")}
+                onChange={(e) => patch({ excluded_label: e.target.value })}
+                placeholder="Excludes"
+              />
+            </FieldGroup>
+          </div>
+          <StringListEditor
+            label="Included items"
+            addLabel="Add inclusion"
+            values={included}
+            onChange={(next) => patch({ included: next })}
+            placeholder="e.g. Daily breakfast"
+          />
+          <StringListEditor
+            label="Excluded items"
+            addLabel="Add exclusion"
+            values={excluded}
+            onChange={(next) => patch({ excluded: next })}
+            placeholder="e.g. Flights"
+          />
+        </div>
+      );
+    }
+
+    case "itinerary": {
+      const items = (content.items as ItineraryDay[] | undefined) ?? [];
+      const variant = (content.variant as TimelineVariant | undefined) ?? "travel";
+      const labels = timelineItemLabels(variant);
+      return (
+        <div className={sectionStack}>
+          <FieldGroup label="Timeline variant">
+            <select
+              value={variant}
+              onChange={(e) => patch({ variant: e.target.value as TimelineVariant })}
+              className="form-select h-10 w-full rounded-lg border border-app-border bg-app-surface-muted/60 px-3 text-sm text-app-text sm:max-w-xs"
+            >
+              <option value="travel">Travel (days, destinations)</option>
+              <option value="course">Course (modules, curriculum)</option>
+              <option value="product">Product (steps, specs)</option>
+            </select>
+            <p className="mt-1 text-xs text-app-muted">Changes labels and icons only — same content structure.</p>
+          </FieldGroup>
+          <FieldGroup label="Timeline tab heading">
+            <Input value={String(content.heading ?? "")} onChange={(e) => patch({ heading: e.target.value })} />
+          </FieldGroup>
+          <FieldGroup label="Secondary tab heading (optional)">
             <Input value={String(content.cost_heading ?? "")} onChange={(e) => patch({ cost_heading: e.target.value })} />
           </FieldGroup>
-          <FieldGroup label="Cost tab content">
+          <FieldGroup label="Secondary tab content (optional)">
             <Textarea value={String(content.cost_body ?? "")} onChange={(e) => patch({ cost_body: e.target.value })} rows={4} />
           </FieldGroup>
           <ListFieldGroup
-            label="Days"
-            addLabel="Add day"
+            label={labels.listLabel}
+            addLabel={labels.addLabel}
             onAdd={() => patch({ items: [...items, { title: "", body: "" }] })}
           >
             <div className="space-y-3">
               {items.map((item, index) => (
                 <ItemCard key={index} onRemove={() => patch({ items: items.filter((_, i) => i !== index) })}>
                   <Input
-                    placeholder="Day title (e.g. Day 01: Arrival)"
+                    placeholder={labels.titlePlaceholder}
                     value={item.title}
                     onChange={(e) => patch({ items: updateList(items, index, { title: e.target.value }) })}
                   />
                   <Textarea
-                    placeholder="Day details"
+                    placeholder="Details"
                     value={item.body ?? ""}
                     onChange={(e) => patch({ items: updateList(items, index, { body: e.target.value }) })}
                     rows={3}
@@ -534,9 +660,9 @@ export function SectionContentEditor({
                     }
                     className="form-select h-10 w-full rounded-lg border border-app-border bg-app-surface-muted/60 px-3 text-sm text-app-text sm:max-w-xs"
                   >
-                    <option value="">Regular day</option>
-                    <option value="start">Trip start</option>
-                    <option value="end">Departure / end</option>
+                    <option value="">Regular item</option>
+                    <option value="start">Start / overview</option>
+                    <option value="end">End / summary</option>
                   </select>
                 </ItemCard>
               ))}
@@ -560,6 +686,9 @@ export function SectionContentEditor({
   }
 }
 
-export function createSectionContent(type: SectionType): Record<string, unknown> {
-  return defaultSectionContent(type);
+export function createSectionContent(
+  type: SectionType,
+  context: SectionDefaultsContext = {},
+): Record<string, unknown> {
+  return defaultSectionContent(type, context);
 }
