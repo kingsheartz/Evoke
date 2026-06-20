@@ -15,7 +15,7 @@ class Product extends Model
 
     protected $fillable = [
         'category_id', 'name', 'slug', 'description', 'sku', 'price', 'compare_price',
-        'stock', 'images', 'attributes', 'is_active', 'is_featured', 'seo_title', 'seo_description',
+        'stock', 'images', 'attributes', 'is_active', 'is_featured', 'seo_title', 'seo_description', 'related_slugs',
     ];
 
     protected function casts(): array
@@ -27,6 +27,7 @@ class Product extends Model
             'attributes' => 'array',
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
+            'related_slugs' => 'array',
         ];
     }
 
@@ -38,5 +39,10 @@ class Product extends Model
     public function variants(): HasMany
     {
         return $this->hasMany(ProductVariant::class, 'product_id');
+    }
+
+    public function orderItems(): HasMany
+    {
+        return $this->hasMany(OrderItem::class, 'product_id');
     }
 }

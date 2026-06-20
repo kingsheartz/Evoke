@@ -16,7 +16,7 @@ class Course extends Model
 
     protected $fillable = [
         'category_id', 'branch_id', 'title', 'slug', 'description', 'seo_title', 'seo_description',
-        'duration', 'fees', 'thumbnail', 'gallery', 'status', 'requires_approval',
+        'duration', 'fees', 'thumbnail', 'gallery', 'status', 'requires_approval', 'is_featured', 'related_slugs',
     ];
 
     protected function casts(): array
@@ -25,6 +25,8 @@ class Course extends Model
             'fees' => 'decimal:2',
             'gallery' => 'array',
             'requires_approval' => 'boolean',
+            'is_featured' => 'boolean',
+            'related_slugs' => 'array',
         ];
     }
 

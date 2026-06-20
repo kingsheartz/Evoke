@@ -214,6 +214,16 @@ export const apiClient = {
       next: { revalidate: 60, tags: [OFFERINGS_CACHE_TAGS.tours, OFFERINGS_CACHE_TAGS.tour(slug)] },
     }),
 
+  getRelatedTourPackages: (slug: string, limit = 3) =>
+    api<{ data: TourPackage[] }>(`/tours/packages/${encodeURIComponent(slug)}/related?limit=${limit}`, {
+      next: { revalidate: 60, tags: [OFFERINGS_CACHE_TAGS.tours, OFFERINGS_CACHE_TAGS.tour(slug)] },
+    }),
+
+  getTrendingTourPackages: (limit = 6) =>
+    api<{ data: TourPackage[] }>(`/tours/trending?limit=${limit}`, {
+      next: { revalidate: 60, tags: [OFFERINGS_CACHE_TAGS.tours] },
+    }),
+
   getShopProducts: (params?: CatalogListParams) =>
     api<Paginated<Product>>(`/shop/products${catalogQuery(params)}`, {
       next: { revalidate: 60, tags: [OFFERINGS_CACHE_TAGS.shop] },
@@ -224,6 +234,16 @@ export const apiClient = {
       next: { revalidate: 60, tags: [OFFERINGS_CACHE_TAGS.shop, OFFERINGS_CACHE_TAGS.product(slug)] },
     }),
 
+  getRelatedShopProducts: (slug: string, limit = 3) =>
+    api<{ data: Product[] }>(`/shop/products/${encodeURIComponent(slug)}/related?limit=${limit}`, {
+      next: { revalidate: 60, tags: [OFFERINGS_CACHE_TAGS.shop, OFFERINGS_CACHE_TAGS.product(slug)] },
+    }),
+
+  getTrendingShopProducts: (limit = 6) =>
+    api<{ data: Product[] }>(`/shop/trending?limit=${limit}`, {
+      next: { revalidate: 60, tags: [OFFERINGS_CACHE_TAGS.shop] },
+    }),
+
   getAcademyCourses: (params?: CatalogListParams) =>
     api<Paginated<Course>>(`/academy/courses${catalogQuery(params)}`, {
       next: { revalidate: 60, tags: [OFFERINGS_CACHE_TAGS.academy] },
@@ -232,6 +252,16 @@ export const apiClient = {
   getAcademyCourse: (slug: string) =>
     api<{ data: Course }>(`/academy/courses/${encodeURIComponent(slug)}`, {
       next: { revalidate: 60, tags: [OFFERINGS_CACHE_TAGS.academy, OFFERINGS_CACHE_TAGS.course(slug)] },
+    }),
+
+  getRelatedAcademyCourses: (slug: string, limit = 3) =>
+    api<{ data: Course[] }>(`/academy/courses/${encodeURIComponent(slug)}/related?limit=${limit}`, {
+      next: { revalidate: 60, tags: [OFFERINGS_CACHE_TAGS.academy, OFFERINGS_CACHE_TAGS.course(slug)] },
+    }),
+
+  getTrendingAcademyCourses: (limit = 6) =>
+    api<{ data: Course[] }>(`/academy/trending?limit=${limit}`, {
+      next: { revalidate: 60, tags: [OFFERINGS_CACHE_TAGS.academy] },
     }),
 
   getAcademyCategories: () => api<{ data: AcademyCategory[] }>("/academy/categories"),
@@ -265,7 +295,7 @@ export const apiClient = {
       body: JSON.stringify(payload),
     }),
 
-  updateCourse: (token: string, id: number, payload: Partial<CoursePayload & { status: string; gallery?: string[]; thumbnail?: string; seo_title?: string; seo_description?: string }>) =>
+  updateCourse: (token: string, id: number, payload: Partial<CoursePayload & { status: string; gallery?: string[]; thumbnail?: string; seo_title?: string; seo_description?: string; is_featured?: boolean; related_slugs?: string[] }>) =>
     api<{ data: Course }>(`/academy/courses/${id}`, {
       method: "PUT",
       token,
@@ -369,7 +399,7 @@ export const apiClient = {
     api<{ data: Product }>(`/shop/admin/products/${id}`, { token }),
   createProduct: (token: string, payload: ProductPayload) =>
     api<{ data: Product }>("/shop/products", { method: "POST", token, body: JSON.stringify(payload) }),
-  updateProduct: (token: string, id: number, payload: Partial<ProductPayload & { is_active: boolean; is_featured: boolean; images?: string[]; compare_price?: number | null; seo_title?: string; seo_description?: string }>) =>
+  updateProduct: (token: string, id: number, payload: Partial<ProductPayload & { is_active: boolean; is_featured: boolean; images?: string[]; compare_price?: number | null; seo_title?: string; seo_description?: string; related_slugs?: string[] }>) =>
     api<{ data: Product }>(`/shop/products/${id}`, { method: "PUT", token, body: JSON.stringify(payload) }),
 
   getProductVariants: (token: string, productId: number) =>
@@ -461,7 +491,7 @@ export const apiClient = {
     api<{ data: TourPackage }>(`/tours/admin/packages/${id}`, { token }),
   createPackage: (token: string, payload: PackagePayload) =>
     api<{ data: TourPackage }>("/tours/packages", { method: "POST", token, body: JSON.stringify(payload) }),
-  updatePackage: (token: string, id: number, payload: Partial<PackagePayload & { is_active: boolean; is_featured: boolean; gallery?: string[]; inclusions?: string[]; exclusions?: string[]; seo_title?: string; seo_description?: string }>) =>
+  updatePackage: (token: string, id: number, payload: Partial<PackagePayload & { is_active: boolean; is_featured: boolean; gallery?: string[]; inclusions?: string[]; exclusions?: string[]; seo_title?: string; seo_description?: string; related_slugs?: string[] }>) =>
     api<{ data: TourPackage }>(`/tours/packages/${id}`, { method: "PUT", token, body: JSON.stringify(payload) }),
   getItinerary: (token: string, packageId: number) =>
     api<{ data: ItineraryDay[] }>(`/tours/admin/packages/${packageId}/itinerary`, { token }),
@@ -991,6 +1021,8 @@ export interface Course {
   category_id: number;
   category?: AcademyCategory;
   requires_approval?: boolean;
+  is_featured?: boolean;
+  related_slugs?: string[] | null;
   thumbnail?: string | null;
   gallery?: string[] | null;
   batches?: CourseBatch[];
@@ -1106,6 +1138,7 @@ export interface Product {
   images?: string[] | null;
   is_active: boolean;
   is_featured: boolean;
+  related_slugs?: string[] | null;
   category_id: number;
   category?: ShopCategory;
   variants?: ProductVariant[];
@@ -1154,6 +1187,7 @@ export interface TourPackage {
   exclusions?: string[] | null;
   is_active: boolean;
   is_featured: boolean;
+  related_slugs?: string[] | null;
   itinerary_days?: ItineraryDay[];
   seo_title?: string | null;
   seo_description?: string | null;

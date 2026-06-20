@@ -56,6 +56,7 @@ interface DivisionForm {
   sections: HomepageSection[];
   featured_catalog_enabled: boolean;
   featured_catalog_vertical: DivisionFeaturedCatalogConfig["vertical"];
+  featured_catalog_source: NonNullable<DivisionFeaturedCatalogConfig["catalog_source"]>;
   featured_catalog_featured_only: boolean;
   featured_catalog_limit: number;
   featured_catalog_heading: string;
@@ -77,6 +78,7 @@ const EMPTY_DIVISION_FORM: DivisionForm = {
   sections: [],
   featured_catalog_enabled: false,
   featured_catalog_vertical: "academy",
+  featured_catalog_source: "featured",
   featured_catalog_featured_only: true,
   featured_catalog_limit: 6,
   featured_catalog_heading: "",
@@ -101,7 +103,11 @@ function toForm(data: DivisionPageData): DivisionForm {
     sections: meta.sections,
     featured_catalog_enabled: catalog?.enabled ?? (data.slug === "tours" || data.slug === "shop" || data.slug === "academy"),
     featured_catalog_vertical: catalog?.vertical ?? (data.slug === "tours" || data.slug === "shop" || data.slug === "academy" ? data.slug : "academy"),
-    featured_catalog_featured_only: catalog?.featured_only ?? true,
+    featured_catalog_source:
+      catalog?.catalog_source ?? (catalog?.featured_only === false ? "latest" : "featured"),
+    featured_catalog_featured_only: catalog?.catalog_source
+      ? catalog.catalog_source === "featured"
+      : (catalog?.featured_only ?? true),
     featured_catalog_limit: catalog?.limit ?? 6,
     featured_catalog_heading: catalog?.heading ?? "",
     featured_catalog_view_all_label: catalog?.view_all_label ?? "",
@@ -125,7 +131,6 @@ export default function DivisionPagesEditorPage() {
   const sections = useWatch({ control, name: "sections" }) ?? [];
   const showInNav = useWatch({ control, name: "show_in_nav" });
   const featuredCatalogEnabled = useWatch({ control, name: "featured_catalog_enabled" });
-  const featuredCatalogFeaturedOnly = useWatch({ control, name: "featured_catalog_featured_only" });
 
   const { fields, append, remove } = useFieldArray({ control, name: "highlight_cards" });
 
@@ -181,7 +186,8 @@ export default function DivisionPagesEditorPage() {
           featured_catalog: {
             enabled: data.featured_catalog_enabled,
             vertical: data.featured_catalog_vertical,
-            featured_only: data.featured_catalog_featured_only,
+            catalog_source: data.featured_catalog_source,
+            featured_only: data.featured_catalog_source === "featured",
             limit: data.featured_catalog_limit,
             heading: data.featured_catalog_heading || undefined,
             view_all_label: data.featured_catalog_view_all_label || undefined,
@@ -557,26 +563,20 @@ export default function DivisionPagesEditorPage() {
                         </Select>
                       </div>
                       <div className="form-field">
+                        <Label>Grid content</Label>
+                        <Select {...register("featured_catalog_source")}>
+                          <option value="featured">Featured items</option>
+                          <option value="trending">Trending (90-day activity)</option>
+                          <option value="latest">Latest items</option>
+                        </Select>
+                      </div>
+                      <div className="form-field">
                         <Label>Item limit</Label>
                         <Input
                           type="number"
                           min={1}
                           max={24}
                           {...register("featured_catalog_limit", { valueAsNumber: true })}
-                        />
-                      </div>
-                      <div className="md:col-span-2 flex flex-col gap-3 rounded-lg border border-app-border px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="min-w-0 flex-1">
-                          <Label htmlFor="featured-catalog-featured-only">Featured items only</Label>
-                          <p className="mt-0.5 text-xs text-app-muted">When off, shows the latest catalog items</p>
-                        </div>
-                        <Switch
-                          id="featured-catalog-featured-only"
-                          checked={featuredCatalogFeaturedOnly ?? true}
-                          onCheckedChange={(value) =>
-                            setValue("featured_catalog_featured_only", value, { shouldDirty: true })
-                          }
-                          className="shrink-0"
                         />
                       </div>
                       <div className="form-field md:col-span-2">

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Recommendations\OfferingRecommendationController;
 use App\Http\Controllers\Api\V1\Tours\ItineraryController;
 use App\Http\Controllers\Api\V1\Tours\PackageController;
 use App\Http\Controllers\Api\V1\Tours\BookingController;
@@ -7,7 +8,9 @@ use App\Http\Controllers\Api\V1\Tours\EnquiryController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('tours')->middleware(['module.enabled:tours'])->group(function () {
+    Route::get('/trending', [OfferingRecommendationController::class, 'trendingTours']);
     Route::get('/packages', [PackageController::class, 'index']);
+    Route::get('/packages/{slug}/related', [OfferingRecommendationController::class, 'relatedTourPackage']);
     Route::get('/packages/{slug}', [PackageController::class, 'show']);
 
     Route::middleware('auth:sanctum')->group(function () {

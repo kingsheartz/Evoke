@@ -124,6 +124,8 @@ export function productToOffering(product: Product): OfferingCardData {
   };
 }
 
+export type CatalogSource = "featured" | "trending" | "latest";
+
 export function courseToOffering(course: Course, options?: { nextBatchLabel?: string }): OfferingCardData {
   return {
     title: course.title,
@@ -132,7 +134,7 @@ export function courseToOffering(course: Course, options?: { nextBatchLabel?: st
     imageAlt: course.title,
     priceLabel: formatOfferingPrice(course.fees),
     metaParts: [course.duration, course.category?.name, options?.nextBatchLabel],
-    badge: course.status === "published" ? undefined : course.status,
+    badge: course.is_featured ? "Featured" : undefined,
     galleryCount: course.gallery?.length ?? 0,
     vertical: "academy",
   };
@@ -231,10 +233,18 @@ export function catalogTitle(vertical: OfferingVertical): string {
 export async function loadCatalogForCms(content: {
   vertical: OfferingVertical;
   featured_only?: boolean;
+  catalog_source?: CatalogSource;
   limit?: number;
 }): Promise<OfferingCardData[]> {
   const limit = content.limit ?? 6;
-  const featured = content.featured_only ?? false;
+  const source =
+    content.catalog_source ?? (content.featured_only ? "featured" : "latest");
+
+  if (source === "trending") {
+    return loadTrendingOfferings(content.vertical, limit);
+  }
+
+  const featured = source === "featured";
 
   switch (content.vertical) {
     case "tours": {
@@ -252,7 +262,10 @@ export async function loadCatalogForCms(content: {
       return response.data.map(productToOffering);
     }
     case "academy": {
-      const response = await apiClient.getAcademyCourses({ per_page: limit });
+      const response = await apiClient.getAcademyCourses({
+        featured: featured || undefined,
+        per_page: limit,
+      });
       return response.data.map((course) =>
         courseToOffering(course, { nextBatchLabel: formatNextBatchLabel(course) }),
       );
@@ -266,6 +279,7 @@ export async function loadDivisionFeaturedCatalog(
   return loadCatalogForCms({
     vertical: config.vertical,
     featured_only: config.featured_only,
+    catalog_source: config.catalog_source,
     limit: config.limit,
   });
 }
@@ -282,18 +296,27 @@ export function offeringCta(vertical: OfferingVertical): { label: string } {
 }
 
 export async function loadFeaturedOfferings(vertical: OfferingVertical): Promise<OfferingCardData[]> {
+  return loadCatalogForCms({ vertical, catalog_source: "featured", limit: 6 });
+}
+
+export async function loadTrendingOfferings(
+  vertical: OfferingVertical,
+  limit = 6,
+): Promise<OfferingCardData[]> {
   switch (vertical) {
     case "tours": {
-      const response = await apiClient.getTourPackages({ featured: true, per_page: 6 });
+      const response = await apiClient.getTrendingTourPackages(limit);
       return response.data.map(tourPackageToOffering);
     }
     case "shop": {
-      const response = await apiClient.getShopProducts({ featured: true, per_page: 6 });
+      const response = await apiClient.getTrendingShopProducts(limit);
       return response.data.map(productToOffering);
     }
     case "academy": {
-      const response = await apiClient.getAcademyCourses({ per_page: 6 });
-      return response.data.map((course) => courseToOffering(course, { nextBatchLabel: formatNextBatchLabel(course) }));
+      const response = await apiClient.getTrendingAcademyCourses(limit);
+      return response.data.map((course) =>
+        courseToOffering(course, { nextBatchLabel: formatNextBatchLabel(course) }),
+      );
     }
   }
 }
@@ -337,11 +360,25 @@ export async function loadCatalogOfferings(
 
 export async function loadRelatedOfferings(
   vertical: OfferingVertical,
-  excludeSlug: string,
+  slug: string,
   limit = 3,
 ): Promise<OfferingCardData[]> {
-  const { items } = await loadCatalogOfferings(vertical, { per_page: limit + 1 });
-  return items.filter((item) => !item.href.endsWith(`/${excludeSlug}`)).slice(0, limit);
+  switch (vertical) {
+    case "tours": {
+      const response = await apiClient.getRelatedTourPackages(slug, limit);
+      return response.data.map(tourPackageToOffering);
+    }
+    case "shop": {
+      const response = await apiClient.getRelatedShopProducts(slug, limit);
+      return response.data.map(productToOffering);
+    }
+    case "academy": {
+      const response = await apiClient.getRelatedAcademyCourses(slug, limit);
+      return response.data.map((course) =>
+        courseToOffering(course, { nextBatchLabel: formatNextBatchLabel(course) }),
+      );
+    }
+  }
 }
 
 export function timelineVariantLabels(variant: TimelineVariant = "travel") {

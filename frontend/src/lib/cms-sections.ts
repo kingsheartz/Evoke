@@ -162,6 +162,7 @@ export interface CatalogContent {
   body?: string;
   vertical: SectionDefaultsDivision;
   featured_only?: boolean;
+  catalog_source?: "featured" | "trending" | "latest";
   limit?: number;
   view_all_label?: string;
 }

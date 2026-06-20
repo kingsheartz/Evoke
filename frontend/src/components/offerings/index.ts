@@ -23,6 +23,7 @@ export {
   loadCatalogOfferings,
   loadFeaturedOfferings,
   loadRelatedOfferings,
+  loadTrendingOfferings,
   offeringCta,
   productStats,
   productToOffering,

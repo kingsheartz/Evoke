@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { GalleryUrlsField, normalizeUrlList } from "@/components/admin/gallery-urls-field";
 import { ProductVariantsEditor } from "@/components/admin/product-variants-editor";
+import { StringListField, normalizeStringList } from "@/components/admin/string-list-field";
 import { AdminBackLink } from "@/components/admin/admin-form-primitives";
 import { CategorySelectField } from "@/components/admin/category-select-field";
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,7 @@ export default function EditProductPage() {
   const id = Number(params.id);
   const [product, setProduct] = useState<Product | null>(null);
   const [images, setImages] = useState<string[]>([]);
+  const [relatedSlugs, setRelatedSlugs] = useState<string[]>([]);
   const [message, setMessage] = useState<string | null>(null);
   const { register, handleSubmit, reset, control } = useForm<EditForm>();
 
@@ -46,6 +48,7 @@ export default function EditProductPage() {
     apiClient.getAdminProduct(token, id).then((r) => {
       setProduct(r.data);
       setImages(r.data.images ?? []);
+      setRelatedSlugs(r.data.related_slugs ?? []);
       reset({
         category_id: r.data.category_id,
         name: r.data.name,
@@ -71,6 +74,7 @@ export default function EditProductPage() {
         ...data,
         compare_price: data.compare_price && Number.isFinite(data.compare_price) ? data.compare_price : null,
         images: normalizeUrlList(images),
+        related_slugs: normalizeStringList(relatedSlugs),
         seo_title: data.seo_title || undefined,
         seo_description: data.seo_description || undefined,
       });
@@ -117,6 +121,16 @@ export default function EditProductPage() {
             </div>
 
             <GalleryUrlsField values={images.length ? images : [""]} onChange={setImages} />
+            <StringListField
+              label="Pinned related products"
+              addLabel="Add slug"
+              values={relatedSlugs.length ? relatedSlugs : [""]}
+              onChange={setRelatedSlugs}
+              placeholder="product-url-slug"
+            />
+            <p className="-mt-2 text-xs text-app-muted">
+              Optional slugs shown first on the detail page related grid. Leave empty for automatic recommendations.
+            </p>
 
             {message && (
               <p className={cn("text-sm", message.includes("updated") ? "text-status-success" : "text-status-error")}>

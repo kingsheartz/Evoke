@@ -86,6 +86,8 @@ class ProductController extends Controller
             'images' => 'nullable|array',
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
+            'related_slugs' => 'nullable|array',
+            'related_slugs.*' => 'string|max:255',
             'seo_title' => 'nullable|string|max:255',
             'seo_description' => 'nullable|string',
         ]);

@@ -16,6 +16,7 @@ export async function CatalogCmsSection({ content }: { content: CatalogContent }
   const items = await loadCatalogForCms({
     vertical: content.vertical,
     featured_only: content.featured_only,
+    catalog_source: content.catalog_source,
     limit: content.limit,
   });
 

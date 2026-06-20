@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Recommendations\OfferingRecommendationController;
 use App\Http\Controllers\Api\V1\Shop\CategoryController as ShopCategoryController;
 use App\Http\Controllers\Api\V1\Shop\CouponController;
 use App\Http\Controllers\Api\V1\Shop\ProductController;
@@ -10,7 +11,9 @@ use App\Http\Controllers\Api\V1\Shop\InventoryController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('shop')->middleware(['module.enabled:shop'])->group(function () {
+    Route::get('/trending', [OfferingRecommendationController::class, 'trendingShop']);
     Route::get('/products', [ProductController::class, 'index']);
+    Route::get('/products/{slug}/related', [OfferingRecommendationController::class, 'relatedShopProduct']);
     Route::get('/products/{slug}', [ProductController::class, 'show']);
     Route::get('/categories', [ProductController::class, 'categories']);
     Route::post('/coupons/validate', [CouponController::class, 'validateCode']);

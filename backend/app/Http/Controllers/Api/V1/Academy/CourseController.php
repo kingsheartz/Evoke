@@ -24,6 +24,7 @@ class CourseController extends Controller
             ->where('status', 'published')
             ->with(['category', 'batches.trainer'])
             ->when($request->category, fn ($q, $cat) => $q->whereHas('category', fn ($c) => $c->where('slug', $cat)))
+            ->when($request->boolean('featured'), fn ($q) => $q->where('is_featured', true))
             ->paginate($request->integer('per_page', 15));
 
         return response()->json($courses);
@@ -94,6 +95,9 @@ class CourseController extends Controller
             'requires_approval' => 'boolean',
             'thumbnail' => 'nullable|string',
             'gallery' => 'nullable|array',
+            'is_featured' => 'boolean',
+            'related_slugs' => 'nullable|array',
+            'related_slugs.*' => 'string|max:255',
         ]);
 
         $course->update($validated);

@@ -15,7 +15,7 @@ class Package extends Model
     protected $fillable = [
         'title', 'slug', 'description', 'destination', 'type', 'duration_days',
         'price', 'gallery', 'inclusions', 'exclusions', 'is_custom', 'is_active',
-        'is_featured', 'seo_title', 'seo_description',
+        'is_featured', 'seo_title', 'seo_description', 'related_slugs',
     ];
 
     protected function casts(): array
@@ -28,6 +28,7 @@ class Package extends Model
             'is_custom' => 'boolean',
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
+            'related_slugs' => 'array',
         ];
     }
 

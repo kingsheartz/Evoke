@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { CourseBatchesEditor } from "@/components/admin/course-batches-editor";
 import { GalleryUrlsField, normalizeUrlList } from "@/components/admin/gallery-urls-field";
+import { StringListField, normalizeStringList } from "@/components/admin/string-list-field";
 import { AdminBackLink } from "@/components/admin/admin-form-primitives";
 import { CategorySelectField } from "@/components/admin/category-select-field";
 import { MediaUrlField } from "@/components/cms/media-url-field";
@@ -31,6 +32,7 @@ interface EditForm {
   seo_title: string;
   seo_description: string;
   requires_approval: boolean;
+  is_featured: boolean;
 }
 
 export default function EditCoursePage() {
@@ -41,6 +43,7 @@ export default function EditCoursePage() {
   const [course, setCourse] = useState<Course | null>(null);
   const [thumbnail, setThumbnail] = useState("");
   const [gallery, setGallery] = useState<string[]>([]);
+  const [relatedSlugs, setRelatedSlugs] = useState<string[]>([]);
   const [message, setMessage] = useState<string | null>(null);
   const { register, handleSubmit, reset, control } = useForm<EditForm>();
 
@@ -50,6 +53,7 @@ export default function EditCoursePage() {
       setCourse(courseRes.data);
       setThumbnail(courseRes.data.thumbnail ?? "");
       setGallery(courseRes.data.gallery ?? []);
+      setRelatedSlugs(courseRes.data.related_slugs ?? []);
       reset({
         category_id: courseRes.data.category_id,
         title: courseRes.data.title,
@@ -60,6 +64,7 @@ export default function EditCoursePage() {
         seo_title: courseRes.data.seo_title ?? "",
         seo_description: courseRes.data.seo_description ?? "",
         requires_approval: courseRes.data.requires_approval ?? false,
+        is_featured: courseRes.data.is_featured ?? false,
       });
     });
   };
@@ -74,6 +79,7 @@ export default function EditCoursePage() {
         ...data,
         thumbnail: thumbnail.trim() || undefined,
         gallery: normalizeUrlList(gallery),
+        related_slugs: normalizeStringList(relatedSlugs),
         seo_title: data.seo_title || undefined,
         seo_description: data.seo_description || undefined,
       });
@@ -126,6 +132,10 @@ export default function EditCoursePage() {
                 <input type="checkbox" className="form-checkbox" {...register("requires_approval")} />
                 Require admin approval before enrollment is active
               </label>
+              <label className="flex items-center gap-2 text-sm text-app-text md:col-span-2">
+                <input type="checkbox" className="form-checkbox" {...register("is_featured")} />
+                Featured on catalog and recommendation grids
+              </label>
             </div>
 
             <div className="space-y-2">
@@ -138,6 +148,17 @@ export default function EditCoursePage() {
               values={gallery.length ? gallery : [""]}
               onChange={setGallery}
             />
+
+            <StringListField
+              label="Pinned related courses"
+              addLabel="Add slug"
+              values={relatedSlugs.length ? relatedSlugs : [""]}
+              onChange={setRelatedSlugs}
+              placeholder="course-url-slug"
+            />
+            <p className="-mt-2 text-xs text-app-muted">
+              Optional slugs shown first on the detail page related grid. Leave empty for automatic recommendations.
+            </p>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2 md:col-span-2">

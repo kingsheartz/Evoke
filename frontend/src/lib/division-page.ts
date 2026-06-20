@@ -21,6 +21,7 @@ export interface DivisionFeaturedCatalogConfig {
   enabled: boolean;
   vertical: SectionDefaultsDivision;
   featured_only?: boolean;
+  catalog_source?: "featured" | "trending" | "latest";
   limit?: number;
   heading?: string;
   view_all_label?: string;

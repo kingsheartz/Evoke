@@ -41,6 +41,7 @@ export default function EditPackagePage() {
   const [gallery, setGallery] = useState<string[]>([]);
   const [inclusions, setInclusions] = useState<string[]>([]);
   const [exclusions, setExclusions] = useState<string[]>([]);
+  const [relatedSlugs, setRelatedSlugs] = useState<string[]>([]);
   const [message, setMessage] = useState<string | null>(null);
   const [newDay, setNewDay] = useState({ day_number: 1, title: "", description: "" });
   const { register, handleSubmit, reset } = useForm<PackageForm>();
@@ -53,6 +54,7 @@ export default function EditPackagePage() {
       setGallery(r.data.gallery ?? []);
       setInclusions(r.data.inclusions ?? []);
       setExclusions(r.data.exclusions ?? []);
+      setRelatedSlugs(r.data.related_slugs ?? []);
       reset({
         title: r.data.title,
         description: r.data.description ?? "",
@@ -79,6 +81,7 @@ export default function EditPackagePage() {
         gallery: normalizeUrlList(gallery),
         inclusions: normalizeStringList(inclusions),
         exclusions: normalizeStringList(exclusions),
+        related_slugs: normalizeStringList(relatedSlugs),
         seo_title: data.seo_title || undefined,
         seo_description: data.seo_description || undefined,
       });
@@ -146,6 +149,16 @@ export default function EditPackagePage() {
             <GalleryUrlsField values={gallery.length ? gallery : [""]} onChange={setGallery} />
             <StringListField label="Inclusions" addLabel="Add inclusion" values={inclusions.length ? inclusions : [""]} onChange={setInclusions} placeholder="e.g. Daily breakfast" />
             <StringListField label="Exclusions" addLabel="Add exclusion" values={exclusions.length ? exclusions : [""]} onChange={setExclusions} placeholder="e.g. Flights" />
+            <StringListField
+              label="Pinned related packages"
+              addLabel="Add slug"
+              values={relatedSlugs.length ? relatedSlugs : [""]}
+              onChange={setRelatedSlugs}
+              placeholder="package-url-slug"
+            />
+            <p className="-mt-2 text-xs text-app-muted">
+              Optional slugs shown first on the detail page “You may also like” grid. Leave empty for automatic recommendations.
+            </p>
 
             {message && <p className={`text-sm ${message.includes("updated") ? "text-status-success" : "text-status-error"}`}>{message}</p>}
             <Button type="submit">Save package</Button>
