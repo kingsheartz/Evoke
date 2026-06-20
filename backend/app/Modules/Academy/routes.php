@@ -5,6 +5,8 @@ use App\Http\Controllers\Api\V1\Academy\CategoryController as AcademyCategoryCon
 use App\Http\Controllers\Api\V1\Academy\CourseController;
 use App\Http\Controllers\Api\V1\Academy\EnrollmentController;
 use App\Http\Controllers\Api\V1\Academy\TrainerController;
+use App\Http\Controllers\Api\V1\Academy\AttendanceController;
+use App\Http\Controllers\Api\V1\Academy\CertificateController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('academy')->middleware(['module.enabled:academy'])->group(function () {
@@ -15,6 +17,7 @@ Route::prefix('academy')->middleware(['module.enabled:academy'])->group(function
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/enrollments', [EnrollmentController::class, 'store']);
         Route::get('/enrollments', [EnrollmentController::class, 'index']);
+        Route::get('/certificates', [CertificateController::class, 'indexForUser']);
     });
 
     Route::middleware(['auth:sanctum', 'permission:academy.courses.manage'])->group(function () {
@@ -37,5 +40,16 @@ Route::prefix('academy')->middleware(['module.enabled:academy'])->group(function
 
     Route::middleware(['auth:sanctum', 'permission:academy.enrollments.manage'])->group(function () {
         Route::put('/admin/enrollments/{enrollment}', [EnrollmentController::class, 'adminUpdate']);
+    });
+
+    Route::middleware(['auth:sanctum', 'permission:academy.attendance.manage'])->group(function () {
+        Route::get('/admin/attendance', [AttendanceController::class, 'adminIndex']);
+        Route::post('/admin/attendance', [AttendanceController::class, 'store']);
+        Route::get('/admin/attendance/enrollments', [AttendanceController::class, 'enrollmentsForMarking']);
+    });
+
+    Route::middleware(['auth:sanctum', 'permission:academy.certificates.manage'])->group(function () {
+        Route::get('/admin/certificates', [CertificateController::class, 'adminIndex']);
+        Route::post('/admin/certificates', [CertificateController::class, 'store']);
     });
 });

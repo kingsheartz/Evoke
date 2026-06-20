@@ -32,4 +32,9 @@ Route::prefix('tours')->middleware(['module.enabled:tours'])->group(function () 
         Route::get('/admin/bookings', [BookingController::class, 'adminIndex']);
         Route::put('/admin/bookings/{booking}', [BookingController::class, 'adminUpdate']);
     });
+
+    Route::middleware(['auth:sanctum', 'permission:tours.enquiries.manage'])->group(function () {
+        Route::get('/admin/enquiries', [EnquiryController::class, 'adminIndex']);
+        Route::put('/admin/enquiries/{enquiry}', [EnquiryController::class, 'adminUpdate']);
+    });
 });

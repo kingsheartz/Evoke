@@ -96,7 +96,13 @@ export default function EnrollmentsPage() {
                               type="button"
                               size="sm"
                               variant="outline"
-                              onClick={() => updateEnrollment(enrollment, { payment_status: "paid" })}
+                              onClick={() => {
+                                const reference = window.prompt("Payment reference (optional):") ?? undefined;
+                                updateEnrollment(enrollment, {
+                                  payment_status: "paid",
+                                  payment_reference: reference || undefined,
+                                });
+                              }}
                             >
                               Mark paid
                             </Button>

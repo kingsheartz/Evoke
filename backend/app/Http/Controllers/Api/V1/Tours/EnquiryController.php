@@ -10,6 +10,29 @@ use Illuminate\Http\Request;
 
 class EnquiryController extends Controller
 {
+    public function adminIndex(Request $request): JsonResponse
+    {
+        $enquiries = Enquiry::query()
+            ->with(['package'])
+            ->when($request->status, fn ($q, $status) => $q->where('status', $status))
+            ->latest()
+            ->paginate($request->integer('per_page', 20));
+
+        return response()->json($enquiries);
+    }
+
+    public function adminUpdate(Request $request, Enquiry $enquiry): JsonResponse
+    {
+        $validated = $request->validate([
+            'status' => 'sometimes|string|in:new,contacted,quoted,converted,closed',
+            'assigned_to' => 'nullable|exists:users,id',
+        ]);
+
+        $enquiry->update($validated);
+
+        return response()->json(['data' => $enquiry->fresh(['package'])]);
+    }
+
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([

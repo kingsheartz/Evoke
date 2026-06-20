@@ -71,13 +71,25 @@ class ContextController extends Controller
             $items[] = ['label' => 'CMS', 'icon' => 'file-text', 'children' => $cmsChildren];
         }
 
-        if (in_array('academy', $enabled, true) && $can('academy.courses.manage')) {
-            $academyChildren = [
-                ['label' => 'Courses', 'href' => '/admin/academy/courses', 'icon' => 'book-open'],
-                ['label' => 'Enrollments', 'href' => '/admin/academy/enrollments', 'icon' => 'clipboard-list'],
-            ];
+        if (in_array('academy', $enabled, true) && (
+            $can('academy.courses.manage') || $can('academy.enrollments.manage') || $can('academy.trainers.manage')
+            || $can('academy.attendance.manage') || $can('academy.certificates.manage')
+        )) {
+            $academyChildren = [];
+            if ($can('academy.courses.manage')) {
+                $academyChildren[] = ['label' => 'Courses', 'href' => '/admin/academy/courses', 'icon' => 'book-open'];
+            }
+            if ($can('academy.enrollments.manage')) {
+                $academyChildren[] = ['label' => 'Enrollments', 'href' => '/admin/academy/enrollments', 'icon' => 'clipboard-list'];
+            }
             if ($can('academy.trainers.manage')) {
                 $academyChildren[] = ['label' => 'Trainers', 'href' => '/admin/academy/trainers', 'icon' => 'users'];
+            }
+            if ($can('academy.attendance.manage')) {
+                $academyChildren[] = ['label' => 'Attendance', 'href' => '/admin/academy/attendance', 'icon' => 'calendar-check'];
+            }
+            if ($can('academy.certificates.manage')) {
+                $academyChildren[] = ['label' => 'Certificates', 'href' => '/admin/academy/certificates', 'icon' => 'award'];
             }
             $items[] = [
                 'label' => 'EVOKE Academy',
@@ -93,6 +105,12 @@ class ContextController extends Controller
             }
             if ($can('shop.orders.manage')) {
                 $shopChildren[] = ['label' => 'Orders', 'href' => '/admin/shop/orders', 'icon' => 'shopping-cart'];
+            }
+            if ($can('shop.coupons.manage')) {
+                $shopChildren[] = ['label' => 'Coupons', 'href' => '/admin/shop/coupons', 'icon' => 'ticket'];
+            }
+            if ($can('shop.inventory.manage')) {
+                $shopChildren[] = ['label' => 'Inventory', 'href' => '/admin/shop/inventory', 'icon' => 'warehouse'];
             }
             if ($shopChildren !== []) {
                 $items[] = [
@@ -110,6 +128,9 @@ class ContextController extends Controller
             }
             if ($can('tours.bookings.manage')) {
                 $tourChildren[] = ['label' => 'Bookings', 'href' => '/admin/tours/bookings', 'icon' => 'calendar-check'];
+            }
+            if ($can('tours.enquiries.manage')) {
+                $tourChildren[] = ['label' => 'Enquiries', 'href' => '/admin/tours/enquiries', 'icon' => 'mail'];
             }
             $items[] = ['label' => 'EVOKE Tours', 'icon' => 'plane', 'children' => $tourChildren];
         }

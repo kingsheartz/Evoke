@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { apiClient } from "@/lib/api";
+import { openRazorpayCheckout } from "@/lib/razorpay-checkout";
 import { revalidateTourPublicCache } from "@/lib/revalidate-cms";
 import { useAuthStore } from "@/stores/app";
 
@@ -19,7 +19,7 @@ export function TourBookingAction({
   redirectPath: string;
 }) {
   const router = useRouter();
-  const { token } = useAuthStore();
+  const { token, user } = useAuthStore();
   const [open, setOpen] = useState(false);
   const [travelDate, setTravelDate] = useState("");
   const [travelers, setTravelers] = useState(2);
@@ -30,7 +30,7 @@ export function TourBookingAction({
   const signInHref = `/sign-in?redirect=${encodeURIComponent(redirectPath)}`;
 
   const submit = async () => {
-    if (!token) {
+    if (!token || !user) {
       router.push(signInHref);
       return;
     }
@@ -48,11 +48,23 @@ export function TourBookingAction({
         special_requests: requests.trim() || undefined,
       });
       await revalidateTourPublicCache();
-      setMessage(`Booking ${response.data.booking_number} submitted. We will confirm shortly.`);
-      setOpen(false);
+
+      try {
+        await openRazorpayCheckout({
+          token,
+          payableType: "tour_booking",
+          payableId: response.data.id,
+          userName: user.name,
+          userEmail: user.email,
+          userPhone: user.phone ?? undefined,
+        });
+      } catch {
+        // Payment optional when Razorpay is not configured
+      }
+
+      router.push(`/confirmation?type=booking&ref=${encodeURIComponent(response.data.booking_number)}`);
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "Could not submit booking.");
-    } finally {
       setSubmitting(false);
     }
   };
@@ -99,19 +111,7 @@ export function TourBookingAction({
           </div>
         </div>
       )}
-      {message && (
-        <p className={`text-sm ${message.includes("submitted") ? "text-status-success" : "text-status-error"}`}>
-          {message}
-          {message.includes("submitted") && (
-            <>
-              {" "}
-              <Link href="/account" className="font-medium text-accent-soft hover:text-accent">
-                View account
-              </Link>
-            </>
-          )}
-        </p>
-      )}
+      {message && <p className="text-sm text-status-error">{message}</p>}
     </div>
   );
 }

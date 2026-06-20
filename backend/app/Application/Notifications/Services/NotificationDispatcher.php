@@ -22,7 +22,7 @@ class NotificationDispatcher
                 continue;
             }
 
-            SendNotificationJob::dispatch($event, $channel, $user?->id, $payload, $template?->body);
+            SendNotificationJob::dispatch($event, $channel, $user?->id, $payload, $template?->body, $template?->subject);
 
             DB::table('notification_logs')->insert([
                 'user_id' => $user?->id,

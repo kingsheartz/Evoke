@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { apiClient, type Enrollment, type ShopOrder, type TourBooking } from "@/lib/api";
+import { apiClient, type AcademyCertificate, type Enrollment, type ShopOrder, type TourBooking } from "@/lib/api";
 import { formatOfferingPrice } from "@/lib/offerings";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, TableEmpty } from "@/components/ui/data-table";
@@ -24,6 +24,7 @@ export function AccountActivity({ token }: { token: string }) {
   const [bookings, setBookings] = useState<TourBooking[]>([]);
   const [orders, setOrders] = useState<ShopOrder[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+  const [certificates, setCertificates] = useState<AcademyCertificate[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -31,6 +32,7 @@ export function AccountActivity({ token }: { token: string }) {
       apiClient.getBookings(token).then((response) => setBookings(response.data ?? [])),
       apiClient.getOrders(token).then((response) => setOrders(response.data ?? [])),
       apiClient.getEnrollments(token).then((response) => setEnrollments(unwrapEnrollments(response))),
+      apiClient.getMyCertificates(token).then((response) => setCertificates(response.data ?? [])),
     ]).finally(() => setLoading(false));
   }, [token]);
 
@@ -148,6 +150,36 @@ export function AccountActivity({ token }: { token: string }) {
                     <td>{enrollment.batch?.name ?? "—"}</td>
                     <td><StatusBadge status={enrollment.status} /></td>
                     <td>{enrollment.payment_status}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </DataTable>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card variant="glass">
+        <CardHeader>
+          <CardTitle className="text-lg">Certificates</CardTitle>
+        </CardHeader>
+        <CardContent flush>
+          {certificates.length === 0 ? (
+            <TableEmpty inset message="No certificates issued yet." />
+          ) : (
+            <DataTable inset>
+              <thead>
+                <tr>
+                  <th>Certificate</th>
+                  <th>Course</th>
+                  <th>Issued</th>
+                </tr>
+              </thead>
+              <tbody>
+                {certificates.map((certificate) => (
+                  <tr key={certificate.id}>
+                    <td className="font-mono text-xs">{certificate.certificate_number}</td>
+                    <td>{certificate.enrollment?.batch?.course?.title ?? "—"}</td>
+                    <td>{certificate.issued_at?.slice(0, 10)}</td>
                   </tr>
                 ))}
               </tbody>

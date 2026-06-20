@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useForm } from "react-hook-form";
+import { StringListField, normalizeStringList } from "@/components/admin/string-list-field";
+import { MediaUrlField } from "@/components/cms/media-url-field";
 import { AdminBackLink } from "@/components/admin/admin-form-primitives";
 import { PermissionGate } from "@/components/admin/permission-gate";
 import { Button } from "@/components/ui/button";
@@ -26,6 +28,9 @@ export default function EditTrainerPage() {
   const token = useAuthStore((s) => s.token);
   const trainerId = Number(params.id);
   const [trainer, setTrainer] = useState<Trainer | null>(null);
+  const [photo, setPhoto] = useState("");
+  const [specializations, setSpecializations] = useState<string[]>([]);
+  const [certifications, setCertifications] = useState<string[]>([]);
   const [message, setMessage] = useState<string | null>(null);
   const { register, handleSubmit, reset } = useForm<FormData>();
 
@@ -33,6 +38,9 @@ export default function EditTrainerPage() {
     if (!token || !trainerId) return;
     apiClient.getAdminTrainer(token, trainerId).then((response) => {
       setTrainer(response.data);
+      setPhoto(response.data.photo ?? "");
+      setSpecializations(response.data.specializations?.length ? response.data.specializations : [""]);
+      setCertifications(response.data.certifications?.length ? response.data.certifications : [""]);
       reset({
         name: response.data.name,
         bio: response.data.bio ?? "",
@@ -48,6 +56,9 @@ export default function EditTrainerPage() {
       await apiClient.updateTrainer(token, trainerId, {
         name: data.name,
         bio: data.bio || undefined,
+        photo: photo.trim() || undefined,
+        specializations: normalizeStringList(specializations),
+        certifications: normalizeStringList(certifications),
         is_active: data.is_active,
       });
       setMessage("Trainer updated.");
@@ -71,7 +82,7 @@ export default function EditTrainerPage() {
             <CardTitle>{trainer.name}</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit(onSubmit)} className="grid max-w-xl gap-4">
+            <form onSubmit={handleSubmit(onSubmit)} className="grid max-w-2xl gap-4">
               <div className="space-y-2">
                 <Label>Name</Label>
                 <Input {...register("name", { required: true })} />
@@ -80,6 +91,22 @@ export default function EditTrainerPage() {
                 <Label>Bio</Label>
                 <Textarea rows={4} {...register("bio")} />
               </div>
+              <div className="space-y-2">
+                <Label>Photo</Label>
+                <MediaUrlField value={photo} onChange={setPhoto} cropAspect={1} />
+              </div>
+              <StringListField
+                label="Specializations"
+                values={specializations}
+                onChange={setSpecializations}
+                placeholder="e.g. Karate, Yoga"
+              />
+              <StringListField
+                label="Certifications"
+                values={certifications}
+                onChange={setCertifications}
+                placeholder="e.g. Black belt, CPR"
+              />
               <label className="flex items-center gap-2 text-sm text-app-text">
                 <input type="checkbox" className="form-checkbox" {...register("is_active")} />
                 Active

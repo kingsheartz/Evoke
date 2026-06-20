@@ -23,6 +23,8 @@ const schema = z.object({
   price: z.number().min(0),
   stock: z.number().min(0),
   description: z.string().optional(),
+  seo_title: z.string().optional(),
+  seo_description: z.string().optional(),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -78,6 +80,8 @@ export default function NewProductPage() {
             <div className="space-y-2"><Label>SKU</Label><Input {...register("sku")} /></div>
             <div className="space-y-2"><Label>Price (₹)</Label><Input type="number" step="0.01" {...register("price", { valueAsNumber: true })} /></div>
             <div className="space-y-2"><Label>Stock</Label><Input type="number" {...register("stock", { valueAsNumber: true })} /></div>
+            <div className="space-y-2 md:col-span-2"><Label>SEO title</Label><Input {...register("seo_title")} /></div>
+            <div className="space-y-2 md:col-span-2"><Label>SEO description</Label><Textarea rows={2} {...register("seo_description")} /></div>
             <FormError message={error} className="md:col-span-2" />
             <div className="md:col-span-2"><Button type="submit" disabled={isSubmitting}>Create Product</Button></div>
           </form>

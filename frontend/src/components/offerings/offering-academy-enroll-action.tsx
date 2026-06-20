@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import type { CourseBatch } from "@/lib/api";
 import { apiClient } from "@/lib/api";
+import { openRazorpayCheckout } from "@/lib/razorpay-checkout";
 import { revalidateAcademyPublicCache } from "@/lib/revalidate-cms";
 import { useAuthStore } from "@/stores/app";
 
@@ -21,7 +22,7 @@ export function AcademyEnrollAction({
   redirectPath: string;
 }) {
   const router = useRouter();
-  const { token } = useAuthStore();
+  const { token, user } = useAuthStore();
   const openBatches = useMemo(
     () => batches.filter((batch) => enrollableStatuses.has(batch.status)),
     [batches],
@@ -33,7 +34,7 @@ export function AcademyEnrollAction({
   const signInHref = `/sign-in?redirect=${encodeURIComponent(redirectPath)}`;
 
   const enroll = async () => {
-    if (!token) {
+    if (!token || !user) {
       router.push(signInHref);
       return;
     }
@@ -46,12 +47,23 @@ export function AcademyEnrollAction({
     try {
       const response = await apiClient.createEnrollment(token, { batch_id: batchId });
       await revalidateAcademyPublicCache();
-      const statusNote =
-        response.data.status === "pending" ? " Pending approval." : "";
-      setMessage(`Enrollment submitted successfully.${statusNote}`);
+
+      try {
+        await openRazorpayCheckout({
+          token,
+          payableType: "academy_enrollment",
+          payableId: response.data.id,
+          userName: user.name,
+          userEmail: user.email,
+          userPhone: user.phone ?? undefined,
+        });
+      } catch {
+        // Payment optional when Razorpay is not configured
+      }
+
+      router.push(`/confirmation?type=enrollment&ref=${encodeURIComponent(String(response.data.id))}`);
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "Could not enroll.");
-    } finally {
       setSubmitting(false);
     }
   };
@@ -91,19 +103,7 @@ export function AcademyEnrollAction({
           to enroll in a batch.
         </p>
       )}
-      {message && (
-        <p className={`text-sm ${message.includes("success") ? "text-status-success" : "text-status-error"}`}>
-          {message}
-          {message.includes("success") && (
-            <>
-              {" "}
-              <Link href="/account" className="font-medium text-accent-soft hover:text-accent">
-                View account
-              </Link>
-            </>
-          )}
-        </p>
-      )}
+      {message && <p className="text-sm text-status-error">{message}</p>}
     </div>
   );
 }

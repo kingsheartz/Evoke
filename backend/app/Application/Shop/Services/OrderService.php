@@ -53,6 +53,13 @@ class OrderService
         ]);
 
         foreach ($cart->items as $item) {
+            $available = $item->variant?->stock ?? $item->product->stock;
+            if ($item->quantity > $available) {
+                abort(422, "Insufficient stock for {$item->product->name}.");
+            }
+        }
+
+        foreach ($cart->items as $item) {
             OrderItem::create([
                 'order_id' => $order->id,
                 'product_id' => $item->product_id,
@@ -63,6 +70,18 @@ class OrderService
                 'unit_price' => $item->unit_price,
                 'total' => $item->unit_price * $item->quantity,
             ]);
+        }
+
+        foreach ($cart->items as $item) {
+            if ($item->variant_id) {
+                $item->variant?->decrement('stock', $item->quantity);
+            } else {
+                $item->product->decrement('stock', $item->quantity);
+            }
+        }
+
+        if ($coupon) {
+            $coupon->increment('used_count');
         }
 
         $cart->items()->delete();

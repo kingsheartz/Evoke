@@ -97,6 +97,25 @@ export default function TourBookingsAdminPage() {
                               </Button>
                             </>
                           )}
+                          {booking.payment_status === "unpaid" && (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={async () => {
+                                if (!token) return;
+                                const reference = window.prompt("Payment reference (optional):") ?? undefined;
+                                await apiClient.updateAdminBooking(token, booking.id, {
+                                  payment_status: "paid",
+                                  payment_reference: reference || undefined,
+                                });
+                                success("Payment recorded.");
+                                load();
+                              }}
+                            >
+                              Mark paid
+                            </Button>
+                          )}
                         </div>
                       </td>
                     </tr>

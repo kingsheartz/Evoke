@@ -421,7 +421,11 @@ export const apiClient = {
 
   createOrder: (
     token: string,
-    payload: { shipping_address: Record<string, string>; billing_address?: Record<string, string> | null },
+    payload: {
+      shipping_address: Record<string, string>;
+      billing_address?: Record<string, string> | null;
+      coupon_code?: string;
+    },
   ) =>
     api<{ data: ShopOrder }>("/shop/orders", {
       method: "POST",
@@ -620,6 +624,114 @@ export const apiClient = {
     api<{ data: AdminTask }>(`/admin/tasks/${id}`, { method: "PUT", token, body: JSON.stringify(payload) }),
   deleteAdminTask: (token: string, id: number) =>
     api<{ message: string }>(`/admin/tasks/${id}`, { method: "DELETE", token }),
+
+  validateCoupon: (payload: { code: string; subtotal: number }) =>
+    api<{ data: { code: string; type: string; value: string; discount: number } }>("/shop/coupons/validate", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
+  getAdminCoupons: (token: string) => api<Paginated<ShopCoupon>>("/shop/admin/coupons", { token }),
+  createCoupon: (token: string, payload: ShopCouponPayload) =>
+    api<{ data: ShopCoupon }>("/shop/admin/coupons", { method: "POST", token, body: JSON.stringify(payload) }),
+  updateCoupon: (token: string, id: number, payload: Partial<ShopCouponPayload>) =>
+    api<{ data: ShopCoupon }>(`/shop/admin/coupons/${id}`, { method: "PUT", token, body: JSON.stringify(payload) }),
+  deleteCoupon: (token: string, id: number) =>
+    api<{ message: string }>(`/shop/admin/coupons/${id}`, { method: "DELETE", token }),
+
+  getAdminInventory: (token: string, params?: { low_stock_threshold?: number }) => {
+    const query = new URLSearchParams();
+    if (params?.low_stock_threshold) query.set("low_stock_threshold", String(params.low_stock_threshold));
+    const qs = query.toString();
+    return api<{ data: InventorySnapshot }>(`/shop/admin/inventory${qs ? `?${qs}` : ""}`, { token });
+  },
+  adjustProductStock: (token: string, productId: number, stock: number) =>
+    api<{ data: Product }>(`/shop/admin/inventory/products/${productId}/stock`, {
+      method: "PUT",
+      token,
+      body: JSON.stringify({ stock }),
+    }),
+
+  getAdminEnquiries: (token: string, params?: { status?: string }) => {
+    const query = new URLSearchParams();
+    if (params?.status) query.set("status", params.status);
+    const qs = query.toString();
+    return api<Paginated<TourEnquiry>>(`/tours/admin/enquiries${qs ? `?${qs}` : ""}`, { token });
+  },
+  updateAdminEnquiry: (token: string, id: number, payload: Partial<{ status: string; assigned_to: number | null }>) =>
+    api<{ data: TourEnquiry }>(`/tours/admin/enquiries/${id}`, {
+      method: "PUT",
+      token,
+      body: JSON.stringify(payload),
+    }),
+  createTourEnquiry: (payload: TourEnquiryPayload) =>
+    api<{ data: TourEnquiry; message: string }>("/tours/enquiries", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
+  getAdminAttendance: (token: string, params?: { date?: string }) => {
+    const query = new URLSearchParams();
+    if (params?.date) query.set("date", params.date);
+    const qs = query.toString();
+    return api<Paginated<AttendanceRecord>>(`/academy/admin/attendance${qs ? `?${qs}` : ""}`, { token });
+  },
+  markAttendance: (
+    token: string,
+    payload: { enrollment_id: number; date: string; status: string; method?: string },
+  ) =>
+    api<{ data: AttendanceRecord }>("/academy/admin/attendance", {
+      method: "POST",
+      token,
+      body: JSON.stringify(payload),
+    }),
+  getAttendanceEnrollments: (token: string) =>
+    api<Paginated<Enrollment>>("/academy/admin/attendance/enrollments", { token }),
+
+  getAdminCertificates: (token: string) =>
+    api<Paginated<AcademyCertificate>>("/academy/admin/certificates", { token }),
+  issueCertificate: (token: string, payload: { enrollment_id: number; file_path?: string }) =>
+    api<{ data: AcademyCertificate }>("/academy/admin/certificates", {
+      method: "POST",
+      token,
+      body: JSON.stringify(payload),
+    }),
+  getMyCertificates: (token: string) =>
+    api<{ data: AcademyCertificate[] }>("/academy/certificates", { token }),
+
+  createPaymentOrder: (
+    token: string,
+    payload: { payable_type: "shop_order" | "tour_booking" | "academy_enrollment"; payable_id: number },
+  ) =>
+    api<{
+      data: {
+        configured: boolean;
+        amount: number;
+        receipt: string;
+        razorpay: { order_id: string; amount: number; currency: string; key: string } | null;
+      };
+    }>("/payments/razorpay/order", { method: "POST", token, body: JSON.stringify(payload) }),
+
+  verifyPayment: (
+    token: string,
+    payload: {
+      payable_type: "shop_order" | "tour_booking" | "academy_enrollment";
+      payable_id: number;
+      razorpay_order_id: string;
+      razorpay_payment_id: string;
+      razorpay_signature: string;
+    },
+  ) =>
+    api<{ message: string }>("/payments/razorpay/verify", {
+      method: "POST",
+      token,
+      body: JSON.stringify(payload),
+    }),
+
+  getNotifications: (token: string) =>
+    api<{ data: AppNotification[] }>("/notifications", { token }),
+  markNotificationRead: (token: string, id: string) =>
+    api<{ message: string }>(`/notifications/${id}/read`, { method: "POST", token }),
 };
 
 export interface HomepageData {
@@ -1305,4 +1417,84 @@ export function getUserPermissions(user: User): string[] {
 
 export function isCustomerUser(roles: string[]): boolean {
   return roles.includes("customer") && !hasAdminAccess(roles, []);
+}
+
+export interface ShopCoupon {
+  id: number;
+  code: string;
+  type: "percentage" | "fixed";
+  value: string;
+  min_order_amount?: string | null;
+  usage_limit?: number | null;
+  used_count?: number;
+  starts_at?: string | null;
+  expires_at?: string | null;
+  is_active: boolean;
+}
+
+export interface ShopCouponPayload {
+  code: string;
+  type: "percentage" | "fixed";
+  value: number;
+  min_order_amount?: number;
+  usage_limit?: number;
+  starts_at?: string;
+  expires_at?: string;
+  is_active?: boolean;
+}
+
+export interface InventorySnapshot {
+  products: Paginated<Product>;
+  low_stock_variants: ProductVariant[];
+  threshold: number;
+}
+
+export interface TourEnquiry {
+  id: number;
+  package_id?: number | null;
+  name: string;
+  email: string;
+  phone?: string | null;
+  travelers_count?: number | null;
+  preferred_date?: string | null;
+  message?: string | null;
+  status: string;
+  package?: { title: string };
+  created_at: string;
+}
+
+export interface TourEnquiryPayload {
+  package_id?: number;
+  name: string;
+  email: string;
+  phone?: string;
+  travelers_count?: number;
+  preferred_date?: string;
+  message?: string;
+}
+
+export interface AttendanceRecord {
+  id: number;
+  enrollment_id: number;
+  date: string;
+  status: string;
+  method: string;
+  enrollment?: Enrollment;
+}
+
+export interface AcademyCertificate {
+  id: number;
+  enrollment_id: number;
+  certificate_number: string;
+  file_path?: string | null;
+  issued_at: string;
+  enrollment?: Enrollment;
+}
+
+export interface AppNotification {
+  id: string;
+  type: string;
+  data: Record<string, unknown>;
+  read_at?: string | null;
+  created_at: string;
 }

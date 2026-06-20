@@ -2,6 +2,7 @@
 
 namespace App\Jobs\Notifications;
 
+use App\Mail\DomainNotificationMail;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -10,6 +11,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class SendNotificationJob implements ShouldQueue
 {
@@ -21,6 +23,7 @@ class SendNotificationJob implements ShouldQueue
         public ?int $userId,
         public array $payload,
         public ?string $templateBody = null,
+        public ?string $templateSubject = null,
     ) {}
 
     public function handle(): void
@@ -65,8 +68,40 @@ class SendNotificationJob implements ShouldQueue
 
     private function sendEmail(): void
     {
-        // Resend integration placeholder — wired via Laravel mail config
-        Log::info('Email notification queued', ['event' => $this->event, 'payload' => $this->payload]);
+        $recipient = $this->resolveEmailRecipient();
+        if (! $recipient) {
+            Log::info('Email notification skipped — no recipient', ['event' => $this->event]);
+
+            return;
+        }
+
+        $body = $this->renderTemplate($this->templateBody ?? 'Notification from Evoke.');
+        $subject = $this->renderTemplate($this->templateSubject ?? 'Evoke notification');
+
+        Mail::to($recipient)->send(new DomainNotificationMail($subject, $body));
+    }
+
+    private function resolveEmailRecipient(): ?string
+    {
+        if ($this->userId) {
+            return User::find($this->userId)?->email;
+        }
+
+        $email = $this->payload['email'] ?? null;
+
+        return is_string($email) && filter_var($email, FILTER_VALIDATE_EMAIL) ? $email : null;
+    }
+
+    private function renderTemplate(string $template): string
+    {
+        $rendered = $template;
+        foreach ($this->payload as $key => $value) {
+            if (is_scalar($value)) {
+                $rendered = str_replace('{{'.$key.'}}', (string) $value, $rendered);
+            }
+        }
+
+        return $rendered;
     }
 
     private function sendSms(): void

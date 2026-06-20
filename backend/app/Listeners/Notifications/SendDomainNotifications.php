@@ -46,4 +46,12 @@ class SendDomainNotifications
             'package_id' => $event->enquiry->package_id,
         ], channels: ['email']);
     }
+
+    public function handlePaymentSuccess(PaymentSucceeded $event): void
+    {
+        $this->dispatcher->dispatch('payment.success', $event->order->user, [
+            'amount' => $event->amount,
+            'order_number' => $event->order->order_number,
+        ]);
+    }
 }

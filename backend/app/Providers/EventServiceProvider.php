@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Events\Academy\EnrollmentCreated;
 use App\Events\Shop\OrderPlaced;
+use App\Events\Shop\PaymentSucceeded;
 use App\Events\Tours\BookingCreated;
 use App\Events\Tours\EnquiryReceived;
 use App\Listeners\Notifications\SendDomainNotifications;
@@ -23,6 +24,9 @@ class EventServiceProvider extends ServiceProvider
         ],
         EnquiryReceived::class => [
             [SendDomainNotifications::class, 'handleEnquiry'],
+        ],
+        PaymentSucceeded::class => [
+            [SendDomainNotifications::class, 'handlePaymentSuccess'],
         ],
     ];
 }

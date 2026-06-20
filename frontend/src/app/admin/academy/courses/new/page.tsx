@@ -24,6 +24,8 @@ const schema = z.object({
   duration: z.string().optional(),
   fees: z.number().min(0),
   requires_approval: z.boolean().optional(),
+  seo_title: z.string().optional(),
+  seo_description: z.string().optional(),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -101,6 +103,8 @@ export default function NewCoursePage() {
               <input type="checkbox" id="requires_approval" className="form-checkbox" {...register("requires_approval")} />
               <Label htmlFor="requires_approval">Requires admin approval for enrollment</Label>
             </div>
+            <div className="space-y-2 md:col-span-2"><Label>SEO title</Label><Input {...register("seo_title")} /></div>
+            <div className="space-y-2 md:col-span-2"><Label>SEO description</Label><Textarea rows={2} {...register("seo_description")} /></div>
             <FormError message={error} className="md:col-span-2" />
             <div className="md:col-span-2">
               <Button type="submit" disabled={isSubmitting}>

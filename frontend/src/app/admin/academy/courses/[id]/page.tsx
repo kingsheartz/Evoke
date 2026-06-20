@@ -30,6 +30,7 @@ interface EditForm {
   status: string;
   seo_title: string;
   seo_description: string;
+  requires_approval: boolean;
 }
 
 export default function EditCoursePage() {
@@ -58,6 +59,7 @@ export default function EditCoursePage() {
         status: courseRes.data.status,
         seo_title: courseRes.data.seo_title ?? "",
         seo_description: courseRes.data.seo_description ?? "",
+        requires_approval: courseRes.data.requires_approval ?? false,
       });
     });
   };
@@ -120,6 +122,10 @@ export default function EditCoursePage() {
                   <option value="archived">Archived</option>
                 </Select>
               </div>
+              <label className="flex items-center gap-2 text-sm text-app-text md:col-span-2">
+                <input type="checkbox" className="form-checkbox" {...register("requires_approval")} />
+                Require admin approval before enrollment is active
+              </label>
             </div>
 
             <div className="space-y-2">

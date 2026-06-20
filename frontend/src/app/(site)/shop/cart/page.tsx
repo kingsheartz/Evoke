@@ -2,22 +2,29 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
 import { CustomerAuthGuard } from "@/components/auth/customer-auth-guard";
 import { PageContainer } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { apiClient, type Cart } from "@/lib/api";
 import { formatOfferingPrice } from "@/lib/offerings";
+import { openRazorpayCheckout } from "@/lib/razorpay-checkout";
 import { revalidateShopPublicCache } from "@/lib/revalidate-cms";
 import { useAuthStore } from "@/stores/app";
 
 function CartContent() {
+  const router = useRouter();
   const { token, user } = useAuthStore();
   const [cart, setCart] = useState<Cart | null>(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
   const [checkingOut, setCheckingOut] = useState(false);
+  const [couponCode, setCouponCode] = useState("");
+  const [discount, setDiscount] = useState(0);
 
   const load = async () => {
     if (!token) return;
@@ -40,6 +47,25 @@ function CartContent() {
     await load();
   };
 
+  const items = cart?.items ?? [];
+  const subtotal = items.reduce((sum, item) => {
+    const unit = Number(item.variant?.price ?? item.product?.price ?? 0);
+    return sum + unit * item.quantity;
+  }, 0);
+  const total = Math.max(0, subtotal - discount);
+
+  const applyCoupon = async () => {
+    if (!couponCode.trim() || subtotal <= 0) return;
+    setMessage(null);
+    try {
+      const response = await apiClient.validateCoupon({ code: couponCode.trim(), subtotal });
+      setDiscount(response.data.discount);
+    } catch (e) {
+      setDiscount(0);
+      setMessage(e instanceof Error ? e.message : "Invalid coupon.");
+    }
+  };
+
   const checkout = async () => {
     if (!token || !user) return;
     if (!user.address_line1 || !user.city || !user.postal_code) {
@@ -59,22 +85,31 @@ function CartContent() {
         country: user.country ?? "IN",
         phone: user.phone ?? "",
       };
-      const response = await apiClient.createOrder(token, { shipping_address });
+      const response = await apiClient.createOrder(token, {
+        shipping_address,
+        coupon_code: couponCode.trim() || undefined,
+      });
       await revalidateShopPublicCache();
-      setMessage(`Order ${response.data.order_number} placed successfully.`);
-      await load();
+
+      try {
+        await openRazorpayCheckout({
+          token,
+          payableType: "shop_order",
+          payableId: response.data.id,
+          userName: user.name,
+          userEmail: user.email,
+          userPhone: user.phone ?? undefined,
+        });
+      } catch {
+        // Payment optional when Razorpay is not configured
+      }
+
+      router.push(`/confirmation?type=order&ref=${encodeURIComponent(response.data.order_number)}`);
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "Checkout failed.");
-    } finally {
       setCheckingOut(false);
     }
   };
-
-  const items = cart?.items ?? [];
-  const subtotal = items.reduce((sum, item) => {
-    const unit = Number(item.variant?.price ?? item.product?.price ?? 0);
-    return sum + unit * item.quantity;
-  }, 0);
 
   return (
     <PageContainer className="py-16">
@@ -123,27 +158,40 @@ function CartContent() {
         </Card>
 
         {items.length > 0 && (
-          <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-lg font-semibold text-app-text">
-              Subtotal {formatOfferingPrice(subtotal, { prefix: false })}
-            </p>
-            <Button type="button" onClick={checkout} disabled={checkingOut}>
-              {checkingOut ? "Placing order…" : "Place order"}
-            </Button>
-          </div>
+          <>
+            <Card className="mt-6">
+              <CardContent className="flex flex-col gap-3 pt-6 sm:flex-row sm:items-end">
+                <div className="flex-1 space-y-2">
+                  <Label>Coupon code</Label>
+                  <Input value={couponCode} onChange={(e) => setCouponCode(e.target.value.toUpperCase())} placeholder="SAVE10" />
+                </div>
+                <Button type="button" variant="outline" onClick={applyCoupon}>
+                  Apply coupon
+                </Button>
+              </CardContent>
+            </Card>
+
+            <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-lg font-semibold text-app-text">
+                  Total {formatOfferingPrice(total, { prefix: false })}
+                </p>
+                {discount > 0 && (
+                  <p className="text-sm text-status-success">
+                    Coupon applied (−{formatOfferingPrice(discount, { prefix: false })})
+                  </p>
+                )}
+              </div>
+              <Button type="button" onClick={checkout} disabled={checkingOut}>
+                {checkingOut ? "Placing order…" : "Place order"}
+              </Button>
+            </div>
+          </>
         )}
 
         {message && (
           <p className={`mt-4 text-sm ${message.includes("success") ? "text-status-success" : "text-status-error"}`}>
             {message}
-            {message.includes("placed") && (
-              <>
-                {" "}
-                <Link href="/account" className="font-medium text-accent-soft hover:text-accent">
-                  View account
-                </Link>
-              </>
-            )}
             {message.includes("address") && (
               <>
                 {" "}

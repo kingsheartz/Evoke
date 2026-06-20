@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { OfferingDetailShell } from "@/components/offerings/offering-detail-shell";
 import { TourBookingAction } from "@/components/offerings/offering-tour-booking-action";
+import { TourEnquiryAction } from "@/components/offerings/tour-enquiry-action";
 import { apiClient } from "@/lib/api";
 import {
   catalogPath,
@@ -55,7 +56,12 @@ export default async function TourPackageDetailPage({
         description={pkg.description}
         priceLabel={formatOfferingPrice(pkg.price)}
         ctaLabel={cta.label}
-        ctaAction={<TourBookingAction packageId={pkg.id} redirectPath={redirectPath} />}
+        ctaAction={
+          <div className="flex flex-col items-stretch gap-3 sm:items-end">
+            <TourBookingAction packageId={pkg.id} redirectPath={redirectPath} />
+            <TourEnquiryAction packageId={pkg.id} packageTitle={pkg.title} />
+          </div>
+        }
         backHref={catalogPath("tours")}
         backLabel="All tour packages"
         heroImageUrl={toGalleryImages(pkg.gallery)[0]?.url}

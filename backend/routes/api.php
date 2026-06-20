@@ -35,4 +35,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/avatar', [ProfileController::class, 'uploadAvatar']);
         Route::delete('/avatar', [ProfileController::class, 'removeAvatar']);
     });
+
+    Route::prefix('payments')->group(function () {
+        Route::post('/razorpay/order', [\App\Http\Controllers\Api\V1\Payments\PaymentController::class, 'createOrder']);
+        Route::post('/razorpay/verify', [\App\Http\Controllers\Api\V1\Payments\PaymentController::class, 'verify']);
+    });
 });
