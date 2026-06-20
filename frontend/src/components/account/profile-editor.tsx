@@ -162,9 +162,10 @@ export function ProfileEditor({ user, token }: ProfileEditorProps) {
         imageSrc={pendingCrop?.src ?? null}
         fileName={pendingCrop?.fileName ?? "avatar.jpg"}
         mimeType={pendingCrop?.mimeType ?? "image/jpeg"}
-        aspect={1}
-        title="Crop profile photo"
-        confirmLabel="Crop & upload"
+        originalFile={pendingCrop?.file}
+        defaultAspect={1}
+        title="Adjust profile photo"
+        confirmLabel="Custom crop & upload"
         onClose={cancelCrop}
         onConfirm={uploadAvatarFile}
       />

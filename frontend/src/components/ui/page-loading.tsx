@@ -29,9 +29,11 @@ export function PageLoading({
       aria-live="polite"
       aria-label={label}
       className={cn(
-        isOverlay
-          ? "fixed inset-0 z-[2147483648] grid h-[100dvh] w-screen place-items-center bg-app-bg"
-          : "page-loading page-loading--content",
+        isOverlay && resolvedLayout === "admin-main"
+          ? "page-loading page-loading--admin-main"
+          : isOverlay
+            ? "fixed inset-0 z-[2147483648] grid h-[100dvh] w-screen place-items-center bg-app-bg"
+            : "page-loading page-loading--content",
         className,
       )}
     >

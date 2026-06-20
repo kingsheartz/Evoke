@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
+import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { TableSkeleton } from "@/components/ui/skeleton";
 
 export function DataTable({
   children,
@@ -56,10 +56,19 @@ export function TableEmpty({
   );
 }
 
-export function TableLoading({ cols = 4, rows = 5, inset }: { cols?: number; rows?: number; inset?: boolean }) {
+export function TableLoading({ inset }: { inset?: boolean }) {
   return (
-    <div className={cn(inset ? "px-6 py-4" : "p-6")}>
-      <TableSkeleton rows={rows} cols={cols} />
+    <div
+      className={cn(
+        "flex min-h-[16rem] flex-col items-center justify-center gap-3 py-16 text-center",
+        inset && "px-6",
+      )}
+      role="status"
+      aria-live="polite"
+      aria-label="Loading"
+    >
+      <Loader2 className="h-8 w-8 animate-spin text-accent" />
+      <p className="text-sm text-app-muted">Loading...</p>
     </div>
   );
 }

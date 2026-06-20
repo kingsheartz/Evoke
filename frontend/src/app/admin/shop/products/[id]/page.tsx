@@ -116,7 +116,7 @@ export default function EditProductPage() {
               <div className="flex items-center gap-2 text-app-text"><input type="checkbox" className="form-checkbox" {...register("is_featured")} /><Label>Featured</Label></div>
             </div>
 
-            <GalleryUrlsField values={images.length ? images : [""]} onChange={(next) => setImages(next.filter(Boolean))} />
+            <GalleryUrlsField values={images.length ? images : [""]} onChange={setImages} />
 
             {message && (
               <p className={cn("text-sm", message.includes("updated") ? "text-status-success" : "text-status-error")}>

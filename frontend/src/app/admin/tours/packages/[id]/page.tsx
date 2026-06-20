@@ -143,7 +143,7 @@ export default function EditPackagePage() {
               </div>
             </div>
 
-            <GalleryUrlsField values={gallery.length ? gallery : [""]} onChange={(next) => setGallery(next.filter(Boolean))} />
+            <GalleryUrlsField values={gallery.length ? gallery : [""]} onChange={setGallery} />
             <StringListField label="Inclusions" addLabel="Add inclusion" values={inclusions.length ? inclusions : [""]} onChange={setInclusions} placeholder="e.g. Daily breakfast" />
             <StringListField label="Exclusions" addLabel="Add exclusion" values={exclusions.length ? exclusions : [""]} onChange={setExclusions} placeholder="e.g. Flights" />
 

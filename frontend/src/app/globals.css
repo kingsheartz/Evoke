@@ -901,6 +901,16 @@ body.admin-tour-active .admin-main-column {
   bottom: 0;
 }
 
+.page-loading--admin-main {
+  position: fixed;
+  z-index: 2147483648;
+  background: var(--background);
+  top: var(--app-topbar-height);
+  right: 0;
+  bottom: 0;
+  left: var(--admin-sidebar-width, 16rem);
+}
+
 /* Form controls */
 .form-field {
   display: flex;

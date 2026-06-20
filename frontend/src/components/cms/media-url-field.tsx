@@ -87,7 +87,9 @@ export function MediaUrlField({
       <div className={cn("space-y-2", className)}>
         <p className="text-xs text-app-muted">
           Paste a URL or upload a file
-          {kind === "image" ? " (JPEG, PNG, WebP, HEIC). Images can be cropped before upload." : "."}
+          {kind === "image"
+            ? " (JPEG, PNG, WebP, HEIC). You can upload the original, use best fit, or custom crop."
+            : "."}
         </p>
         <Input
           id={id}
@@ -126,9 +128,10 @@ export function MediaUrlField({
         imageSrc={pendingCrop?.src ?? null}
         fileName={pendingCrop?.fileName ?? "image.jpg"}
         mimeType={pendingCrop?.mimeType ?? "image/jpeg"}
-        aspect={cropAspect}
-        title="Crop image"
-        confirmLabel="Crop & upload"
+        originalFile={pendingCrop?.file}
+        defaultAspect={cropAspect}
+        title="Adjust image"
+        confirmLabel="Custom crop & upload"
         onClose={cancelCrop}
         onConfirm={uploadFile}
       />

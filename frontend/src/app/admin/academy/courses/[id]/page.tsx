@@ -87,7 +87,7 @@ export default function EditCoursePage() {
   };
 
   if (!course) {
-    return <PageLoading label="Loading course..." />;
+    return <PageLoading label="Loading course..." layout="admin-main" />;
   }
 
   return (
@@ -136,7 +136,7 @@ export default function EditCoursePage() {
             <GalleryUrlsField
               label="Course gallery"
               values={gallery.length ? gallery : [""]}
-              onChange={(next) => setGallery(next.filter(Boolean))}
+              onChange={setGallery}
             />
 
             <div className="grid gap-4 md:grid-cols-2">

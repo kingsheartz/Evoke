@@ -5,6 +5,7 @@ import { isCropSupportedImage } from "@/lib/media";
 
 export interface PendingImageCrop {
   src: string;
+  file: File;
   fileName: string;
   mimeType: string;
 }
@@ -19,6 +20,7 @@ export function useImageCropFlow() {
     const src = URL.createObjectURL(file);
     setPending({
       src,
+      file,
       fileName: file.name,
       mimeType: file.type || "image/jpeg",
     });
