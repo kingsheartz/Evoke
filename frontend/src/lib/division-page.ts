@@ -163,7 +163,7 @@ export function emptyDivisionForm(slug: string, navLabel: string): DivisionPageD
     public_path: `/${slug}`,
     badge: navLabel,
     title: navLabel,
-    description: "",
+    description: `Landing page for ${navLabel}.`,
     icon: "graduation-cap",
     accent_style: "accent",
     home_gradient: null,

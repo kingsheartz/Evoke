@@ -21,6 +21,7 @@ import { useUnsavedChangesWarning } from "@/hooks/use-unsaved-changes";
 import { invalidateDivisionNavCache } from "@/hooks/use-division-nav";
 import {
   apiClient,
+  ApiError,
   type DivisionHighlightCard,
   type DivisionPageData,
 } from "@/lib/api";
@@ -176,6 +177,10 @@ export default function DivisionPagesEditorPage() {
       notifyError("That URL slug is reserved.");
       return;
     }
+    if (divisions.some((division) => division.slug === slug)) {
+      notifyError(`A division with slug “${slug}” already exists. Choose a different URL slug.`);
+      return;
+    }
     try {
       const label = newNavLabel.trim() || slug;
       const { data } = await apiClient.createDivisionPage(token, {
@@ -194,8 +199,12 @@ export default function DivisionPagesEditorPage() {
       if (!list?.find((d) => d.slug === data.slug)) {
         setDivisions((prev) => [...prev, data]);
       }
-    } catch {
-      notifyError("Could not create division. Check the slug is unique.");
+    } catch (error) {
+      if (error instanceof ApiError) {
+        notifyError(error.message);
+        return;
+      }
+      notifyError("Could not create division.");
     }
   };
 

@@ -13,6 +13,7 @@ class DivisionPageController extends Controller
     /** URL segments reserved for other app routes — not valid division slugs. */
     private const RESERVED_SLUGS = [
         'account', 'admin', 'login', 'sign-in', 'register', 'p', 'api', 'health', 'search', 'modules', 'homepage',
+        'tours', 'shop', 'academy',
     ];
 
     public function index(): JsonResponse
@@ -71,7 +72,7 @@ class DivisionPageController extends Controller
             'nav_label' => 'required|string|max:255',
             'badge' => 'required|string|max:255',
             'title' => 'required|string|max:255',
-            'description' => 'required|string|max:5000',
+            'description' => 'nullable|string|max:5000',
             'icon' => 'nullable|string|max:64',
             'accent_style' => 'nullable|string|in:accent,emerald,orange,rose,blue,amber,violet',
             'home_gradient' => 'nullable|string|max:255',
@@ -94,7 +95,7 @@ class DivisionPageController extends Controller
             'show_in_nav' => $validated['show_in_nav'] ?? true,
             'badge' => $validated['badge'],
             'title' => $validated['title'],
-            'description' => $validated['description'],
+            'description' => $validated['description'] ?? '',
             'icon' => $validated['icon'] ?? 'graduation-cap',
             'accent_style' => $validated['accent_style'] ?? 'accent',
             'home_gradient' => $validated['home_gradient'] ?? null,
