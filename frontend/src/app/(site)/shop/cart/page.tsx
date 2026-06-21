@@ -3,18 +3,70 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Trash2 } from "lucide-react";
+import { ArrowLeft, ShoppingBag, Trash2 } from "lucide-react";
 import { CustomerAuthGuard } from "@/components/auth/customer-auth-guard";
+import { AccountNav } from "@/components/account/account-nav";
 import { PageContainer } from "@/components/layout/app-shell";
+import { CartOrderSummary } from "@/components/shop/cart-order-summary";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { apiClient, type Cart } from "@/lib/api";
 import { formatOfferingPrice } from "@/lib/offerings";
 import { openRazorpayCheckout } from "@/lib/razorpay-checkout";
 import { revalidateShopPublicCache } from "@/lib/revalidate-cms";
 import { useAuthStore } from "@/stores/app";
+import { cn } from "@/lib/utils";
+
+function CartLineItem({
+  name,
+  variantName,
+  quantity,
+  unitPrice,
+  slug,
+  image,
+  onRemove,
+}: {
+  name: string;
+  variantName?: string | null;
+  quantity: number;
+  unitPrice: string;
+  slug?: string;
+  image?: string | null;
+  onRemove: () => void;
+}) {
+  const lineTotal = Number(unitPrice) * quantity;
+
+  return (
+    <div className="flex gap-4 rounded-xl border border-app-border bg-app-surface/80 p-4">
+      <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-app-surface-muted ring-1 ring-app-border">
+        {image ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={image} alt="" className="h-full w-full object-cover" />
+        ) : (
+          <ShoppingBag className="h-7 w-7 text-app-muted" aria-hidden />
+        )}
+      </div>
+      <div className="min-w-0 flex-1">
+        {slug ? (
+          <Link href={`/shop/${slug}`} className="font-medium text-app-text hover:text-accent-soft">
+            {name}
+          </Link>
+        ) : (
+          <p className="font-medium text-app-text">{name}</p>
+        )}
+        {variantName && <p className="text-sm text-app-muted">{variantName}</p>}
+        <p className="mt-2 text-sm text-app-muted">
+          Qty {quantity} × {formatOfferingPrice(unitPrice, { prefix: false })}
+        </p>
+        <p className="mt-1 text-sm font-medium text-app-text">
+          {formatOfferingPrice(lineTotal, { prefix: false })}
+        </p>
+      </div>
+      <Button type="button" variant="ghost" size="sm" className="shrink-0 self-start" onClick={onRemove} aria-label={`Remove ${name}`}>
+        <Trash2 className="h-4 w-4 text-status-error" />
+      </Button>
+    </div>
+  );
+}
 
 function CartContent() {
   const router = useRouter();
@@ -69,7 +121,7 @@ function CartContent() {
   const checkout = async () => {
     if (!token || !user) return;
     if (!user.address_line1 || !user.city || !user.postal_code) {
-      setMessage("Add your delivery address on your account page before checkout.");
+      setMessage("Add your delivery address before checkout.");
       return;
     }
     setCheckingOut(true);
@@ -101,7 +153,7 @@ function CartContent() {
           userPhone: user.phone ?? undefined,
         });
       } catch {
-        // Payment optional when Razorpay is not configured
+        /* Payment optional when Razorpay is not configured */
       }
 
       router.push(`/confirmation?type=order&ref=${encodeURIComponent(response.data.order_number)}`);
@@ -111,97 +163,83 @@ function CartContent() {
     }
   };
 
+  if (!user || !token) return null;
+
   return (
-    <PageContainer className="py-16">
-      <div className="mx-auto max-w-3xl">
-        <h1 className="font-display text-3xl font-semibold tracking-tight text-app-text md:text-4xl">Your cart</h1>
-        <p className="mt-2 text-app-muted">Review items before placing your order.</p>
+    <PageContainer className="py-12 md:py-16">
+      <div className="mx-auto flex max-w-6xl flex-col gap-8 lg:flex-row lg:items-start lg:gap-10">
+        <aside className="hidden lg:block lg:w-56 lg:shrink-0">
+          <div className="rounded-2xl border border-app-border bg-app-surface/60 p-4 lg:sticky lg:top-24">
+            <AccountNav />
+          </div>
+        </aside>
 
-        <Card className="mt-8">
-          <CardHeader>
-            <CardTitle>Items</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {loading ? (
-              <p className="text-sm text-app-muted">Loading cart…</p>
-            ) : items.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-app-border px-6 py-10 text-center">
-                <p className="text-app-muted">Your cart is empty.</p>
-                <Button asChild className="mt-4">
-                  <Link href="/shop/products">Browse products</Link>
-                </Button>
-              </div>
-            ) : (
-              items.map((item) => {
-                const name = item.product?.name ?? "Product";
-                const unitPrice = item.variant?.price ?? item.product?.price ?? "0";
-                return (
-                  <div
-                    key={item.id}
-                    className="flex items-start justify-between gap-4 rounded-xl border border-app-border bg-app-surface/80 p-4"
-                  >
-                    <div>
-                      <p className="font-medium text-app-text">{name}</p>
-                      {item.variant?.name && <p className="text-sm text-app-muted">{item.variant.name}</p>}
-                      <p className="mt-1 text-sm text-app-muted">
-                        Qty {item.quantity} · {formatOfferingPrice(unitPrice, { prefix: false })}
-                      </p>
-                    </div>
-                    <Button type="button" variant="ghost" size="sm" onClick={() => removeItem(item.id)}>
-                      <Trash2 className="h-4 w-4 text-status-error" />
-                    </Button>
-                  </div>
-                );
-              })
-            )}
-          </CardContent>
-        </Card>
+        <div className="min-w-0 flex-1">
+          <Link
+            href="/shop/products"
+            className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-app-muted hover:text-accent-soft"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Continue shopping
+          </Link>
 
-        {items.length > 0 && (
-          <>
-            <Card className="mt-6">
-              <CardContent className="flex flex-col gap-3 pt-6 sm:flex-row sm:items-end">
-                <div className="flex-1 space-y-2">
-                  <Label>Coupon code</Label>
-                  <Input value={couponCode} onChange={(e) => setCouponCode(e.target.value.toUpperCase())} placeholder="SAVE10" />
-                </div>
-                <Button type="button" variant="outline" onClick={applyCoupon}>
-                  Apply coupon
-                </Button>
-              </CardContent>
-            </Card>
-
-            <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-lg font-semibold text-app-text">
-                  Total {formatOfferingPrice(total, { prefix: false })}
-                </p>
-                {discount > 0 && (
-                  <p className="text-sm text-status-success">
-                    Coupon applied (−{formatOfferingPrice(discount, { prefix: false })})
-                  </p>
-                )}
-              </div>
-              <Button type="button" onClick={checkout} disabled={checkingOut}>
-                {checkingOut ? "Placing order…" : "Place order"}
-              </Button>
-            </div>
-          </>
-        )}
-
-        {message && (
-          <p className={`mt-4 text-sm ${message.includes("success") ? "text-status-success" : "text-status-error"}`}>
-            {message}
-            {message.includes("address") && (
-              <>
-                {" "}
-                <Link href="/account" className="font-medium text-accent-soft hover:text-accent">
-                  Update account
-                </Link>
-              </>
-            )}
+          <h1 className="font-display text-3xl font-semibold tracking-tight text-app-text md:text-4xl">Your cart</h1>
+          <p className="mt-2 text-app-muted">
+            {items.length === 0 ? "Your cart is empty." : `${items.length} item${items.length === 1 ? "" : "s"} ready for checkout.`}
           </p>
-        )}
+
+          <div className={cn("mt-8 grid gap-8", items.length > 0 && "lg:grid-cols-[minmax(0,1fr)_20rem] xl:grid-cols-[minmax(0,1fr)_22rem]")}>
+            <div>
+              {loading ? (
+                <p className="text-sm text-app-muted">Loading cart…</p>
+              ) : items.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-app-border px-6 py-14 text-center">
+                  <ShoppingBag className="mx-auto h-10 w-10 text-app-muted" />
+                  <p className="mt-4 text-app-muted">Add products from the shop to get started.</p>
+                  <Button asChild className="mt-6">
+                    <Link href="/shop/products">Browse products</Link>
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {items.map((item) => {
+                    const product = item.product;
+                    const unitPrice = item.variant?.price ?? product?.price ?? "0";
+                    return (
+                      <CartLineItem
+                        key={item.id}
+                        name={product?.name ?? "Product"}
+                        variantName={item.variant?.name}
+                        quantity={item.quantity}
+                        unitPrice={unitPrice}
+                        slug={product?.slug}
+                        image={product?.images?.[0]}
+                        onRemove={() => removeItem(item.id)}
+                      />
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {items.length > 0 && (
+              <CartOrderSummary
+                subtotal={subtotal}
+                discount={discount}
+                total={total}
+                couponCode={couponCode}
+                onCouponChange={setCouponCode}
+                onApplyCoupon={applyCoupon}
+                checkingOut={checkingOut}
+                onCheckout={checkout}
+                user={user}
+                message={message}
+              />
+            )}
+          </div>
+
+          {items.length === 0 && message && <p className="mt-4 text-sm text-status-error">{message}</p>}
+        </div>
       </div>
     </PageContainer>
   );

@@ -135,24 +135,40 @@ class ContextController extends Controller
             $items[] = ['label' => 'EVOKE Tours', 'icon' => 'plane', 'children' => $tourChildren];
         }
 
-        if ($can('platform.manage') || $can('users.manage') || $can('cms.homepage.manage') || $can('cms.pages.manage')) {
+        if ($can('users.manage')) {
+            $items[] = [
+                'label' => 'Users',
+                'href' => '/admin/settings/users',
+                'icon' => 'users',
+                'visible' => true,
+            ];
+        }
+
+        if ($can('platform.manage')) {
+            $items[] = [
+                'label' => 'Advertisements',
+                'href' => '/admin/settings/advertisements',
+                'icon' => 'megaphone',
+                'visible' => true,
+            ];
+        }
+
+        if ($can('platform.manage') || $can('cms.homepage.manage') || $can('cms.pages.manage')) {
             $settingsChildren = [];
             if ($can('platform.manage') || $can('cms.homepage.manage') || $can('cms.pages.manage')) {
                 $settingsChildren[] = ['label' => 'Brand', 'href' => '/admin/settings/brand', 'icon' => 'image'];
             }
             if ($can('platform.manage')) {
                 $settingsChildren[] = ['label' => 'Preferences', 'href' => '/admin/settings/preferences', 'icon' => 'sliders'];
-                $settingsChildren[] = ['label' => 'Advertisements', 'href' => '/admin/settings/advertisements', 'icon' => 'megaphone'];
                 $settingsChildren[] = ['label' => 'Modules', 'href' => '/admin/settings/modules', 'icon' => 'blocks'];
             }
-            if ($can('users.manage')) {
-                $settingsChildren[] = ['label' => 'Users', 'href' => '/admin/settings/users', 'icon' => 'users'];
+            if ($settingsChildren !== []) {
+                $items[] = [
+                    'label' => 'Settings',
+                    'icon' => 'settings',
+                    'children' => $settingsChildren,
+                ];
             }
-            $items[] = [
-                'label' => 'Settings',
-                'icon' => 'settings',
-                'children' => $settingsChildren,
-            ];
         }
 
         return array_values(array_filter($items, function ($item) {

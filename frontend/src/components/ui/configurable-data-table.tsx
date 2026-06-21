@@ -35,11 +35,6 @@ export interface TableColumn<T> {
 
 const DEFAULT_COL_WIDTH = 140;
 const DEFAULT_MIN_WIDTH = 72;
-const EMPTY_COLUMN_PREFS: TableColumnPrefs = { hidden: [], pinned: {} };
-
-function buildInitialWidths<T>(columns: TableColumn<T>[]): Record<string, number> {
-  return mergeStoredColumnWidths(columns, undefined, (col) => col.width ?? DEFAULT_COL_WIDTH);
-}
 
 function measureColumnWidths<T>(
   table: HTMLTableElement,
@@ -97,7 +92,39 @@ function orderColumns<T>(columns: TableColumn<T>[], pinned: Record<string, Exclu
   return [...left, ...center, ...right];
 }
 
-export function ConfigurableDataTable<T extends object>({
+function resolveColumnWidths<T>(
+  columns: TableColumn<T>[],
+  stored: Record<string, number>,
+): Record<string, number> {
+  const widths = { ...stored };
+  for (const col of columns) {
+    if (widths[col.key] == null) {
+      widths[col.key] = col.width ?? DEFAULT_COL_WIDTH;
+    }
+  }
+  return widths;
+}
+
+export function ConfigurableDataTable<T extends object>(props: {
+  tableId: string;
+  columns: TableColumn<T>[];
+  data: T[];
+  keyField: keyof T;
+  emptyMessage?: string;
+  searchable?: boolean;
+  searchPlaceholder?: string;
+  /** Custom text extractor for client-side search (nested fields). */
+  searchText?: (row: T) => string;
+  resizable?: boolean;
+  columnManagement?: boolean;
+  inset?: boolean;
+  className?: string;
+  rowClassName?: (row: T) => string | undefined;
+}) {
+  return <ConfigurableDataTableBody key={props.tableId} {...props} />;
+}
+
+function ConfigurableDataTableBody<T extends object>({
   tableId,
   columns,
   data,
@@ -119,7 +146,6 @@ export function ConfigurableDataTable<T extends object>({
   emptyMessage?: string;
   searchable?: boolean;
   searchPlaceholder?: string;
-  /** Custom text extractor for client-side search (nested fields). */
   searchText?: (row: T) => string;
   resizable?: boolean;
   columnManagement?: boolean;
@@ -128,20 +154,22 @@ export function ConfigurableDataTable<T extends object>({
   rowClassName?: (row: T) => string | undefined;
 }) {
   const manageColumns = columnManagement ?? Boolean(tableId);
-  const [search, setSearch] = useState("");
   const initialPrefs = loadTableColumnPrefs(tableId);
 
+  const [search, setSearch] = useState("");
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>(() =>
     mergeStoredColumnWidths(columns, initialPrefs.widths, (col) => col.width ?? DEFAULT_COL_WIDTH),
   );
   const [layoutLocked, setLayoutLocked] = useState(
     () => Boolean(initialPrefs.widths && Object.keys(initialPrefs.widths).length > 0),
   );
-  const [tableWidth, setTableWidth] = useState<number | null>(null);
   const [isResizing, setIsResizing] = useState(false);
+  const [scrollableX, setScrollableX] = useState(false);
   const [manageOpen, setManageOpen] = useState(false);
   const [columnPrefs, setColumnPrefs] = useState<TableColumnPrefs>(() => initialPrefs);
+
   const tableRef = useRef<HTMLTableElement>(null);
+  const tableWrapRef = useRef<HTMLDivElement>(null);
   const columnWidthsRef = useRef(columnWidths);
   const columnPrefsRef = useRef(columnPrefs);
   const layoutLockedRef = useRef(layoutLocked);
@@ -155,11 +183,30 @@ export function ConfigurableDataTable<T extends object>({
     minPartnerWidth: number;
   } | null>(null);
 
-  const columnKeys = useMemo(() => columns.map((col) => col.key).join("|"), [columns]);
+  const resolvedColumnWidths = useMemo(
+    () => resolveColumnWidths(columns, columnWidths),
+    [columns, columnWidths],
+  );
 
-  columnWidthsRef.current = columnWidths;
-  columnPrefsRef.current = columnPrefs;
-  layoutLockedRef.current = layoutLocked;
+  useEffect(() => {
+    columnWidthsRef.current = columnWidths;
+    columnPrefsRef.current = columnPrefs;
+    layoutLockedRef.current = layoutLocked;
+  }, [columnWidths, columnPrefs, layoutLocked]);
+
+  useEffect(() => {
+    if (!isResizing) return;
+
+    const previousCursor = document.body.style.cursor;
+    const previousUserSelect = document.body.style.userSelect;
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+
+    return () => {
+      document.body.style.cursor = previousCursor;
+      document.body.style.userSelect = previousUserSelect;
+    };
+  }, [isResizing]);
 
   const persistTableLayout = useCallback(
     (prefs: TableColumnPrefs, widths: Record<string, number>) => {
@@ -167,17 +214,6 @@ export function ConfigurableDataTable<T extends object>({
     },
     [tableId],
   );
-
-  useEffect(() => {
-    const prefs = loadTableColumnPrefs(tableId);
-    setColumnPrefs(prefs);
-    setColumnWidths((prev) =>
-      mergeStoredColumnWidths(columns, prefs.widths ?? prev, (col) => col.width ?? DEFAULT_COL_WIDTH),
-    );
-    if (prefs.widths && Object.keys(prefs.widths).length > 0) {
-      setLayoutLocked(true);
-    }
-  }, [tableId, columnKeys, columns]);
 
   const persistPrefs = useCallback(
     (next: TableColumnPrefs) => {
@@ -202,20 +238,6 @@ export function ConfigurableDataTable<T extends object>({
     return orderColumns(shown, columnPrefs.pinned);
   }, [columns, hiddenSet, columnPrefs.pinned]);
 
-  useEffect(() => {
-    setColumnWidths((prev) => {
-      const next = { ...prev };
-      let changed = false;
-      for (const col of columns) {
-        if (next[col.key] == null) {
-          next[col.key] = col.width ?? DEFAULT_COL_WIDTH;
-          changed = true;
-        }
-      }
-      return changed ? next : prev;
-    });
-  }, [columnKeys, columns]);
-
   const filteredData = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!searchable || !q) return data;
@@ -227,7 +249,18 @@ export function ConfigurableDataTable<T extends object>({
 
   const pageData = filteredData;
 
-  const handleResizeMove = useCallback((event: MouseEvent) => {
+  const visibleColumnsRef = useRef(visibleColumns);
+
+  useEffect(() => {
+    visibleColumnsRef.current = visibleColumns;
+  }, [visibleColumns]);
+
+  const resizeListenersRef = useRef<{
+    move: (event: MouseEvent) => void;
+    end: () => void;
+  } | null>(null);
+
+  const onResizeMove = useCallback((event: MouseEvent) => {
     const state = resizeRef.current;
     if (!state) return;
 
@@ -255,17 +288,22 @@ export function ConfigurableDataTable<T extends object>({
     });
   }, []);
 
-  const handleResizeEnd = useCallback(() => {
+  const endResize = useCallback(() => {
+    const listeners = resizeListenersRef.current;
+    if (listeners) {
+      document.removeEventListener("mousemove", listeners.move);
+      document.removeEventListener("mouseup", listeners.end);
+      resizeListenersRef.current = null;
+    }
+
     resizeRef.current = null;
     setIsResizing(false);
-    document.removeEventListener("mousemove", handleResizeMove);
-    document.removeEventListener("mouseup", handleResizeEnd);
-    document.body.style.cursor = "";
-    document.body.style.userSelect = "";
 
     const table = tableRef.current;
+    const columnsForMeasure = visibleColumnsRef.current;
+
     if (layoutLockedRef.current && table) {
-      const measured = measureColumnWidths(table, visibleColumns, columnWidthsRef.current);
+      const measured = measureColumnWidths(table, columnsForMeasure, columnWidthsRef.current);
       columnWidthsRef.current = measured;
       setColumnWidths(measured);
       persistWidths(measured);
@@ -273,7 +311,17 @@ export function ConfigurableDataTable<T extends object>({
     }
 
     persistWidths(columnWidthsRef.current);
-  }, [handleResizeMove, visibleColumns, persistWidths]);
+  }, [persistWidths]);
+
+  useEffect(() => {
+    return () => {
+      const listeners = resizeListenersRef.current;
+      if (listeners) {
+        document.removeEventListener("mousemove", listeners.move);
+        document.removeEventListener("mouseup", listeners.end);
+      }
+    };
+  }, []);
 
   const startResize = (key: string, index: number, event: React.MouseEvent<HTMLSpanElement>) => {
     if (!resizable) return;
@@ -287,12 +335,10 @@ export function ConfigurableDataTable<T extends object>({
     if (!table) return;
 
     const measured = measureColumnWidths(table, visibleColumns, columnWidthsRef.current);
-    const lockedWidth = Math.round(table.getBoundingClientRect().width);
 
     if (!layoutLockedRef.current) {
       flushSync(() => {
         setColumnWidths(measured);
-        setTableWidth(lockedWidth);
         setLayoutLocked(true);
       });
       layoutLockedRef.current = true;
@@ -316,13 +362,11 @@ export function ConfigurableDataTable<T extends object>({
     };
 
     setIsResizing(true);
-    document.body.style.cursor = "col-resize";
-    document.body.style.userSelect = "none";
-    document.addEventListener("mousemove", handleResizeMove);
-    document.addEventListener("mouseup", handleResizeEnd);
+    const listeners = { move: onResizeMove, end: endResize };
+    resizeListenersRef.current = listeners;
+    document.addEventListener("mousemove", listeners.move);
+    document.addEventListener("mouseup", listeners.end);
   };
-
-  useEffect(() => () => handleResizeEnd(), [handleResizeEnd]);
 
   const handlePin = (col: TableColumn<T>, pin: ColumnPin) => {
     const nextPinned = { ...columnPrefs.pinned };
@@ -344,19 +388,36 @@ export function ConfigurableDataTable<T extends object>({
     }
   };
 
-  const tableStyle =
-    layoutLocked && tableWidth != null
-      ? { width: tableWidth, tableLayout: "fixed" as const }
-      : layoutLocked
-        ? { tableLayout: "fixed" as const }
-        : undefined;
+  const tableStyle = layoutLocked ? { width: "100%", tableLayout: "fixed" as const } : undefined;
+
+  const lockedColumnPercents = useMemo(() => {
+    if (!layoutLocked) return null;
+    const total = visibleColumns.reduce(
+      (sum, col) => sum + (resolvedColumnWidths[col.key] ?? DEFAULT_COL_WIDTH),
+      0,
+    );
+    if (total <= 0) return null;
+
+    const percents: Record<string, string> = {};
+    for (const col of visibleColumns) {
+      const width = resolvedColumnWidths[col.key] ?? DEFAULT_COL_WIDTH;
+      percents[col.key] = `${(width / total) * 100}%`;
+    }
+    return percents;
+  }, [layoutLocked, visibleColumns, resolvedColumnWidths]);
 
   useLayoutEffect(() => {
-    if (!layoutLocked || tableWidth != null || pageData.length === 0) return;
+    const wrap = tableWrapRef.current;
     const table = tableRef.current;
-    if (!table) return;
-    setTableWidth(Math.round(table.getBoundingClientRect().width));
-  }, [layoutLocked, tableWidth, pageData.length, visibleColumns.length]);
+    if (!wrap || !table || pageData.length === 0) return;
+
+    const observer = new ResizeObserver(() => {
+      setScrollableX(table.scrollWidth > wrap.clientWidth + 1);
+    });
+    observer.observe(wrap);
+    observer.observe(table);
+    return () => observer.disconnect();
+  }, [pageData.length, visibleColumns, resolvedColumnWidths, layoutLocked, lockedColumnPercents, isResizing]);
 
   const leftPinnedKeys = visibleColumns
     .filter((c) => resolvePin(c, columnPrefs.pinned) === "left")
@@ -397,12 +458,14 @@ export function ConfigurableDataTable<T extends object>({
         <p className="px-6 py-12 text-center text-sm text-app-muted">{emptyMessage}</p>
       ) : (
         <div
+          ref={tableWrapRef}
           data-inset={inset ? "true" : undefined}
           className={cn(
             "table-wrap",
             inset
               ? "rounded-none border-0 border-t border-app-border bg-transparent"
               : "rounded-xl border border-app-border bg-app-surface/40",
+            (scrollableX || isResizing) && "table-wrap--scrollable",
             isResizing && "table-wrap--resizing",
           )}
         >
@@ -420,10 +483,14 @@ export function ConfigurableDataTable<T extends object>({
               {visibleColumns.map((col) => (
                 <col
                   key={col.key}
-                  style={{
-                    width: columnWidths[col.key] ?? DEFAULT_COL_WIDTH,
-                    minWidth: col.minWidth ?? DEFAULT_MIN_WIDTH,
-                  }}
+                  style={
+                    lockedColumnPercents
+                      ? { width: lockedColumnPercents[col.key] }
+                      : {
+                          width: resolvedColumnWidths[col.key] ?? DEFAULT_COL_WIDTH,
+                          minWidth: col.minWidth ?? DEFAULT_MIN_WIDTH,
+                        }
+                  }
                 />
               ))}
             </colgroup>
@@ -446,12 +513,14 @@ export function ConfigurableDataTable<T extends object>({
                     <th
                       key={col.key}
                       style={
-                        layoutLocked
-                          ? {
-                              width: columnWidths[col.key] ?? DEFAULT_COL_WIDTH,
-                              minWidth: col.minWidth ?? DEFAULT_MIN_WIDTH,
-                            }
-                          : undefined
+                        lockedColumnPercents
+                          ? { width: lockedColumnPercents[col.key] }
+                          : layoutLocked
+                            ? {
+                                width: resolvedColumnWidths[col.key] ?? DEFAULT_COL_WIDTH,
+                                minWidth: col.minWidth ?? DEFAULT_MIN_WIDTH,
+                              }
+                            : undefined
                       }
                       className={cn(
                         resizable && "data-table-th--resizable",

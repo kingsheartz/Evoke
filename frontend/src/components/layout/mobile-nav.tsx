@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LogOut, Menu, User, X } from "lucide-react";
+import { LogOut, Menu, ShoppingCart, User, X } from "lucide-react";
 import { EvokeLogo } from "@/components/brand/evoke-logo";
 import { Button } from "@/components/ui/button";
 import { apiClient, hasAdminAccess } from "@/lib/api";
@@ -94,6 +94,12 @@ export function MobileNav() {
           <div className="mt-auto space-y-3 pt-6">
             {isLoggedIn ? (
               <>
+                <Button asChild variant="outline" className="w-full">
+                  <Link href="/shop/cart" onClick={() => setOpen(false)}>
+                    <ShoppingCart className="h-4 w-4" />
+                    Cart
+                  </Link>
+                </Button>
                 <Button asChild variant="outline" className="w-full">
                   <Link href="/account" onClick={() => setOpen(false)}>
                     <User className="h-4 w-4" />

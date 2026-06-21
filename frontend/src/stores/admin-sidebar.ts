@@ -19,6 +19,28 @@ function clampWidth(width: number) {
   return Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, width));
 }
 
+/** @deprecated Only for debugging — do not use during render (SSR mismatch). */
+export function readPersistedSidebarState(): { width: number; collapsed: boolean } {
+  if (typeof window === "undefined") {
+    return { width: DEFAULT_WIDTH, collapsed: false };
+  }
+  try {
+    const raw = localStorage.getItem("evoke-admin-sidebar");
+    if (!raw) return { width: DEFAULT_WIDTH, collapsed: false };
+    const parsed = JSON.parse(raw) as { state?: { collapsed?: boolean; width?: number } };
+    const collapsed = Boolean(parsed.state?.collapsed);
+    const width = collapsed ? COLLAPSED_WIDTH : clampWidth(parsed.state?.width ?? DEFAULT_WIDTH);
+    return { width, collapsed };
+  } catch {
+    return { width: DEFAULT_WIDTH, collapsed: false };
+  }
+}
+
+export function syncAdminSidebarWidthVar(width: number) {
+  if (typeof document === "undefined") return;
+  document.documentElement.style.setProperty("--admin-sidebar-width", `${width}px`);
+}
+
 export const useAdminSidebarStore = create<AdminSidebarState>()(
   persist(
     (set, get) => ({

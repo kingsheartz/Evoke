@@ -285,8 +285,8 @@ body.admin-tour-active .admin-main-column {
   bottom: 0;
   z-index: 40;
   width: var(--admin-sidebar-width, 16rem);
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
   border-right: 1px solid var(--border);
   background: var(--admin-sidebar-bg);
@@ -297,6 +297,20 @@ body.admin-tour-active .admin-main-column {
 .admin-sidebar--collapsed .admin-sidebar-nav {
   padding-left: 0.5rem;
   padding-right: 0.5rem;
+}
+
+.admin-sidebar--collapsed .admin-sidebar-header {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+.admin-sidebar--collapsed .admin-sidebar-footer {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+.admin-sidebar--collapsed {
+  width: var(--admin-sidebar-width, 4.5rem);
 }
 
 .admin-sidebar-resize-handle {
@@ -327,15 +341,35 @@ body.admin-tour-active .admin-main-column {
   font-weight: 500;
 }
 
+.admin-sidebar-footer {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  margin-top: auto;
+  flex-shrink: 0;
+}
+
+.admin-user-menu-trigger:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--primary) 55%, transparent);
+  outline-offset: 2px;
+}
+
+.admin-user-menu-dropdown {
+  position: fixed;
+  z-index: 200;
+  overflow: hidden;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow:
+    0 4px 6px -1px rgb(0 0 0 / 0.12),
+    0 12px 28px -4px rgb(0 0 0 / 0.28);
+}
+
 .admin-avatar-badge {
   background: color-mix(in srgb, var(--primary) 14%, var(--surface));
   color: var(--primary);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--primary) 28%, transparent);
-}
-
-.admin-sidebar-footer {
-  /* Clear Next.js dev indicator / browser overlays at bottom-left */
-  padding-bottom: 3.5rem;
 }
 
 .admin-main-column {
@@ -350,6 +384,22 @@ body.admin-tour-active .admin-main-column {
   flex-direction: column;
   overflow: hidden;
   transition: left 0.2s ease;
+}
+
+.admin-header {
+  padding-left: var(--app-gutter);
+  padding-right: 0.625rem;
+}
+
+@media (min-width: 768px) {
+  .admin-header {
+    padding-left: var(--app-gutter-md);
+    padding-right: 0.875rem;
+  }
+}
+
+.admin-header-actions {
+  align-items: center;
 }
 
 .admin-main {
@@ -902,13 +952,12 @@ body.admin-tour-active .admin-main-column {
 }
 
 .page-loading--admin-main {
-  position: fixed;
-  z-index: 2147483648;
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
   background: var(--background);
-  top: var(--app-topbar-height);
-  right: 0;
-  bottom: 0;
-  left: var(--admin-sidebar-width, 16rem);
 }
 
 /* Form controls */
@@ -1012,8 +1061,13 @@ select:-webkit-autofill {
 
 /* Data tables */
 .table-wrap {
-  overflow-x: auto;
+  overflow-x: clip;
+  overflow-y: visible;
   -webkit-overflow-scrolling: touch;
+}
+
+.table-wrap--scrollable {
+  overflow-x: auto;
 }
 
 .data-table {

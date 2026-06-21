@@ -1,126 +1,131 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { GraduationCap, LogOut, Plane, Palette, ShoppingBag } from "lucide-react";
-import { CustomerAuthGuard } from "@/components/auth/customer-auth-guard";
-import { AccountActivity } from "@/components/account/account-activity";
-import { ProfileEditor } from "@/components/account/profile-editor";
-import { PageContainer } from "@/components/layout/app-shell";
-import { ThemeSettings } from "@/components/theme/theme-settings";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { GraduationCap, Package, Plane, ShoppingBag } from "lucide-react";
+import { AccountShell } from "@/components/account/account-shell";
+import { BookingHistoryList } from "@/components/account/booking-history-list";
+import { OrderHistoryList } from "@/components/account/order-history-list";
 import { apiClient, hasAdminAccess } from "@/lib/api";
 import { useAuthStore } from "@/stores/app";
 
-const quickLinks = [
-  { href: "/academy", label: "EVOKE Academy", description: "Browse courses and enrollments", icon: GraduationCap },
-  { href: "/shop", label: "EOKE Sports", description: "Shop gear and track orders", icon: ShoppingBag },
-  { href: "/tours", label: "EVOKE Tours", description: "Explore packages and bookings", icon: Plane },
-];
+function unwrapCount(response: { data?: unknown[] }): number {
+  return Array.isArray(response.data) ? response.data.length : 0;
+}
 
-function AccountContent() {
-  const router = useRouter();
-  const { user, token, roles, permissions, logout } = useAuthStore();
+export default function AccountOverviewPage() {
+  const { user, token, roles, permissions } = useAuthStore();
   const isAdmin = hasAdminAccess(roles, permissions);
+  const [counts, setCounts] = useState({ orders: 0, bookings: 0, enrollments: 0, cart: 0 });
 
-  const handleSignOut = async () => {
-    if (token) {
-      try {
-        await apiClient.logout(token);
-      } catch {
-        // still clear local session
-      }
-    }
-    logout();
-    router.push("/");
-  };
+  useEffect(() => {
+    if (!token) return;
+    Promise.all([
+      apiClient.getOrders(token),
+      apiClient.getBookings(token),
+      apiClient.getEnrollments(token),
+      apiClient.getCart(token),
+    ]).then(([orders, bookings, enrollments, cart]) => {
+      setCounts({
+        orders: unwrapCount(orders),
+        bookings: unwrapCount(bookings),
+        enrollments: unwrapCount(enrollments),
+        cart: cart.data?.items?.length ?? 0,
+      });
+    });
+  }, [token]);
 
   if (!user || !token) return null;
 
   const addressComplete = Boolean(user.address_line1 && user.city && user.postal_code);
 
+  const statCards = [
+    { href: "/account/orders", label: "Orders", value: counts.orders, icon: Package },
+    { href: "/shop/cart", label: "Cart items", value: counts.cart, icon: ShoppingBag },
+    { href: "/account/bookings", label: "Bookings", value: counts.bookings, icon: Plane },
+    { href: "/account/enrollments", label: "Enrollments", value: counts.enrollments, icon: GraduationCap },
+  ];
+
   return (
-    <PageContainer className="py-16 md:py-20">
-      <div className="mx-auto max-w-3xl">
-        <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.15em] text-accent-soft">My account</p>
-            <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight text-app-text md:text-4xl">
-              Welcome, {user.name.split(" ")[0]}
-            </h1>
-            <p className="mt-2 text-app-muted">{user.email}</p>
-          </div>
-          <Button variant="outline" onClick={handleSignOut}>
-            <LogOut className="h-4 w-4" />
-            Sign out
-          </Button>
+    <AccountShell
+      title={`Welcome, ${user.name.split(" ")[0]}`}
+      description="Your orders, bookings, and academy activity in one place."
+    >
+      {!addressComplete && (
+        <div className="mb-6 rounded-xl border border-status-warning/30 bg-status-warning/10 px-4 py-3 text-sm text-app-text">
+          Add your delivery address for shop checkout.{" "}
+          <Link href="/account/profile" className="font-medium text-accent-soft hover:text-accent">
+            Update profile →
+          </Link>
         </div>
+      )}
 
-        {!addressComplete && (
-          <div className="mb-6 rounded-xl border border-status-warning/30 bg-status-warning/10 px-4 py-3 text-sm text-app-text">
-            Add your delivery address below for shop orders and tour bookings.
-          </div>
-        )}
-
-        <Card variant="glass" className="mb-8">
-          <CardHeader>
-            <CardTitle className="text-lg">Profile & address</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ProfileEditor user={user} token={token} />
-          </CardContent>
-        </Card>
-
-        <Card variant="glass" className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Palette className="h-5 w-5 text-accent-soft" />
-              Theme
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ThemeSettings />
-          </CardContent>
-        </Card>
-
-        <h2 className="mb-4 font-display text-xl font-semibold text-app-text">Your activity</h2>
-        <AccountActivity token={token} />
-
-        <h2 className="mb-4 mt-10 font-display text-xl font-semibold text-app-text">Explore divisions</h2>
-        <div className="grid gap-4 sm:grid-cols-3">
-          {quickLinks.map((link) => (
+      <div className="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {statCards.map((card) => {
+          const Icon = card.icon;
+          return (
             <Link
-              key={link.href}
-              href={link.href}
-              className="group rounded-2xl border border-app-border bg-app-surface/80 p-5 ring-1 ring-app-border transition-colors hover:border-accent/30"
+              key={card.href}
+              href={card.href}
+              className="rounded-2xl border border-app-border bg-app-surface/80 p-5 ring-1 ring-app-border transition-colors hover:border-accent/30"
             >
-              <link.icon className="h-5 w-5 text-accent-soft" />
-              <h3 className="mt-3 font-medium text-app-text">{link.label}</h3>
-              <p className="mt-1 text-sm text-app-muted">{link.description}</p>
+              <Icon className="h-5 w-5 text-accent-soft" />
+              <p className="mt-3 text-2xl font-semibold text-app-text">{card.value}</p>
+              <p className="text-sm text-app-muted">{card.label}</p>
             </Link>
-          ))}
-        </div>
-
-        {isAdmin && (
-          <div className="mt-8 rounded-xl border border-accent/25 bg-accent/5 p-4">
-            <p className="text-sm text-app-muted">
-              You have staff access.{" "}
-              <Link href="/admin" className="font-medium text-accent-soft hover:text-accent">
-                Open admin portal →
-              </Link>
-            </p>
-          </div>
-        )}
+          );
+        })}
       </div>
-    </PageContainer>
-  );
-}
 
-export default function AccountPage() {
-  return (
-    <CustomerAuthGuard>
-      <AccountContent />
-    </CustomerAuthGuard>
+      <div className="space-y-10">
+        <section>
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <h2 className="font-display text-xl font-semibold text-app-text">Recent orders</h2>
+            <Link href="/account/orders" className="text-sm font-medium text-accent-soft hover:text-accent">
+              View all
+            </Link>
+          </div>
+          <OrderHistoryList token={token} compact />
+        </section>
+
+        <section>
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <h2 className="font-display text-xl font-semibold text-app-text">Recent bookings</h2>
+            <Link href="/account/bookings" className="text-sm font-medium text-accent-soft hover:text-accent">
+              View all
+            </Link>
+          </div>
+          <BookingHistoryList token={token} compact />
+        </section>
+      </div>
+
+      <div className="mt-10 grid gap-4 sm:grid-cols-3">
+        {[
+          { href: "/academy", label: "EVOKE Academy", description: "Courses & certificates" },
+          { href: "/shop", label: "EVOKE Sports", description: "Gear & equipment" },
+          { href: "/tours", label: "EVOKE Tours", description: "Travel packages" },
+        ].map((link) => (
+          <Link
+            key={link.href}
+            href={link.href}
+            className="rounded-2xl border border-app-border bg-app-surface/80 p-5 transition-colors hover:border-accent/30"
+          >
+            <h3 className="font-medium text-app-text">{link.label}</h3>
+            <p className="mt-1 text-sm text-app-muted">{link.description}</p>
+          </Link>
+        ))}
+      </div>
+
+      {isAdmin && (
+        <div className="mt-8 rounded-xl border border-accent/25 bg-accent/5 p-4">
+          <p className="text-sm text-app-muted">
+            You have staff access.{" "}
+            <Link href="/admin" className="font-medium text-accent-soft hover:text-accent">
+              Open admin portal →
+            </Link>
+          </p>
+        </div>
+      )}
+    </AccountShell>
   );
 }

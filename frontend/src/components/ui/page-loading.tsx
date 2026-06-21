@@ -44,6 +44,11 @@ export function PageLoading({
     </div>
   );
 
+  // admin-main: render in-place so centering follows the main column, not the viewport + CSS var.
+  if (isOverlay && resolvedLayout === "admin-main") {
+    return content;
+  }
+
   if (isOverlay && typeof document !== "undefined") {
     return createPortal(content, document.body);
   }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PageLoading } from "@/components/ui/page-loading";
 import { apiClient, ApiError } from "@/lib/api";
@@ -16,17 +16,20 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
   const fetchedForToken = useRef<string | null>(null);
 
+  useLayoutEffect(() => {
+    if (!hydrated || !token) return;
+    const cached = useAuthStore.getState();
+    if (cached.user && cached.navigation.length > 0) {
+      setReady(true);
+    }
+  }, [hydrated, token]);
+
   useEffect(() => {
     if (!hydrated) return;
 
     if (!token) {
       router.replace("/login?redirect=/admin");
       return;
-    }
-
-    const cached = useAuthStore.getState();
-    if (cached.user && cached.navigation.length > 0) {
-      setReady(true);
     }
 
     if (fetchedForToken.current === token) {
@@ -49,6 +52,7 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
           router.replace("/login?redirect=/admin");
           return;
         }
+        const cached = useAuthStore.getState();
         if (cached.user && cached.navigation.length > 0) {
           setReady(true);
           return;
@@ -64,12 +68,8 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
   }, [hydrated, token, router, setContext]);
 
   if (!hydrated || !token || !ready || !user) {
-    return (
-      <PageLoading
-        label={token ? "Loading admin panel..." : "Signing out..."}
-        layout="viewport"
-      />
-    );
+    const label = !hydrated || token ? "Loading admin panel..." : "Redirecting to sign in...";
+    return <PageLoading label={label} layout="admin-main" />;
   }
 
   return <>{children}</>;
