@@ -1,5 +1,6 @@
 import { AdminAuthGuard } from "@/components/admin/admin-auth-guard";
 import { AdminHeader } from "@/components/admin/admin-header";
+import { AdminScrollControls } from "@/components/admin/admin-scroll-controls";
 import { AdminScrollLock } from "@/components/admin/admin-scroll-lock";
 import { AdminShellExtras } from "@/components/admin/admin-shell-extras";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
@@ -22,6 +23,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <AdminContent>
               <AdminAuthGuard>{children}</AdminAuthGuard>
             </AdminContent>
+            <AdminScrollControls />
           </main>
         </div>
       </div>

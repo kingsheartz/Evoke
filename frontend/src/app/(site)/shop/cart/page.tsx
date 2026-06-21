@@ -3,80 +3,26 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ShoppingBag, Trash2 } from "lucide-react";
+import { ArrowLeft, ShoppingBag } from "lucide-react";
 import { CustomerAuthGuard } from "@/components/auth/customer-auth-guard";
 import { AccountMobileHeader } from "@/components/account/account-mobile-header";
 import { AccountNav } from "@/components/account/account-nav";
 import { PageContainer } from "@/components/layout/app-shell";
+import { CartLineItem } from "@/components/shop/cart-line-item";
 import { CartOrderSummary } from "@/components/shop/cart-order-summary";
 import { MobileCheckoutBar } from "@/components/shop/mobile-checkout-bar";
 import { Button } from "@/components/ui/button";
 import { apiClient, type Cart } from "@/lib/api";
-import { formatOfferingPrice } from "@/lib/offerings";
-import { openRazorpayCheckout } from "@/lib/razorpay-checkout";
-import { revalidateShopPublicCache } from "@/lib/revalidate-cms";
 import { useAuthStore } from "@/stores/app";
 import { cn } from "@/lib/utils";
 
-function CartLineItem({
-  name,
-  variantName,
-  quantity,
-  unitPrice,
-  slug,
-  image,
-  onRemove,
-}: {
-  name: string;
-  variantName?: string | null;
-  quantity: number;
-  unitPrice: string;
-  slug?: string;
-  image?: string | null;
-  onRemove: () => void;
-}) {
-  const lineTotal = Number(unitPrice) * quantity;
-
-  return (
-    <div className="flex gap-3 rounded-xl border border-app-border bg-app-surface/80 p-3 sm:gap-4 sm:p-4">
-      <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-app-surface-muted ring-1 ring-app-border sm:h-20 sm:w-20">
-        {image ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={image} alt="" className="h-full w-full object-cover" />
-        ) : (
-          <ShoppingBag className="h-7 w-7 text-app-muted" aria-hidden />
-        )}
-      </div>
-      <div className="min-w-0 flex-1">
-        {slug ? (
-          <Link href={`/shop/${slug}`} className="font-medium text-app-text hover:text-accent-soft">
-            {name}
-          </Link>
-        ) : (
-          <p className="font-medium text-app-text">{name}</p>
-        )}
-        {variantName && <p className="text-sm text-app-muted">{variantName}</p>}
-        <p className="mt-2 text-sm text-app-muted">
-          Qty {quantity} × {formatOfferingPrice(unitPrice, { prefix: false })}
-        </p>
-        <p className="mt-1 text-sm font-medium text-app-text">
-          {formatOfferingPrice(lineTotal, { prefix: false })}
-        </p>
-      </div>
-      <Button type="button" variant="ghost" size="sm" className="shrink-0 self-start" onClick={onRemove} aria-label={`Remove ${name}`}>
-        <Trash2 className="h-4 w-4 text-status-error" />
-      </Button>
-    </div>
-  );
-}
+const COUPON_STORAGE_KEY = "evoke_cart_coupon";
 
 function CartContent() {
   const router = useRouter();
   const { token, user } = useAuthStore();
   const [cart, setCart] = useState<Cart | null>(null);
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState<string | null>(null);
-  const [checkingOut, setCheckingOut] = useState(false);
   const [couponCode, setCouponCode] = useState("");
   const [discount, setDiscount] = useState(0);
 
@@ -93,6 +39,8 @@ function CartContent() {
 
   useEffect(() => {
     load();
+    const saved = sessionStorage.getItem(COUPON_STORAGE_KEY);
+    if (saved) setCouponCode(saved);
   }, [token]);
 
   const removeItem = async (itemId: number) => {
@@ -110,62 +58,24 @@ function CartContent() {
 
   const applyCoupon = async () => {
     if (!couponCode.trim() || subtotal <= 0) return;
-    setMessage(null);
     try {
       const response = await apiClient.validateCoupon({ code: couponCode.trim(), subtotal });
       setDiscount(response.data.discount);
-    } catch (e) {
+      sessionStorage.setItem(COUPON_STORAGE_KEY, couponCode.trim());
+    } catch {
       setDiscount(0);
-      setMessage(e instanceof Error ? e.message : "Invalid coupon.");
+      sessionStorage.removeItem(COUPON_STORAGE_KEY);
     }
   };
 
-  const checkout = async () => {
-    if (!token || !user) return;
-    if (!user.address_line1 || !user.city || !user.postal_code) {
-      setMessage("Add your delivery address before checkout.");
-      return;
+  const proceedToCheckout = () => {
+    if (couponCode.trim()) {
+      sessionStorage.setItem(COUPON_STORAGE_KEY, couponCode.trim());
     }
-    setCheckingOut(true);
-    setMessage(null);
-    try {
-      const shipping_address = {
-        name: user.name,
-        line1: user.address_line1,
-        line2: user.address_line2 ?? "",
-        city: user.city,
-        state: user.state ?? "",
-        postal_code: user.postal_code,
-        country: user.country ?? "IN",
-        phone: user.phone ?? "",
-      };
-      const response = await apiClient.createOrder(token, {
-        shipping_address,
-        coupon_code: couponCode.trim() || undefined,
-      });
-      await revalidateShopPublicCache();
-
-      try {
-        await openRazorpayCheckout({
-          token,
-          payableType: "shop_order",
-          payableId: response.data.id,
-          userName: user.name,
-          userEmail: user.email,
-          userPhone: user.phone ?? undefined,
-        });
-      } catch {
-        /* Payment optional when Razorpay is not configured */
-      }
-
-      router.push(`/confirmation?type=order&ref=${encodeURIComponent(response.data.order_number)}`);
-    } catch (e) {
-      setMessage(e instanceof Error ? e.message : "Checkout failed.");
-      setCheckingOut(false);
-    }
+    router.push("/shop/checkout");
   };
 
-  if (!user || !token) return null;
+  if (!token) return null;
 
   return (
     <PageContainer className="py-8 md:py-12 lg:py-16">
@@ -190,7 +100,7 @@ function CartContent() {
             Your cart
           </h1>
           <p className="mt-2 text-app-muted">
-            {items.length === 0 ? "Your cart is empty." : `${items.length} item${items.length === 1 ? "" : "s"} ready for checkout.`}
+            {items.length === 0 ? "Your cart is empty." : `${items.length} item${items.length === 1 ? "" : "s"} in your cart.`}
           </p>
 
           <div className={cn("mt-8 grid gap-8", items.length > 0 && "lg:grid-cols-[minmax(0,1fr)_20rem] xl:grid-cols-[minmax(0,1fr)_22rem]")}>
@@ -229,30 +139,29 @@ function CartContent() {
 
             {items.length > 0 && (
               <CartOrderSummary
+                mode="cart"
                 subtotal={subtotal}
                 discount={discount}
                 total={total}
                 couponCode={couponCode}
                 onCouponChange={setCouponCode}
                 onApplyCoupon={applyCoupon}
-                checkingOut={checkingOut}
-                onCheckout={checkout}
-                user={user}
-                message={message}
+                checkingOut={false}
+                onCheckout={proceedToCheckout}
+                user={user ?? undefined}
+                message={null}
               />
             )}
           </div>
-
-          {items.length === 0 && message && <p className="mt-4 text-sm text-status-error">{message}</p>}
         </div>
       </div>
 
       {items.length > 0 && (
         <MobileCheckoutBar
           total={total}
-          checkingOut={checkingOut}
-          disabled={!user.address_line1 || !user.city || !user.postal_code}
-          onCheckout={checkout}
+          checkingOut={false}
+          onCheckout={proceedToCheckout}
+          label="Checkout"
         />
       )}
     </PageContainer>

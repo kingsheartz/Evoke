@@ -26,11 +26,12 @@ const labels: Record<string, { title: string; description: string }> = {
 export default async function ConfirmationPage({
   searchParams,
 }: {
-  searchParams: Promise<{ type?: string; ref?: string }>;
+  searchParams: Promise<{ type?: string; ref?: string; id?: string }>;
 }) {
   const params = await searchParams;
   const type = params.type ?? "order";
   const ref = params.ref;
+  const orderId = params.id;
   const copy = labels[type] ?? labels.order;
 
   return (
@@ -46,12 +47,25 @@ export default async function ConfirmationPage({
             </p>
           )}
           <div className="mt-4 flex flex-wrap justify-center gap-3">
-            <Button asChild>
-              <Link href="/account">View account</Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link href="/">Back home</Link>
-            </Button>
+            {type === "order" && orderId ? (
+              <Button asChild>
+                <Link href={`/account/orders/${orderId}`}>View order</Link>
+              </Button>
+            ) : (
+              <Button asChild>
+                <Link href="/account">View account</Link>
+              </Button>
+            )}
+            {type === "order" && (
+              <Button asChild variant="outline">
+                <Link href="/shop/products">Continue shopping</Link>
+              </Button>
+            )}
+            {type !== "order" && (
+              <Button asChild variant="outline">
+                <Link href="/">Back home</Link>
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>

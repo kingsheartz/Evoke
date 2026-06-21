@@ -184,6 +184,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       {mounted &&
         createPortal(
           <div
+            data-notification-stack
             className={cn(
               "pointer-events-none fixed z-[var(--z-notification)] flex w-full max-w-[22rem] flex-col gap-2",
               POSITION_CLASSES[position],

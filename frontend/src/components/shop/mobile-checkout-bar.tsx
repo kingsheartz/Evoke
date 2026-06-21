@@ -8,11 +8,13 @@ export function MobileCheckoutBar({
   checkingOut,
   disabled,
   onCheckout,
+  label = "Place order",
 }: {
   total: number;
   checkingOut: boolean;
   disabled?: boolean;
   onCheckout: () => void;
+  label?: string;
 }) {
   return (
     <div className="fixed inset-x-0 bottom-0 z-30 border-t border-app-border bg-app-bg/95 px-4 py-3 backdrop-blur-md pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden">
@@ -29,7 +31,7 @@ export function MobileCheckoutBar({
           onClick={onCheckout}
           disabled={checkingOut || disabled}
         >
-          {checkingOut ? "Placing order…" : "Place order"}
+          {checkingOut ? "Please wait…" : label}
         </Button>
       </div>
     </div>

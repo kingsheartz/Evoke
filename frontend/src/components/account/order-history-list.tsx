@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 import { apiClient, type ShopOrder } from "@/lib/api";
 import { formatOfferingPrice } from "@/lib/offerings";
 import { AccountRecordCard, AccountRecordRow } from "@/components/account/account-record-card";
@@ -66,16 +67,22 @@ export function OrderHistoryList({
             <ul className="space-y-3 p-4 md:hidden">
               {rows.map((order) => (
                 <li key={order.id}>
-                  <AccountRecordCard>
-                    <AccountRecordRow label="Order" value={<span className="font-mono text-xs">{order.order_number}</span>} />
-                    <AccountRecordRow label="Date" value={order.created_at?.slice(0, 10) ?? "—"} />
-                    <AccountRecordRow label="Status" value={<StatusBadge status={order.status} />} />
-                    <AccountRecordRow label="Payment" value={order.payment_status ?? "—"} />
-                    <AccountRecordRow
-                      label="Total"
-                      value={formatOfferingPrice(orderTotal(order), { prefix: false })}
-                    />
-                  </AccountRecordCard>
+                  <Link href={`/account/orders/${order.id}`} className="block transition-opacity hover:opacity-90">
+                    <AccountRecordCard>
+                      <AccountRecordRow label="Order" value={<span className="font-mono text-xs">{order.order_number}</span>} />
+                      <AccountRecordRow label="Date" value={order.created_at?.slice(0, 10) ?? "—"} />
+                      <AccountRecordRow label="Status" value={<StatusBadge status={order.status} />} />
+                      <AccountRecordRow label="Payment" value={order.payment_status ?? "—"} />
+                      <AccountRecordRow
+                        label="Total"
+                        value={formatOfferingPrice(orderTotal(order), { prefix: false })}
+                      />
+                      <p className="mt-2 flex items-center gap-1 text-xs font-medium text-accent-soft">
+                        View details
+                        <ChevronRight className="h-3.5 w-3.5" />
+                      </p>
+                    </AccountRecordCard>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -88,6 +95,7 @@ export function OrderHistoryList({
                   <th>Status</th>
                   <th>Payment</th>
                   <th>Total</th>
+                  <th aria-label="Actions" />
                 </tr>
               </thead>
               <tbody>
@@ -100,6 +108,14 @@ export function OrderHistoryList({
                     </td>
                     <td>{order.payment_status ?? "—"}</td>
                     <td>{formatOfferingPrice(orderTotal(order), { prefix: false })}</td>
+                    <td>
+                      <Link
+                        href={`/account/orders/${order.id}`}
+                        className="text-sm font-medium text-accent-soft hover:text-accent"
+                      >
+                        View
+                      </Link>
+                    </td>
                   </tr>
                 ))}
               </tbody>

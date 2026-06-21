@@ -28,6 +28,7 @@
   --app-section-gap: 1.5rem;
   --z-notification: 2147483650;
   --z-page-loading: 2147483648;
+  --z-scroll-jump: 25;
   --z-admin-modal: 2147483646;
   --z-admin-panel: 2147483630;
   --color-success: #34d399;
@@ -222,8 +223,18 @@ html.admin-route body {
   overflow: hidden !important;
   height: 100%;
   overscroll-behavior: none;
-  --notification-top: calc(var(--app-topbar-height) + 0.5rem);
+  --notification-top: calc(var(--app-topbar-height) + 0.75rem);
   --page-loading-top: var(--app-topbar-height);
+}
+
+/* Toasts sit in the main column — not under the sidebar or behind the top bar */
+html.admin-route [data-notification-stack] {
+  top: var(--notification-top);
+  right: max(1rem, env(safe-area-inset-right, 0px));
+  left: auto;
+  transform: none;
+  align-items: flex-end;
+  max-width: min(22rem, calc(100vw - var(--admin-sidebar-width, 16rem) - 2rem));
 }
 
 .admin-shell {
@@ -392,6 +403,9 @@ body.admin-tour-active .admin-main-column {
 }
 
 .admin-header {
+  position: relative;
+  z-index: 50;
+  flex-shrink: 0;
   padding-left: var(--app-gutter);
   padding-right: 0.625rem;
 }
@@ -415,6 +429,30 @@ body.admin-tour-active .admin-main-column {
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
+}
+
+/* Keep save toolbar visible while scrolling long admin forms (CMS builder, settings, etc.) */
+.admin-main .app-page > .page-header:has([data-admin-primary-save="true"]) {
+  position: sticky;
+  top: 0;
+  z-index: 35;
+  margin-left: calc(-1 * var(--app-gutter));
+  margin-right: calc(-1 * var(--app-gutter));
+  margin-bottom: 0;
+  padding: 0.75rem var(--app-gutter);
+  background: color-mix(in srgb, var(--background) 94%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+
+@media (min-width: 768px) {
+  .admin-main .app-page > .page-header:has([data-admin-primary-save="true"]) {
+    margin-left: calc(-1 * var(--app-gutter-md));
+    margin-right: calc(-1 * var(--app-gutter-md));
+    padding-left: var(--app-gutter-md);
+    padding-right: var(--app-gutter-md);
+  }
 }
 
 /* Typography */
@@ -1957,6 +1995,53 @@ button.manage-columns-close:hover:not(:disabled) {
   background: color-mix(in srgb, #3b82f6 14%, var(--surface));
   border-color: color-mix(in srgb, #3b82f6 40%, transparent);
   color: #bfdbfe;
+}
+
+/* Quick scroll to top / bottom — public site and admin main panel */
+.scroll-jump-controls--site {
+  right: max(1rem, env(safe-area-inset-right, 0px));
+  bottom: max(1.5rem, env(safe-area-inset-bottom, 0px));
+}
+
+@media (max-width: 1023px) {
+  .scroll-jump-controls--site {
+    bottom: max(5rem, calc(env(safe-area-inset-bottom, 0px) + 4rem));
+  }
+}
+
+.scroll-jump-controls--admin {
+  right: max(1rem, env(safe-area-inset-right, 0px));
+  bottom: max(1.5rem, env(safe-area-inset-bottom, 0px));
+}
+
+.scroll-jump-btn {
+  display: inline-flex;
+  height: 2.5rem;
+  width: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  color: var(--foreground);
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition:
+    transform 0.15s ease,
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.scroll-jump-btn:hover {
+  border-color: color-mix(in srgb, var(--primary) 45%, var(--border));
+  background: color-mix(in srgb, var(--primary) 12%, var(--surface));
+  color: var(--accent-soft);
+}
+
+.scroll-jump-btn:active {
+  transform: scale(0.96);
 }
 
 @media (prefers-reduced-motion: reduce) {

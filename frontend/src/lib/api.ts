@@ -465,6 +465,9 @@ export const apiClient = {
 
   getOrders: (token: string) => api<Paginated<ShopOrder>>("/shop/orders", { token }),
 
+  getOrder: (token: string, id: number) =>
+    api<{ data: ShopOrder }>(`/shop/orders/${id}`, { token }),
+
   getAdminOrders: (token: string, params?: { status?: string; page?: number }) => {
     const query = new URLSearchParams();
     if (params?.status) query.set("status", params.status);
@@ -1106,11 +1109,24 @@ export interface ShopOrder {
   order_number: string;
   status: string;
   payment_status?: string;
+  payment_reference?: string | null;
+  subtotal?: string;
+  discount?: string;
+  shipping?: string;
   total: string;
   total_amount?: string;
+  tracking_number?: string | null;
+  shipping_address?: Record<string, string> | null;
+  billing_address?: Record<string, string> | null;
   created_at: string;
   user?: User;
-  items?: Array<{ product_name: string; quantity: number; total: string }>;
+  items?: Array<{
+    id?: number;
+    product_name: string;
+    quantity: number;
+    unit_price?: string;
+    total: string;
+  }>;
 }
 
 export interface TourBooking {
