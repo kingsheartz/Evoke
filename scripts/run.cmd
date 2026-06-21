@@ -223,9 +223,9 @@ goto :eof
 :down
 call :parse_flags %*
 if "!FLAG_VOLUMES!"=="1" (
-  docker compose -f docker-compose.yml down -v
+  docker compose -f docker-compose.yml --profile full --profile mysql down -v --remove-orphans
 ) else (
-  docker compose -f docker-compose.yml down
+  docker compose -f docker-compose.yml --profile full --profile mysql down --remove-orphans
 )
 goto :eof
 

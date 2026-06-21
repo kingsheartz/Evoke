@@ -261,10 +261,11 @@ cmd_build() {
 }
 
 cmd_down() {
+  local down_args=(-f docker-compose.yml --profile full --profile mysql down --remove-orphans)
   if [[ "$REMOVE_VOLUMES" -eq 1 ]]; then
-    docker compose -f docker-compose.yml down -v
+    docker compose "${down_args[@]}" -v
   else
-    docker compose -f docker-compose.yml down
+    docker compose "${down_args[@]}"
   fi
 }
 

@@ -280,11 +280,9 @@ switch ($Command.ToLower()) {
     }
     "down" {
         $f = Get-Flags $argsList
-        if ($f.Volumes) {
-            docker compose -f docker-compose.yml down -v
-        } else {
-            docker compose -f docker-compose.yml down
-        }
+        $downArgs = @("-f", "docker-compose.yml", "--profile", "full", "--profile", "mysql", "down", "--remove-orphans")
+        if ($f.Volumes) { $downArgs += "-v" }
+        docker compose @downArgs
     }
     "restart" {
         if ($argsList.Count -gt 0 -and -not $argsList[0].StartsWith("--")) {
@@ -340,8 +338,9 @@ switch ($Command.ToLower()) {
             "up" { Invoke-Up $stackArg $prodRest }
             "down" {
                 $f = Get-Flags $prodRest
-                if ($f.Volumes) { docker compose -f docker-compose.yml down -v }
-                else { docker compose -f docker-compose.yml down }
+                $downArgs = @("-f", "docker-compose.yml", "--profile", "full", "--profile", "mysql", "down", "--remove-orphans")
+                if ($f.Volumes) { $downArgs += "-v" }
+                docker compose @downArgs
             }
             "build" {
                 Set-StackProfiles $stackArg

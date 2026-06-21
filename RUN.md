@@ -282,6 +282,8 @@ scripts\run.cmd down
 | UI looks old / unchanged | `.\scripts\dev.ps1 reset-frontend` |
 | Most pages show **404** (especially `/admin/...`) | Turbopack + Windows Docker mounts — fixed in dev via webpack; run `.\scripts\dev.ps1 reset-frontend` then hard-refresh |
 | Port already in use | Stop other stacks: `run down` |
+| `Network evoke_evoke-network Resource is still in use` after `down` | Postgres (or other profiled services) was still running. Use the updated `run down` (stops all profiles), or manually: `docker stop evoke-postgres-1` then `docker compose --profile full --profile mysql down --remove-orphans` |
+| Docker shows `<none>` images after restart | Dangling layers from rebuilds — safe to remove: `docker image prune -f` |
 | MySQL migrations fail | Ensure stack is `mysql`, not `core` |
 | AI errors | Use `core` stack; AI needs `ai` stack + Postgres + model pulls |
 | WSL `bash\r` error | Windows CRLF line endings. Fix once: `python -c "p='scripts/run.sh'; open(p,'wb').write(open(p,'rb').read().replace(b'\\r\\n',b'\\n'))"` (run from repo root). Or: `git add --renormalize scripts/run.sh scripts/dev.sh && git checkout -- scripts/` |
