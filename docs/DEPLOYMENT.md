@@ -11,15 +11,15 @@ For stack runner and progressive setup, see [RUN.md](../RUN.md).
 
 The repo ships a **development** Docker stack (`docker compose up`). It is optimized for local work, not production:
 
-| Component | Current dev setup | Production needs |
-|-----------|-------------------|------------------|
-| Frontend | `npm run dev` in Docker | `next build` + `next start` (or Vercel) |
-| Backend | `php artisan serve` | PHP-FPM + Nginx, or Laravel Octane |
+| Component | Dev setup (`docker compose up`) | Production |
+|-----------|----------------------------------|------------|
+| Frontend | `npm run dev` in Docker | `next build` + `next start` — see `frontend/Dockerfile.prod` |
+| Backend | `php artisan serve` | Production image — see `backend/Dockerfile.prod` (FPM/Octane optional upgrade) |
 | Nginx | Routes `/api`, `/`, `/ai` on port 8080 | HTTPS (443), real domain |
 | AI + Ollama | Optional in compose | Heavy; skip on small budgets |
 | Secrets | Example values in compose | Strong passwords, unique `APP_KEY` |
 
-There is no `docker-compose.prod.yml` yet. The options below describe **what to run where**; you adapt Dockerfiles or use split hosting.
+Use **`docker-compose.prod.yml`** locally to smoke-test production builds (`scripts/run.ps1 prod up`). For AWS, see [Option G](#option-g--aws-ec2--cicd-free-tier) and [infra/aws/README.md](../infra/aws/README.md).
 
 ---
 
@@ -82,6 +82,8 @@ Realistic for a **small production** or **beta** launch:
 
 **Tradeoffs:** API may sleep, cold starts, strict limits. Fine for demos, not ideal for a busy shop.
 
+**Alternative:** [Option G](#option-g--aws-ec2--cicd-free-tier) — AWS EC2 t3.micro free tier with full Docker stack (always-on, more setup).
+
 ### ~$800/month (USD)
 
 Comfortable budget for managed hosting: Vercel Pro, Laravel Forge + VPS, managed Postgres/Redis, optional cloud LLM API (pay-per-use). Ollama self-hosted still optional.
@@ -98,6 +100,9 @@ Comfortable budget for managed hosting: Vercel Pro, Laravel Forge + VPS, managed
 | **D. PaaS (Railway / Render)** | ₹500–2000+ | Low–medium | Less SSH, pay per service |
 | **E. Laravel Forge + Vercel** | ₹1500+ | Low | Easiest ops, over ₹800 |
 | **F. XAMPP / shared PHP only** | — | — | **Not suitable** (no Next.js, no Redis) |
+| **G. AWS EC2 + CI/CD** | ₹0–500* | Medium | Free-tier EC2, ECR, GitHub Actions deploy |
+
+\* AWS **t3.micro** free tier (12 months) + domain; small ECR/storage charges possible after free tier.
 
 ---
 
@@ -142,11 +147,10 @@ cp .env.example .env
 cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env.local
 
-# Production: use next build + next start, not npm run dev
-# Production: use PHP-FPM + Nginx for Laravel, not artisan serve
-# (Adapt Dockerfiles or run services on the host until prod compose exists)
+# Production smoke test (next start, APP_ENV=production):
+# ./scripts/run.sh prod up core --migrate
 
-docker compose up -d --build   # dev stack; replace with prod images when ready
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 
 docker compose exec backend php artisan key:generate
 docker compose exec backend php artisan migrate --force
@@ -245,6 +249,32 @@ Easier than raw VPS if you prefer dashboards over SSH. Cost scales with services
 [Forge](https://forge.laravel.com) provisions the VPS, Nginx, SSL, queue workers, and scheduler for Laravel. Deploy frontend to Vercel.
 
 **Cost:** Forge (~$12/mo) + VPS (~$6/mo) ≈ **₹1,500+/mo** — above the ₹800 target, but the **lowest-effort** paid path.
+
+---
+
+## Option G — AWS EC2 + CI/CD (free tier)
+
+Run Evoke on a **t3.micro EC2** instance with images in **ECR**, built and deployed by **GitHub Actions** or **AWS CodeBuild**. All public URLs are configurable via `deploy.env` and GitHub repository variables.
+
+| Piece | AWS service |
+|-------|-------------|
+| Host | EC2 `t3.micro` (free tier eligible) |
+| Images | ECR (`evoke-frontend`, `evoke-backend`) |
+| Build | GitHub Actions (`.github/workflows/build.yml`, `deploy-aws.yml`) or CodeBuild (`infra/aws/buildspec.yml`) |
+| Deploy | SSM Run Command → `infra/aws/scripts/deploy.sh` on EC2 |
+| Stack on host | `infra/aws/docker-compose.aws.yml` (nginx + MySQL + Redis) |
+
+**Pros:** Free-tier friendly, repeatable CI/CD, OIDC deploy (no long-lived AWS keys in GitHub).  
+**Cons:** More AWS setup than a plain VPS; MySQL default (no AI/RAG); HTTPS requires Caddy/Certbot or ALB on the host.
+
+### Quick start
+
+1. Deploy CloudFormation stacks in [infra/aws/cloudformation/](../infra/aws/cloudformation/)
+2. Configure `/opt/evoke/deploy.env` from [infra/aws/config/deploy.env.example](../infra/aws/config/deploy.env.example)
+3. Set GitHub variables: `NEXT_PUBLIC_API_URL`, `ECR_REGISTRY`, `AWS_DEPLOY_ROLE_ARN`, `EC2_INSTANCE_ID`
+4. Run the **Deploy AWS** workflow or push to `main` with `AUTO_DEPLOY_ON_PUSH=true`
+
+Full steps: **[infra/aws/README.md](../infra/aws/README.md)**
 
 ---
 
@@ -406,26 +436,37 @@ The in-repo Nginx config listens on **port 80** only. Terminate TLS on the host 
 | **Launch on ₹800/mo** | Option A — one VPS, MySQL, no AI, Caddy + Docker |
 | **Best frontend UX, same budget** | Option B — Vercel free + cheap VPS for API |
 | **Quick demo, no cost** | Option C — free tiers |
+| **AWS free tier + automated deploy** | Option G — EC2 + ECR + GitHub Actions |
 | **Minimal DevOps, higher budget** | Option E — Forge + Vercel |
 | **Full AI on your own hardware** | Separate GPU/large VPS; not ₹800 |
 
 ---
 
-## Future improvements (repo)
+## Repo production assets
 
-These would make “one-command” production deploy easier:
+Already in the repository:
 
-- `docker-compose.prod.yml` with production commands
-- `frontend/Dockerfile.prod` — multi-stage `next build` + `next start`
-- Backend image with PHP-FPM + Nginx (or Octane)
-- Example Caddyfile for single-domain HTTPS
-- CI/CD workflow (GitHub Actions → VPS or Vercel)
+| Asset | Purpose |
+|-------|---------|
+| `docker-compose.prod.yml` | Production overrides (no bind mounts, prod frontend image) |
+| `frontend/Dockerfile.prod` | Multi-stage `next build` + standalone `node server.js` |
+| `backend/Dockerfile.prod` | Production API image (`composer --no-dev`) |
+| `.github/workflows/build.yml` | CI — lint, build, Docker smoke test |
+| `.github/workflows/deploy-aws.yml` | Build → ECR → deploy EC2 via SSM |
+| `infra/aws/` | AWS compose, scripts, CloudFormation, CodeBuild spec |
 
-Until those exist, use **Option A or B** and adapt build/run commands as described above.
+### Still optional (future)
+
+- Backend image with **PHP-FPM + Nginx** (or Laravel Octane) instead of `artisan serve`
+- Example **Caddyfile** for single-domain HTTPS on VPS/EC2
+- GitHub Actions deploy workflow for **generic VPS** (SSH, not AWS-only)
+- `docker-compose.prod.yml` profile for **PostgreSQL + AI** on larger hosts
 
 ---
 
 ## Related docs
 
 - [DEVELOPMENT.md](DEVELOPMENT.md) — local Docker, dev scripts, MySQL profile
+- [RUN.md](../RUN.md) — stack runner, `prod up`, progressive setup
+- [infra/aws/README.md](../infra/aws/README.md) — AWS build & deploy pipelines (Option G)
 - [README.md](../README.md) — architecture and quick start

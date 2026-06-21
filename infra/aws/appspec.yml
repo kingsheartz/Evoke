@@ -1,0 +1,20 @@
+version: 0.0
+os: linux
+
+files:
+  - source: infra/aws/
+    destination: /opt/evoke/infra/aws/
+  - source: docker/nginx/
+    destination: /opt/evoke/docker/nginx/
+  - source: infra/aws/docker-compose.aws.yml
+    destination: /opt/evoke/infra/aws/docker-compose.aws.yml
+
+hooks:
+  BeforeInstall:
+    - location: infra/aws/scripts/codedeploy-before.sh
+      timeout: 120
+      runas: root
+  AfterInstall:
+    - location: infra/aws/scripts/codedeploy-after.sh
+      timeout: 900
+      runas: root

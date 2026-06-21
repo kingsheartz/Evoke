@@ -1,0 +1,128 @@
+name: Deploy AWS
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: Docker image tag (default = git SHA)
+        required: false
+        type: string
+      next_public_api_url:
+        description: Public API URL for frontend build (overrides repo variable)
+        required: false
+        type: string
+      deploy:
+        description: Run remote deploy on EC2 after push
+        required: true
+        default: true
+        type: boolean
+  push:
+    branches: [master, main]
+    paths-ignore:
+      - "**/*.md"
+      - "docs/**"
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION || 'ap-south-1' }}
+  ECR_REGISTRY: ${{ vars.ECR_REGISTRY }}
+  EC2_INSTANCE_ID: ${{ vars.EC2_INSTANCE_ID }}
+  NEXT_PUBLIC_APP_NAME: ${{ vars.NEXT_PUBLIC_APP_NAME || 'Evoke' }}
+
+jobs:
+  deploy:
+    name: Build, push ECR, deploy EC2
+    runs-on: ubuntu-latest
+    environment: ${{ vars.AWS_DEPLOY_ENVIRONMENT || 'production' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve deploy configuration
+        id: config
+        run: |
+          API_URL="${{ inputs.next_public_api_url || vars.NEXT_PUBLIC_API_URL }}"
+          if [ -z "$API_URL" ]; then
+            echo "Set repository variable NEXT_PUBLIC_API_URL or pass workflow input next_public_api_url" >&2
+            exit 1
+          fi
+          if [ -z "${{ env.ECR_REGISTRY }}" ]; then
+            echo "Set repository variable ECR_REGISTRY (e.g. 123456789012.dkr.ecr.ap-south-1.amazonaws.com)" >&2
+            exit 1
+          fi
+          TAG="${{ inputs.image_tag }}"
+          if [ -z "$TAG" ]; then TAG="${GITHUB_SHA::12}"; fi
+          echo "next_public_api_url=$API_URL" >> "$GITHUB_OUTPUT"
+          echo "image_tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Ensure ECR repositories exist
+        run: |
+          aws ecr describe-repositories --repository-names evoke-frontend evoke-backend 2>/dev/null \
+            || (aws ecr create-repository --repository-name evoke-frontend && aws ecr create-repository --repository-name evoke-backend)
+
+      - name: Build and push frontend
+        env:
+          IMAGE_TAG: ${{ steps.config.outputs.image_tag }}
+          NEXT_PUBLIC_API_URL: ${{ steps.config.outputs.next_public_api_url }}
+        run: |
+          FRONTEND_IMAGE="${{ env.ECR_REGISTRY }}/evoke-frontend:${IMAGE_TAG}"
+          docker build \
+            -f frontend/Dockerfile.prod \
+            --build-arg NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL}" \
+            --build-arg NEXT_PUBLIC_APP_NAME="${{ env.NEXT_PUBLIC_APP_NAME }}" \
+            -t "${FRONTEND_IMAGE}" \
+            -t "${{ env.ECR_REGISTRY }}/evoke-frontend:latest" \
+            frontend
+          docker push "${FRONTEND_IMAGE}"
+          docker push "${{ env.ECR_REGISTRY }}/evoke-frontend:latest"
+
+      - name: Build and push backend
+        env:
+          IMAGE_TAG: ${{ steps.config.outputs.image_tag }}
+        run: |
+          BACKEND_IMAGE="${{ env.ECR_REGISTRY }}/evoke-backend:${IMAGE_TAG}"
+          docker build -f backend/Dockerfile.prod \
+            -t "${BACKEND_IMAGE}" \
+            -t "${{ env.ECR_REGISTRY }}/evoke-backend:latest" \
+            backend
+          docker push "${BACKEND_IMAGE}"
+          docker push "${{ env.ECR_REGISTRY }}/evoke-backend:latest"
+
+      - name: Deploy to EC2 via SSM
+        if: ${{ (github.event_name == 'workflow_dispatch' && inputs.deploy) || (github.event_name == 'push' && vars.AUTO_DEPLOY_ON_PUSH == 'true') }}
+        env:
+          IMAGE_TAG: ${{ steps.config.outputs.image_tag }}
+          GIT_REF: ${{ github.ref_name }}
+        run: |
+          if [ -z "${{ env.EC2_INSTANCE_ID }}" ]; then
+            echo "EC2_INSTANCE_ID not set — skipping remote deploy." >&2
+            exit 0
+          fi
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "${{ env.EC2_INSTANCE_ID }}" \
+            --document-name "AWS-RunShellScript" \
+            --comment "Evoke GitHub deploy ${IMAGE_TAG}" \
+            --parameters commands="[
+              \"export IMAGE_TAG=${IMAGE_TAG}\",
+              \"cd /opt/evoke && git fetch origin ${GIT_REF} && git checkout ${GIT_REF} && git pull --ff-only || true\",
+              \"/opt/evoke/infra/aws/scripts/deploy.sh\"
+            ]" \
+            --query "Command.CommandId" --output text)
+          aws ssm wait command-executed --command-id "$COMMAND_ID" --instance-id "${{ env.EC2_INSTANCE_ID }}"
+          aws ssm get-command-invocation \
+            --command-id "$COMMAND_ID" \
+            --instance-id "${{ env.EC2_INSTANCE_ID }}" \
+            --query '[Status, StandardOutputContent, StandardErrorContent]' \
+            --output text

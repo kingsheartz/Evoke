@@ -1,0 +1,95 @@
+version: 0.2
+
+# AWS CodeBuild — build and push Evoke Docker images to ECR.
+# Configure endpoints via CodeBuild environment variables or Parameter Store.
+#
+# Required env (project or Parameter Store):
+#   AWS_DEFAULT_REGION, AWS_ACCOUNT_ID
+#   ECR_REGISTRY (or derived from account + region)
+#   NEXT_PUBLIC_API_URL, NEXT_PUBLIC_APP_NAME
+# Optional deploy:
+#   EC2_INSTANCE_ID — triggers SSM deploy after push
+#   IMAGE_TAG (defaults to CODEBUILD_RESOLVED_SOURCE_VERSION)
+
+env:
+  variables:
+    NEXT_PUBLIC_APP_NAME: Evoke
+    IMAGE_TAG: latest
+  parameter-store:
+    # Optional — create these in SSM Parameter Store for configurable endpoints:
+    # NEXT_PUBLIC_API_URL: /evoke/deploy/NEXT_PUBLIC_API_URL
+    # APP_URL: /evoke/deploy/APP_URL
+    # FRONTEND_URL: /evoke/deploy/FRONTEND_URL
+
+phases:
+  pre_build:
+    commands:
+      - echo "Logging in to Amazon ECR..."
+      - export AWS_ACCOUNT_ID="${AWS_ACCOUNT_ID:-$(aws sts get-caller-identity --query Account --output text)}"
+      - export AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION:-${AWS_REGION:-ap-south-1}}"
+      - export ECR_REGISTRY="${ECR_REGISTRY:-${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com}"
+      - export IMAGE_TAG="${IMAGE_TAG:-${CODEBUILD_RESOLVED_SOURCE_VERSION:-latest}}"
+      - aws ecr get-login-password --region "$AWS_DEFAULT_REGION" | docker login --username AWS --password-stdin "$ECR_REGISTRY"
+      - aws ecr describe-repositories --repository-names evoke-frontend evoke-backend --region "$AWS_DEFAULT_REGION" 2>/dev/null \
+        || (aws ecr create-repository --repository-name evoke-frontend --region "$AWS_DEFAULT_REGION" \
+        && aws ecr create-repository --repository-name evoke-backend --region "$AWS_DEFAULT_REGION")
+      - |
+        if [ -z "${NEXT_PUBLIC_API_URL:-}" ]; then
+          echo "NEXT_PUBLIC_API_URL is required (CodeBuild env or SSM /evoke/deploy/NEXT_PUBLIC_API_URL)" >&2
+          exit 1
+        fi
+
+  build:
+    commands:
+      - echo "Building frontend (${IMAGE_TAG}) with NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}"
+      - |
+        docker build \
+          -f frontend/Dockerfile.prod \
+          --build-arg NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL}" \
+          --build-arg NEXT_PUBLIC_APP_NAME="${NEXT_PUBLIC_APP_NAME:-Evoke}" \
+          -t "${ECR_REGISTRY}/evoke-frontend:${IMAGE_TAG}" \
+          -t "${ECR_REGISTRY}/evoke-frontend:latest" \
+          frontend
+      - echo "Building backend (${IMAGE_TAG})..."
+      - |
+        docker build \
+          -f backend/Dockerfile.prod \
+          -t "${ECR_REGISTRY}/evoke-backend:${IMAGE_TAG}" \
+          -t "${ECR_REGISTRY}/evoke-backend:latest" \
+          backend
+
+  post_build:
+    commands:
+      - echo "Pushing images to ECR..."
+      - docker push "${ECR_REGISTRY}/evoke-frontend:${IMAGE_TAG}"
+      - docker push "${ECR_REGISTRY}/evoke-frontend:latest"
+      - docker push "${ECR_REGISTRY}/evoke-backend:${IMAGE_TAG}"
+      - docker push "${ECR_REGISTRY}/evoke-backend:latest"
+      - printf '{"frontend":"%s/evoke-frontend:%s","backend":"%s/evoke-backend:%s","imageTag":"%s"}' "$ECR_REGISTRY" "$IMAGE_TAG" "$ECR_REGISTRY" "$IMAGE_TAG" "$IMAGE_TAG" > image-manifest.json
+      - |
+        if [ -n "${EC2_INSTANCE_ID:-}" ]; then
+          echo "Deploying to EC2 ${EC2_INSTANCE_ID} via SSM..."
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "$EC2_INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --comment "Evoke deploy ${IMAGE_TAG}" \
+            --parameters commands="[
+              \"export IMAGE_TAG=${IMAGE_TAG}\",
+              \"cd /opt/evoke && git pull --ff-only || true\",
+              \"/opt/evoke/infra/aws/scripts/deploy.sh\"
+            ]" \
+            --query "Command.CommandId" --output text)
+          aws ssm wait command-executed --command-id "$COMMAND_ID" --instance-id "$EC2_INSTANCE_ID"
+          aws ssm get-command-invocation --command-id "$COMMAND_ID" --instance-id "$EC2_INSTANCE_ID" --query StandardOutputContent --output text
+        else
+          echo "EC2_INSTANCE_ID not set — skip remote deploy (images pushed only)."
+        fi
+
+artifacts:
+  files:
+    - image-manifest.json
+
+cache:
+  paths:
+    - "/root/.npm/**/*"
+    - "/var/lib/docker/**/*"

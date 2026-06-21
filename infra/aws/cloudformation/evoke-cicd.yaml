@@ -1,0 +1,258 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Evoke — ECR repositories, CodeBuild project, and optional EC2 host (free-tier friendly).
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: evoke
+  NextPublicApiUrl:
+    Type: String
+    Description: Browser-facing API base URL baked into the frontend image
+    Default: https://yourdomain.com/api/v1
+  NextPublicAppName:
+    Type: String
+    Default: Evoke
+  Ec2InstanceType:
+    Type: String
+    Default: t3.micro
+    AllowedValues: [t3.micro, t2.micro, t3.small]
+  Ec2KeyName:
+    Type: String
+    Default: ""
+    Description: Optional SSH key pair name (SSM Session Manager works without SSH)
+  GitHubRepoUrl:
+    Type: String
+    Default: https://github.com/your-org/evoke.git
+  GitHubBranch:
+    Type: String
+    Default: master
+  CreateEc2Host:
+    Type: String
+    Default: "true"
+    AllowedValues: ["true", "false"]
+
+Conditions:
+  CreateEc2: !Equals [!Ref CreateEc2Host, "true"]
+  HasKeyName: !Not [!Equals [!Ref Ec2KeyName, ""]]
+
+Resources:
+  FrontendRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: evoke-frontend
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      EmptyOnDelete: true
+
+  BackendRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: evoke-backend
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      EmptyOnDelete: true
+
+  ArtifactBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  CodeBuildServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: codebuild.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: EvokeCodeBuild
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - ecr:GetAuthorizationToken
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:CompleteLayerUpload
+                  - ecr:InitiateLayerUpload
+                  - ecr:PutImage
+                  - ecr:UploadLayerPart
+                  - ecr:CreateRepository
+                  - ecr:DescribeRepositories
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:GetObjectVersion
+                Resource: !Sub "${ArtifactBucket.Arn}/*"
+              - Effect: Allow
+                Action:
+                  - ssm:SendCommand
+                  - ssm:GetCommandInvocation
+                  - ssm:ListCommandInvocations
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - ec2:DescribeInstances
+                Resource: "*"
+
+  BuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub "${ProjectName}-build"
+      ServiceRole: !GetAtt CodeBuildServiceRole.Arn
+      Artifacts:
+        Type: S3
+        Location: !Ref ArtifactBucket
+        Name: build-output
+        Packaging: NONE
+        OverrideArtifactName: true
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/amazonlinux-x86_64-standard:5.0
+        PrivilegedMode: true
+        EnvironmentVariables:
+          - Name: AWS_ACCOUNT_ID
+            Value: !Ref AWS::AccountId
+          - Name: AWS_DEFAULT_REGION
+            Value: !Ref AWS::Region
+          - Name: ECR_REGISTRY
+            Value: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com"
+          - Name: NEXT_PUBLIC_API_URL
+            Value: !Ref NextPublicApiUrl
+          - Name: NEXT_PUBLIC_APP_NAME
+            Value: !Ref NextPublicAppName
+          - Name: EC2_INSTANCE_ID
+            Value: !If [CreateEc2, !Ref EvokeHost, ""]
+      Source:
+        Type: GITHUB
+        Location: !Ref GitHubRepoUrl
+        BuildSpec: infra/aws/buildspec.yml
+        GitCloneDepth: 1
+      SourceVersion: !Ref GitHubBranch
+      TimeoutInMinutes: 30
+
+  Ec2InstanceRole:
+    Type: AWS::IAM::Role
+    Condition: CreateEc2
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+      Policies:
+        - PolicyName: EvokeEc2Deploy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                Resource: !Sub "${ArtifactBucket.Arn}/*"
+
+  Ec2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Condition: CreateEc2
+    Properties:
+      Roles:
+        - !Ref Ec2InstanceRole
+
+  EvokeSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Condition: CreateEc2
+    Properties:
+      GroupDescription: Evoke web — HTTP (+ optional SSH)
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+
+  EvokeHost:
+    Type: AWS::EC2::Instance
+    Condition: CreateEc2
+    Properties:
+      InstanceType: !Ref Ec2InstanceType
+      IamInstanceProfile: !Ref Ec2InstanceProfile
+      ImageId: !Sub "{{resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64}}"
+      KeyName: !If [HasKeyName, !Ref Ec2KeyName, !Ref AWS::NoValue]
+      SecurityGroupIds:
+        - !Ref EvokeSecurityGroup
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          set -euxo pipefail
+          EVOKE_ROOT=/opt/evoke
+          dnf update -y
+          dnf install -y docker git curl jq aws-cli
+          systemctl enable --now docker
+          usermod -aG docker ec2-user || true
+          mkdir -p /usr/libexec/docker/cli-plugins
+          curl -fsSL "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-$(uname -m)" \
+            -o /usr/libexec/docker/cli-plugins/docker-compose
+          chmod +x /usr/libexec/docker/cli-plugins/docker-compose
+          if [ ! -d /opt/evoke/.git ]; then
+            git clone --branch ${GitHubBranch} --depth 1 ${GitHubRepoUrl} /opt/evoke
+          fi
+          chmod +x /opt/evoke/infra/aws/scripts/*.sh
+          if [ ! -f /opt/evoke/deploy.env ]; then
+            cp /opt/evoke/infra/aws/config/deploy.env.example /opt/evoke/deploy.env
+          fi
+      Tags:
+        - Key: Name
+          Value: !Sub "${ProjectName}-host"
+
+Outputs:
+  EcrRegistry:
+    Description: Docker registry prefix for deploy.env
+    Value: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com"
+  FrontendRepositoryUri:
+    Value: !GetAtt FrontendRepository.RepositoryUri
+  BackendRepositoryUri:
+    Value: !GetAtt BackendRepository.RepositoryUri
+  CodeBuildProjectName:
+    Value: !Ref BuildProject
+  ArtifactBucketName:
+    Value: !Ref ArtifactBucket
+  Ec2InstanceId:
+    Condition: CreateEc2
+    Value: !Ref EvokeHost
+  Ec2PublicIp:
+    Condition: CreateEc2
+    Value: !GetAtt EvokeHost.PublicIp
+  DeployEnvHint:
+    Description: Set these in /opt/evoke/deploy.env on the EC2 host
+    Value: !Sub |
+      ECR_REGISTRY=${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com
+      NEXT_PUBLIC_API_URL=${NextPublicApiUrl}
+      AWS_REGION=${AWS::Region}

@@ -1,0 +1,43 @@
+name: CodeBuild (AWS)
+
+# Mirror of infra/aws/buildspec.yml — trigger CodeBuild from GitHub when not using deploy-aws.yml.
+on:
+  workflow_dispatch:
+    inputs:
+      next_public_api_url:
+        description: Override NEXT_PUBLIC_API_URL for this build
+        required: false
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  start-codebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION || 'ap-south-1' }}
+
+      - name: Start CodeBuild project
+        env:
+          PROJECT: ${{ vars.CODEBUILD_PROJECT_NAME || 'evoke-build' }}
+          API_URL: ${{ inputs.next_public_api_url || vars.NEXT_PUBLIC_API_URL }}
+        run: |
+          if [ -z "$API_URL" ]; then
+            echo "Set NEXT_PUBLIC_API_URL repository variable or workflow input" >&2
+            exit 1
+          fi
+          BUILD_ID=$(aws codebuild start-build \
+            --project-name "$PROJECT" \
+            --environment-variables-override name=NEXT_PUBLIC_API_URL,value="$API_URL",type=PLAINTEXT \
+            --query 'build.id' --output text)
+          echo "Started CodeBuild: $BUILD_ID"
+          aws codebuild wait build-completed --ids "$BUILD_ID"
+          STATUS=$(aws codebuild batch-get-builds --ids "$BUILD_ID" --query 'builds[0].buildStatus' --output text)
+          echo "Build status: $STATUS"
+          test "$STATUS" = "SUCCEEDED"
