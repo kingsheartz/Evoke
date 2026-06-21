@@ -1,16 +1,20 @@
 import { CMS_CACHE_TAGS, OFFERINGS_CACHE_TAGS } from "@/lib/cms-cache-tags";
 
+/** True during `next build` — Docker internal API hostnames are not reachable yet. */
+export function isNextProductionBuild(): boolean {
+  return process.env.NEXT_PHASE === "phase-production-build";
+}
+
 function getApiUrl(): string {
   // Browser must use localhost — "backend" only resolves inside Docker network
   if (typeof window !== "undefined") {
     return process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
   }
-  // Server-side rendering inside Docker can use internal hostname
-  return (
-    process.env.INTERNAL_API_URL ??
-    process.env.NEXT_PUBLIC_API_URL ??
-    "http://localhost:8000/api/v1"
-  );
+  // INTERNAL_API_URL (e.g. http://backend:8000) works at runtime in compose, not during image build
+  if (!isNextProductionBuild() && process.env.INTERNAL_API_URL) {
+    return process.env.INTERNAL_API_URL;
+  }
+  return process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
 }
 
 export class ApiError extends Error {

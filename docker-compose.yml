@@ -59,6 +59,7 @@ services:
       - DB_PASSWORD=${DB_PASSWORD:-evoke_secret}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - REDIS_CLIENT=predis
       - CACHE_STORE=redis
       - QUEUE_CONNECTION=redis
       - SESSION_DRIVER=redis
@@ -174,6 +175,7 @@ services:
       - DB_USERNAME=${DB_USERNAME:-evoke}
       - DB_PASSWORD=${DB_PASSWORD:-evoke_secret}
       - REDIS_HOST=redis
+      - REDIS_CLIENT=predis
       - QUEUE_CONNECTION=redis
     volumes:
       - ./backend:/var/www/html
@@ -201,6 +203,7 @@ services:
       - DB_USERNAME=${DB_USERNAME:-evoke}
       - DB_PASSWORD=${DB_PASSWORD:-evoke_secret}
       - REDIS_HOST=redis
+      - REDIS_CLIENT=predis
     volumes:
       - ./backend:/var/www/html
       - /var/www/html/vendor

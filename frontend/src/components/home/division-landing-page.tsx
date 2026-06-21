@@ -1,17 +1,15 @@
 import { notFound } from "next/navigation";
 import { DivisionLandingView } from "@/components/home/division-landing-view";
 import { OfferingCatalogSection } from "@/components/offerings/offering-catalog-section";
-import { apiClient } from "@/lib/api";
 import type { OfferingCardData } from "@/lib/offerings";
 import { catalogPath, catalogTitle, loadDivisionFeaturedCatalog } from "@/lib/offerings";
-import { resolveDivisionFeaturedCatalog } from "@/lib/division-page";
+import { loadDivisionPage, resolveDivisionFeaturedCatalog } from "@/lib/division-page";
 
 export async function DivisionLandingPage({ slug }: { slug: string }) {
   let page;
   try {
-    const response = await apiClient.getDivisionPage(slug);
-    if (!response.data) notFound();
-    page = response.data;
+    page = await loadDivisionPage(slug);
+    if (!page) notFound();
   } catch {
     notFound();
   }

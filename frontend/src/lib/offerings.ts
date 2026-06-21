@@ -1,5 +1,5 @@
 import type { DivisionFeaturedCatalogConfig } from "@/lib/division-page";
-import { apiClient, type Course, type Product, type TourPackage } from "@/lib/api";
+import { apiClient, isNextProductionBuild, type Course, type Product, type TourPackage } from "@/lib/api";
 import type { StatItem } from "@/lib/cms-sections";
 import type { GalleryImage } from "@/lib/cms-sections";
 
@@ -328,33 +328,40 @@ export async function loadCatalogOfferings(
   const per_page = params?.per_page ?? 12;
   const page = params?.page ?? 1;
 
-  switch (vertical) {
-    case "tours": {
-      const response = await apiClient.getTourPackages({ page, per_page });
-      return {
-        items: response.data.map(tourPackageToOffering),
-        total: response.total,
-        lastPage: response.last_page,
-      };
+  try {
+    switch (vertical) {
+      case "tours": {
+        const response = await apiClient.getTourPackages({ page, per_page });
+        return {
+          items: response.data.map(tourPackageToOffering),
+          total: response.total,
+          lastPage: response.last_page,
+        };
+      }
+      case "shop": {
+        const response = await apiClient.getShopProducts({ page, per_page });
+        return {
+          items: response.data.map(productToOffering),
+          total: response.total,
+          lastPage: response.last_page,
+        };
+      }
+      case "academy": {
+        const response = await apiClient.getAcademyCourses({ page, per_page });
+        return {
+          items: response.data.map((course) =>
+            courseToOffering(course, { nextBatchLabel: formatNextBatchLabel(course) }),
+          ),
+          total: response.total,
+          lastPage: response.last_page,
+        };
+      }
     }
-    case "shop": {
-      const response = await apiClient.getShopProducts({ page, per_page });
-      return {
-        items: response.data.map(productToOffering),
-        total: response.total,
-        lastPage: response.last_page,
-      };
+  } catch (error) {
+    if (isNextProductionBuild()) {
+      return { items: [], total: 0, lastPage: 1 };
     }
-    case "academy": {
-      const response = await apiClient.getAcademyCourses({ page, per_page });
-      return {
-        items: response.data.map((course) =>
-          courseToOffering(course, { nextBatchLabel: formatNextBatchLabel(course) }),
-        ),
-        total: response.total,
-        lastPage: response.last_page,
-      };
-    }
+    throw error;
   }
 }
 

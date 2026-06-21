@@ -50,7 +50,7 @@ Examples:
   .\scripts\run.ps1 init
   .\scripts\run.ps1 up core --migrate --seed
   .\scripts\run.ps1 up mysql --migrate
-  .\scripts\run.ps1 prod up core --migrate
+  .\scripts\run.ps1 prod up core --migrate --seed
   .\scripts\run.ps1 smoke
 
 Daily UI fixes: .\scripts\dev.ps1
@@ -64,16 +64,16 @@ function Test-StackName([string]$Name) {
 }
 
 function Get-Flags {
-    param([string[]]$Args)
+    param([string[]]$OptionTokens)
     @{
-        Migrate    = ($Args -contains "--migrate") -or ($Args -contains "--seed") -or ($Args -contains "--fresh")
-        Seed       = ($Args -contains "--seed") -or ($Args -contains "--fresh")
-        Fresh      = $Args -contains "--fresh"
-        Build      = -not (($Args -contains "--no-build") -or ($Args -contains "--watch"))
-        Pull       = $Args -contains "--pull"
-        Foreground = ($Args -contains "--foreground") -or ($Args -contains "-f")
-        Volumes    = $Args -contains "--volumes"
-        Force      = $Args -contains "--force"
+        Migrate    = ($OptionTokens -contains "--migrate") -or ($OptionTokens -contains "--seed") -or ($OptionTokens -contains "--fresh")
+        Seed       = ($OptionTokens -contains "--seed") -or ($OptionTokens -contains "--fresh")
+        Fresh      = $OptionTokens -contains "--fresh"
+        Build      = -not (($OptionTokens -contains "--no-build") -or ($OptionTokens -contains "--watch"))
+        Pull       = $OptionTokens -contains "--pull"
+        Foreground = ($OptionTokens -contains "--foreground") -or ($OptionTokens -contains "-f")
+        Volumes    = $OptionTokens -contains "--volumes"
+        Force      = $OptionTokens -contains "--force"
     }
 }
 
@@ -182,9 +182,25 @@ function Invoke-MigrateInternal {
     }
 }
 
+function Wait-ForBackend {
+    param([int]$MaxAttempts = 30)
+
+    Write-Host "Waiting for backend..."
+    for ($i = 1; $i -le $MaxAttempts; $i++) {
+        try {
+            $null = Invoke-WebRequest -Uri "http://localhost:8000/api/v1/health" -UseBasicParsing -TimeoutSec 5
+            return
+        } catch {
+            Start-Sleep -Seconds 2
+        }
+    }
+
+    Write-Host "WARN Backend not ready — retry migrate manually if needed" -ForegroundColor Yellow
+}
+
 function Invoke-Up {
-    param([string]$StackName, [string[]]$Args)
-    $flags = Get-Flags $Args
+    param([string]$StackName, [string[]]$OptionTokens)
+    $flags = Get-Flags $OptionTokens
     Set-StackProfiles $StackName
 
     Write-Host "Stack: $StackName ($($Script:ComposeMode) mode)"
@@ -202,8 +218,7 @@ function Invoke-Up {
 
     if ($flags.Migrate) {
         Write-Host ""
-        Write-Host "Waiting for backend..."
-        Start-Sleep -Seconds 5
+        Wait-ForBackend
         Invoke-MigrateInternal $flags
     }
 
