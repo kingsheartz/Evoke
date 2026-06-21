@@ -199,7 +199,7 @@ Set production URLs before `prod up` if testing real domains:
 NEXT_PUBLIC_API_URL=https://api.yourdomain.com/api/v1
 ```
 
-For server deployment steps and ₹800/mo hosting: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+For server deployment: [docs/deploy/README.md](docs/deploy/README.md) (Option A VPS or AWS).
 
 ---
 
@@ -213,7 +213,7 @@ For server deployment steps and ₹800/mo hosting: [docs/DEPLOYMENT.md](docs/DEP
 | **4. MySQL path** | `up mysql --migrate` | Postgres, AI |
 | **5. AI features** | `up ai` + ollama model pulls | — |
 | **6. Pre-deploy** | `prod up core --migrate`, `prod health` | Live domain SSL |
-| **7. Go live** | VPS + [DEPLOYMENT.md](docs/DEPLOYMENT.md) | — |
+| **7. Go live** | VPS → [OPTION-A-VPS.md](docs/deploy/OPTION-A-VPS.md) · AWS → [OPTION-G-AWS.md](docs/deploy/OPTION-G-AWS.md) | — |
 
 ### Optional env (add when needed)
 

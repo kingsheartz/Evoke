@@ -9,6 +9,7 @@ vendor/
 !.env.example
 deploy.env
 infra/aws/backend.runtime.env
+.env.production
 
 # Build
 .next/

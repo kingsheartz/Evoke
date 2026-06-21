@@ -2,6 +2,8 @@
 
 Free-tier friendly CI/CD: **GitHub Actions** (recommended) or **AWS CodeBuild**, deploying Docker images to **ECR** and running on a **t3.micro EC2** instance via **SSM**.
 
+**Step-by-step production guide:** [docs/deploy/OPTION-G-AWS.md](../../docs/deploy/OPTION-G-AWS.md)
+
 All public endpoints are configurable — no hard-coded domains.
 
 ---

@@ -5,6 +5,15 @@ How to put Evoke on the internet: hosting options, budgets, environment setup, a
 For local development, see [DEVELOPMENT.md](DEVELOPMENT.md).  
 For stack runner and progressive setup, see [RUN.md](../RUN.md).
 
+**Production runbooks (step-by-step):**
+
+| Path | Guide |
+|------|-------|
+| **Option A — Single VPS** | [docs/deploy/OPTION-A-VPS.md](deploy/OPTION-A-VPS.md) |
+| **Option G — AWS EC2 + CI/CD** | [docs/deploy/OPTION-G-AWS.md](deploy/OPTION-G-AWS.md) |
+
+Index: [docs/deploy/README.md](deploy/README.md)
+
 ---
 
 ## Before you deploy
@@ -19,7 +28,7 @@ The repo ships a **development** Docker stack (`docker compose up`). It is optim
 | AI + Ollama | Optional in compose | Heavy; skip on small budgets |
 | Secrets | Example values in compose | Strong passwords, unique `APP_KEY` |
 
-Use **`docker-compose.prod.yml`** locally to smoke-test production builds (`scripts/run.ps1 prod up`). For AWS, see [Option G](#option-g--aws-ec2--cicd-free-tier) and [infra/aws/README.md](../infra/aws/README.md).
+Use **`docker-compose.prod.yml`** locally to smoke-test production builds (`scripts/run.ps1 prod up`). Full guides: [Option A runbook](deploy/OPTION-A-VPS.md) · [Option G runbook](deploy/OPTION-G-AWS.md).
 
 ---
 
@@ -110,6 +119,8 @@ Comfortable budget for managed hosting: Vercel Pro, Laravel Forge + VPS, managed
 
 **Recommended** when you want one server and one monthly bill.
 
+**→ Full runbook: [docs/deploy/OPTION-A-VPS.md](deploy/OPTION-A-VPS.md)**
+
 ### Suggested providers
 
 | Provider | Rough price | Notes |
@@ -135,30 +146,16 @@ Comfortable budget for managed hosting: Vercel Pro, Laravel Forge + VPS, managed
 
 ### High-level steps
 
+See [OPTION-A-VPS.md](deploy/OPTION-A-VPS.md) for phases 0–7 (Docker, env, Caddy HTTPS, updates). Summary:
+
 ```bash
-# On the VPS (Ubuntu)
-sudo apt update && sudo apt install -y docker.io docker-compose-plugin git
-
-git clone <your-repo-url> /opt/evoke
-cd /opt/evoke
-
-# Copy and edit env files (see Production environment below)
-cp .env.example .env
-cp backend/.env.example backend/.env
-cp frontend/.env.example frontend/.env.local
-
-# Production smoke test (next start, APP_ENV=production):
-# ./scripts/run.sh prod up core --migrate
-
-docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
-
-docker compose exec backend php artisan key:generate
-docker compose exec backend php artisan migrate --force
-docker compose exec backend php artisan config:cache
-docker compose exec backend php artisan route:cache
+# On the VPS (Ubuntu) — after clone and env setup
+set -a && source .env.production && set +a
+docker compose -f docker-compose.yml -f docker-compose.prod.yml \
+  --profile mysql --profile proxy --profile workers up -d --build
 ```
 
-Point your domain A record to the VPS IP. Terminate TLS at Caddy/Nginx.
+Point your domain A record to the VPS IP. Terminate TLS with Caddy ([example Caddyfile](../infra/vps/Caddyfile.example)).
 
 ### MySQL on production
 
@@ -254,6 +251,9 @@ Easier than raw VPS if you prefer dashboards over SSH. Cost scales with services
 
 ## Option G — AWS EC2 + CI/CD (free tier)
 
+**→ Full runbook: [docs/deploy/OPTION-G-AWS.md](deploy/OPTION-G-AWS.md)**  
+Pipeline reference: [infra/aws/README.md](../infra/aws/README.md)
+
 Run Evoke on a **t3.micro EC2** instance with images in **ECR**, built and deployed by **GitHub Actions** or **AWS CodeBuild**. All public URLs are configurable via `deploy.env` and GitHub repository variables.
 
 | Piece | AWS service |
@@ -269,12 +269,10 @@ Run Evoke on a **t3.micro EC2** instance with images in **ECR**, built and deplo
 
 ### Quick start
 
-1. Deploy CloudFormation stacks in [infra/aws/cloudformation/](../infra/aws/cloudformation/)
-2. Configure `/opt/evoke/deploy.env` from [infra/aws/config/deploy.env.example](../infra/aws/config/deploy.env.example)
-3. Set GitHub variables: `NEXT_PUBLIC_API_URL`, `ECR_REGISTRY`, `AWS_DEPLOY_ROLE_ARN`, `EC2_INSTANCE_ID`
-4. Run the **Deploy AWS** workflow or push to `main` with `AUTO_DEPLOY_ON_PUSH=true`
-
-Full steps: **[infra/aws/README.md](../infra/aws/README.md)**
+1. [Phase 0–8 in OPTION-G-AWS.md](deploy/OPTION-G-AWS.md)
+2. Deploy CloudFormation stacks
+3. Configure `/opt/evoke/deploy.env`
+4. Set GitHub variables and run **Deploy AWS** workflow
 
 ---
 
@@ -458,15 +456,19 @@ Already in the repository:
 ### Still optional (future)
 
 - Backend image with **PHP-FPM + Nginx** (or Laravel Octane) instead of `artisan serve`
-- Example **Caddyfile** for single-domain HTTPS on VPS/EC2
 - GitHub Actions deploy workflow for **generic VPS** (SSH, not AWS-only)
 - `docker-compose.prod.yml` profile for **PostgreSQL + AI** on larger hosts
+
+Already provided: [Caddyfile example](../infra/vps/Caddyfile.example), [VPS production env template](../infra/vps/config/production.env.example).
 
 ---
 
 ## Related docs
 
+- [docs/deploy/README.md](deploy/README.md) — production runbook index
+- [docs/deploy/OPTION-A-VPS.md](deploy/OPTION-A-VPS.md) — single VPS deploy
+- [docs/deploy/OPTION-G-AWS.md](deploy/OPTION-G-AWS.md) — AWS EC2 + CI/CD deploy
 - [DEVELOPMENT.md](DEVELOPMENT.md) — local Docker, dev scripts, MySQL profile
 - [RUN.md](../RUN.md) — stack runner, `prod up`, progressive setup
-- [infra/aws/README.md](../infra/aws/README.md) — AWS build & deploy pipelines (Option G)
+- [infra/aws/README.md](../infra/aws/README.md) — AWS pipeline file reference
 - [README.md](../README.md) — architecture and quick start

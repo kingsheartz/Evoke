@@ -1,0 +1,23 @@
+# Caddy reverse proxy — Option A (VPS) and Option G (AWS)
+# Install Caddy on the HOST, not inside Docker.
+#
+# Option A: proxies to nginx compose on 127.0.0.1:8080
+# Option G (AWS): change reverse_proxy to 127.0.0.1:80 (aws compose nginx)
+
+yourdomain.com, www.yourdomain.com {
+	encode gzip
+
+	reverse_proxy 127.0.0.1:8080
+
+	# Optional: security headers
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+	}
+}
+
+# After editing:
+#   sudo cp this-file /etc/caddy/Caddyfile
+#   sudo caddy validate --config /etc/caddy/Caddyfile
+#   sudo systemctl reload caddy
