@@ -27,7 +27,7 @@ export function PageHeader({
             {badge}
           </span>
         )}
-        <h1 className="font-display text-3xl font-semibold tracking-tight text-app-text">{title}</h1>
+        <h1 className="font-display text-2xl font-semibold tracking-tight text-app-text sm:text-3xl">{title}</h1>
         {description && (
           <p className="mt-1.5 max-w-xl text-sm leading-relaxed text-app-muted">{description}</p>
         )}

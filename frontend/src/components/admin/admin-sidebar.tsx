@@ -35,9 +35,11 @@ import {
   Ticket,
   Users,
   Warehouse,
+  X,
   type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAdminMobile } from "@/hooks/use-admin-mobile";
 import { useAdminSidebarHydrated } from "@/hooks/use-admin-sidebar-hydration";
 import { useAuthHydrated } from "@/hooks/use-auth-hydration";
 import { cn } from "@/lib/utils";
@@ -264,13 +266,17 @@ export function AdminSidebar() {
   const { navigation, user } = useAuthStore();
   const sidebarHydrated = useAdminSidebarHydrated();
   const authHydrated = useAuthHydrated();
-  const { collapsed, width, toggleCollapsed, setWidth, getSidebarWidth } = useAdminSidebarStore();
+  const isMobile = useAdminMobile();
+  const { collapsed, width, mobileOpen, toggleCollapsed, closeMobile, setWidth, getSidebarWidth } =
+    useAdminSidebarStore();
   const resizing = useRef(false);
   const startX = useRef(0);
   const startWidth = useRef(width);
   const [linkFlyout, setLinkFlyout] = useState<{ label: string; top: number; left: number } | null>(null);
   const [groupFlyout, setGroupFlyout] = useState<GroupFlyout | null>(null);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => buildOpenGroups(navigation));
+
+  const displayCollapsed = isMobile ? false : collapsed;
 
   const { mainNavigation, settingsLinks } = useMemo(() => {
     const settings = navigation.find((item) => item.label === "Settings");
@@ -302,18 +308,40 @@ export function AdminSidebar() {
   }, [navigation]);
 
   const sidebarWidth = sidebarHydrated ? getSidebarWidth() : DEFAULT_WIDTH;
-  const sidebarCollapsed = sidebarHydrated && collapsed;
+  const sidebarCollapsed = sidebarHydrated && displayCollapsed;
 
   useLayoutEffect(() => {
+    if (isMobile) {
+      syncAdminSidebarWidthVar(mobileOpen ? DEFAULT_WIDTH : 0);
+      return;
+    }
     syncAdminSidebarWidthVar(sidebarHydrated ? getSidebarWidth() : DEFAULT_WIDTH);
-  }, [sidebarHydrated, collapsed, width, getSidebarWidth]);
+  }, [sidebarHydrated, collapsed, width, mobileOpen, isMobile, getSidebarWidth]);
 
   useEffect(() => {
     return useAdminSidebarStore.subscribe((state, prev) => {
       if (state.collapsed === prev.collapsed && state.width === prev.width) return;
+      if (window.matchMedia("(max-width: 1023px)").matches) return;
       syncAdminSidebarWidthVar(state.getSidebarWidth());
     });
   }, []);
+
+  useEffect(() => {
+    closeMobile();
+  }, [pathname, closeMobile]);
+
+  useEffect(() => {
+    if (!isMobile) closeMobile();
+  }, [isMobile, closeMobile]);
+
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") closeMobile();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [mobileOpen, closeMobile]);
 
   useEffect(() => {
     setOpenGroups((prev) => {
@@ -334,11 +362,11 @@ export function AdminSidebar() {
 
   const showLinkFlyout = useCallback(
     (el: HTMLElement, label: string) => {
-      if (!collapsed) return;
+      if (!displayCollapsed) return;
       const r = el.getBoundingClientRect();
       setLinkFlyout({ label, top: r.top + r.height / 2, left: r.right + 8 });
     },
-    [collapsed],
+    [displayCollapsed],
   );
 
   const hideFlyout = useCallback(() => {
@@ -390,7 +418,7 @@ export function AdminSidebar() {
 
   const onResizeStart = useCallback(
     (event: React.MouseEvent) => {
-      if (collapsed) return;
+      if (displayCollapsed || isMobile) return;
       event.preventDefault();
       resizing.current = true;
       startX.current = event.clientX;
@@ -400,19 +428,42 @@ export function AdminSidebar() {
       window.addEventListener("mousemove", onResizeMove);
       window.addEventListener("mouseup", onResizeEnd);
     },
-    [collapsed, width, onResizeMove, onResizeEnd],
+    [displayCollapsed, isMobile, width, onResizeMove, onResizeEnd],
   );
 
   return (
     <>
+      {mobileOpen && (
+        <button
+          type="button"
+          className="admin-sidebar-backdrop lg:hidden"
+          aria-label="Close menu"
+          onClick={closeMobile}
+        />
+      )}
+
       <aside
         data-tour="sidebar"
-        className={cn("admin-sidebar", sidebarCollapsed && "admin-sidebar--collapsed")}
-        style={{ width: sidebarWidth }}
+        className={cn(
+          "admin-sidebar",
+          sidebarCollapsed && "admin-sidebar--collapsed",
+          mobileOpen && "admin-sidebar--mobile-open",
+        )}
+        style={isMobile ? undefined : { width: sidebarWidth }}
       >
         <div className="shrink-0 border-b border-app-border px-4 py-4 admin-sidebar-header">
           <div className={cn("flex items-center", sidebarCollapsed ? "flex-col gap-3" : "justify-between gap-2")}>
             <EvokeLogo variant="admin-icon" href="/admin" />
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="inline-flex shrink-0 text-app-muted hover:text-app-text lg:hidden h-9 w-9 justify-center p-0"
+              onClick={closeMobile}
+              aria-label="Close menu"
+            >
+              <X className="h-4 w-4" />
+            </Button>
             <Button
               type="button"
               variant="ghost"

@@ -6,11 +6,11 @@ import { AdminUserMenu } from "@/components/admin/admin-user-menu";
 import { Button } from "@/components/ui/button";
 import { useAdminSidebarStore } from "@/stores/admin-sidebar";
 import { useAdminPreferencesStore } from "@/stores/admin-preferences";
-import { PanelLeft } from "lucide-react";
+import { PanelLeft, X } from "lucide-react";
 
 export function AdminHeader() {
-  const toggleCollapsed = useAdminSidebarStore((s) => s.toggleCollapsed);
-  const collapsed = useAdminSidebarStore((s) => s.collapsed);
+  const mobileOpen = useAdminSidebarStore((s) => s.mobileOpen);
+  const toggleMobile = useAdminSidebarStore((s) => s.toggleMobile);
   const resetTour = useAdminPreferencesStore((s) => s.resetTour);
 
   const startTour = () => {
@@ -29,10 +29,11 @@ export function AdminHeader() {
           variant="ghost"
           size="sm"
           className="h-9 w-9 p-0 text-app-muted hover:text-app-text"
-          onClick={toggleCollapsed}
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          onClick={toggleMobile}
+          aria-label={mobileOpen ? "Close menu" : "Open menu"}
+          aria-expanded={mobileOpen}
         >
-          <PanelLeft className="h-4 w-4" />
+          {mobileOpen ? <X className="h-4 w-4" /> : <PanelLeft className="h-4 w-4" />}
         </Button>
       </div>
       <div className="admin-header-actions flex items-center gap-2">

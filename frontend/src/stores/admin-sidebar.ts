@@ -9,10 +9,14 @@ const COLLAPSED_WIDTH = 72;
 interface AdminSidebarState {
   collapsed: boolean;
   width: number;
+  mobileOpen: boolean;
   toggleCollapsed: () => void;
   setCollapsed: (collapsed: boolean) => void;
   setWidth: (width: number) => void;
   getSidebarWidth: () => number;
+  openMobile: () => void;
+  closeMobile: () => void;
+  toggleMobile: () => void;
 }
 
 function clampWidth(width: number) {
@@ -46,10 +50,14 @@ export const useAdminSidebarStore = create<AdminSidebarState>()(
     (set, get) => ({
       collapsed: false,
       width: DEFAULT_WIDTH,
+      mobileOpen: false,
       toggleCollapsed: () => set((s) => ({ collapsed: !s.collapsed })),
       setCollapsed: (collapsed) => set({ collapsed }),
       setWidth: (width) => set({ width: clampWidth(width) }),
       getSidebarWidth: () => (get().collapsed ? COLLAPSED_WIDTH : get().width),
+      openMobile: () => set({ mobileOpen: true }),
+      closeMobile: () => set({ mobileOpen: false }),
+      toggleMobile: () => set((s) => ({ mobileOpen: !s.mobileOpen })),
     }),
     { name: "evoke-admin-sidebar" },
   ),
