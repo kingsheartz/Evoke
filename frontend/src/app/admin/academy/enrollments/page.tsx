@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Banknote, Check, XCircle } from "lucide-react";
 import { PermissionGate } from "@/components/admin/permission-gate";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfigurableDataTable, TableEmpty } from "@/components/ui/data-table";
 import { PageHeader } from "@/components/ui/page-header";
-import { TableRowActions, TableRowButton } from "@/components/ui/table-row-actions";
+import { TableIconAction, TableRowActions, tableIconPrimaryClassName } from "@/components/ui/table-row-actions";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { apiClient, type Enrollment } from "@/lib/api";
 import { useNotifications } from "@/lib/notifications";
@@ -115,30 +116,32 @@ export default function EnrollmentsPage() {
                   {
                     key: "actions",
                     header: "Actions",
-                    width: 220,
+                    width: 140,
                     hideable: false,
                     pinnable: false,
                     render: (enrollment) => (
                       <TableRowActions>
                         {enrollment.status === "pending" && (
                           <>
-                            <TableRowButton
-                              variant="default"
+                            <TableIconAction
+                              icon={Check}
+                              label="Approve enrollment"
+                              className={tableIconPrimaryClassName}
                               onClick={() => updateEnrollment(enrollment, { status: "approved" })}
-                            >
-                              Approve
-                            </TableRowButton>
-                            <TableRowButton
+                            />
+                            <TableIconAction
+                              icon={XCircle}
+                              label="Reject enrollment"
                               onClick={() => updateEnrollment(enrollment, { status: "rejected" })}
-                            >
-                              Reject
-                            </TableRowButton>
+                            />
                           </>
                         )}
                         {enrollment.payment_status === "unpaid" && enrollment.status === "approved" && (
-                          <TableRowButton onClick={() => void markPaid(enrollment)}>
-                            Mark paid
-                          </TableRowButton>
+                          <TableIconAction
+                            icon={Banknote}
+                            label="Mark as paid"
+                            onClick={() => void markPaid(enrollment)}
+                          />
                         )}
                       </TableRowActions>
                     ),

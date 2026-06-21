@@ -541,7 +541,7 @@ function Field({
   return (
     <div className="space-y-2">
       <Label>{label}</Label>
-      <Input type={type} value={value} onChange={(e) => onChange(e.target.value)} />
+      <Input type={type} value={value ?? ""} onChange={(e) => onChange(e.target.value)} />
     </div>
   );
 }

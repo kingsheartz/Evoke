@@ -6,11 +6,16 @@ import { ActionButton } from "@/components/ui/action-button";
 import { Button, type ButtonProps } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
+export const tableIconDeleteClassName =
+  "text-status-error hover:bg-status-error/10 hover:text-status-error";
+
+export const tableIconPrimaryClassName = "text-accent-soft hover:bg-accent/10 hover:text-accent";
+
 /** Standard wrapper for action buttons inside data table rows. */
 export function TableRowActions({
   children,
   className,
-  variant = "default",
+  variant = "toolbar",
 }: {
   children: ReactNode;
   className?: string;
@@ -30,7 +35,18 @@ export function TableRowActions({
   );
 }
 
-/** Icon-only row action with tooltip — use inside `TableRowActions variant="toolbar"`. */
+function TableIconActionTooltip({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <span className="table-action-tooltip-wrap">
+      {children}
+      <span className="table-action-tooltip" role="tooltip">
+        {label}
+      </span>
+    </span>
+  );
+}
+
+/** Icon-only row action with hover tooltip — use inside `TableRowActions variant="toolbar"`. */
 export function TableIconAction({
   icon: Icon,
   label,
@@ -51,32 +67,30 @@ export function TableIconAction({
     <Icon className="h-4 w-4 shrink-0" />
   );
 
-  if (asChild) {
-    const child = React.Children.only(children) as React.ReactElement<{ children?: React.ReactNode }>;
+  const buttonClassName = cn("table-action-btn table-action-btn--icon h-8 w-8 rounded-lg", className);
 
-    return (
-      <Button
-        asChild
-        variant="ghost"
-        size="icon"
-        className={cn("table-action-btn table-action-btn--icon h-8 w-8 rounded-lg", className)}
-        title={label}
-        aria-label={label}
-        disabled={loading || props.disabled}
-        {...props}
-      >
-        {React.cloneElement(child, undefined, adornment)}
-      </Button>
-    );
-  }
-
-  return (
+  const button = asChild ? (
+    <Button
+      asChild
+      variant="ghost"
+      size="icon"
+      className={buttonClassName}
+      aria-label={label}
+      disabled={loading || props.disabled}
+      {...props}
+    >
+      {React.cloneElement(
+        React.Children.only(children) as React.ReactElement<{ children?: React.ReactNode }>,
+        undefined,
+        adornment,
+      )}
+    </Button>
+  ) : (
     <Button
       type="button"
       variant="ghost"
       size="icon"
-      className={cn("table-action-btn table-action-btn--icon h-8 w-8 rounded-lg", className)}
-      title={label}
+      className={buttonClassName}
       aria-label={label}
       disabled={loading || props.disabled}
       {...props}
@@ -84,6 +98,8 @@ export function TableIconAction({
       {adornment}
     </Button>
   );
+
+  return <TableIconActionTooltip label={label}>{button}</TableIconActionTooltip>;
 }
 
 /** Divider between primary and destructive toolbar actions. */

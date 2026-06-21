@@ -11,6 +11,7 @@ import {
   Search,
   UserPlus,
   Users,
+  Trash2,
 } from "lucide-react";
 import { UserAvatar, UserDetailPanel } from "@/components/admin/user-detail-panel";
 import { ActionButton } from "@/components/ui/action-button";
@@ -19,7 +20,7 @@ import { ConfigurableDataTable, TableEmpty } from "@/components/ui/data-table";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { PageHeader } from "@/components/ui/page-header";
-import { TableActionButton, TableDeleteButton, TableRowActions } from "@/components/ui/table-row-actions";
+import { TableActionsDivider, TableIconAction, TableRowActions, tableIconDeleteClassName } from "@/components/ui/table-row-actions";
 import { apiClient, type AdminUser, type UserListParams, type UserListStats } from "@/lib/api";
 import { formatRole } from "@/lib/status-labels";
 import { useNotifications } from "@/lib/notifications";
@@ -312,15 +313,19 @@ export default function UsersSettingsPage() {
                   {
                     key: "actions",
                     header: "Actions",
-                    width: 180,
+                    width: 120,
                     hideable: false,
                     pinnable: false,
                     render: (u) => (
                       <TableRowActions>
-                        <TableActionButton icon={Eye} onClick={() => openView(u)}>
-                          View
-                        </TableActionButton>
-                        <TableDeleteButton onClick={() => remove(u.id, u.name)} />
+                        <TableIconAction icon={Eye} label="View user" onClick={() => openView(u)} />
+                        <TableActionsDivider />
+                        <TableIconAction
+                          icon={Trash2}
+                          label="Delete user"
+                          className={tableIconDeleteClassName}
+                          onClick={() => remove(u.id, u.name)}
+                        />
                       </TableRowActions>
                     ),
                   },

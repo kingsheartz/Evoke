@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { Trash2 } from "lucide-react";
 import { PermissionGate } from "@/components/admin/permission-gate";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +9,7 @@ import { ConfigurableDataTable, TableEmpty, TableLoading } from "@/components/ui
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageHeader } from "@/components/ui/page-header";
-import { TableDeleteButton, TableRowActions } from "@/components/ui/table-row-actions";
+import { TableIconAction, TableRowActions, tableIconDeleteClassName } from "@/components/ui/table-row-actions";
 import { Select } from "@/components/ui/select";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Switch } from "@/components/ui/switch";
@@ -123,12 +124,17 @@ export default function ShopCouponsAdminPage() {
       {
         key: "actions",
         header: "Actions",
-        width: 120,
+        width: 88,
         hideable: false,
         pinnable: false,
         render: (coupon: ShopCoupon) => (
           <TableRowActions>
-            <TableDeleteButton onClick={() => remove(coupon)} />
+            <TableIconAction
+              icon={Trash2}
+              label="Delete coupon"
+              className={tableIconDeleteClassName}
+              onClick={() => remove(coupon)}
+            />
           </TableRowActions>
         ),
       },

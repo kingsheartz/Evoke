@@ -436,6 +436,7 @@ body.admin-tour-active .admin-main-column {
   position: sticky;
   top: 0;
   z-index: 35;
+  align-items: center;
   margin-left: calc(-1 * var(--app-gutter));
   margin-right: calc(-1 * var(--app-gutter));
   margin-bottom: 0;
@@ -1411,6 +1412,47 @@ select:-webkit-autofill {
 
 .table-action-btn--icon {
   border-color: transparent;
+}
+
+.table-action-tooltip-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.table-action-tooltip {
+  position: absolute;
+  top: 50%;
+  right: calc(100% + 0.5rem);
+  left: auto;
+  z-index: 60;
+  pointer-events: none;
+  white-space: nowrap;
+  border-radius: 0.5rem;
+  border: 1px solid color-mix(in srgb, var(--border) 90%, transparent);
+  background: color-mix(in srgb, var(--surface) 96%, transparent);
+  padding: 0.25rem 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--foreground);
+  box-shadow: var(--shadow-card);
+  opacity: 0;
+  transform: translateY(-50%) translateX(4px);
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
+}
+
+.table-action-tooltip-wrap:hover .table-action-tooltip,
+.table-action-tooltip-wrap:focus-within .table-action-tooltip {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .table-action-tooltip {
+    transition: none;
+  }
 }
 
 /* Inset rows already draw cell chrome — flatten ghost actions, keep primary CTAs */

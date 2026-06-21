@@ -7,7 +7,7 @@ import { ActionButton } from "@/components/ui/action-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfigurableDataTable, TableEmpty } from "@/components/ui/data-table";
 import { PageHeader } from "@/components/ui/page-header";
-import { TableActionButton, TableRowActions } from "@/components/ui/table-row-actions";
+import { TableIconAction, TableRowActions } from "@/components/ui/table-row-actions";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { apiClient, type TourPackage } from "@/lib/api";
 import { useAuthStore } from "@/stores/app";
@@ -83,14 +83,14 @@ export default function TourPackagesPage() {
                 {
                   key: "actions",
                   header: "Actions",
-                  width: 120,
+                  width: 88,
                   hideable: false,
                   pinnable: false,
                   render: (pkg) => (
                     <TableRowActions>
-                      <TableActionButton asChild icon={Pencil}>
-                        <Link href={`/admin/tours/packages/${pkg.id}`}>Edit</Link>
-                      </TableActionButton>
+                      <TableIconAction asChild icon={Pencil} label="Edit package">
+                        <Link href={`/admin/tours/packages/${pkg.id}`} />
+                      </TableIconAction>
                     </TableRowActions>
                   ),
                 },

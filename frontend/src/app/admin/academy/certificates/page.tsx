@@ -11,7 +11,7 @@ import { ConfigurableDataTable, TableEmpty, TableLoading } from "@/components/ui
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageHeader } from "@/components/ui/page-header";
-import { TableActionButton, TableRowActions } from "@/components/ui/table-row-actions";
+import { TableIconAction, TableRowActions } from "@/components/ui/table-row-actions";
 import { apiClient, type AcademyCertificate } from "@/lib/api";
 import { CERTIFICATE_FILE_ACCEPT } from "@/lib/media";
 import { useNotifications } from "@/lib/notifications";
@@ -212,19 +212,24 @@ export default function AcademyCertificatesAdminPage() {
                   {
                     key: "actions",
                     header: "Actions",
-                    width: 140,
+                    width: 88,
                     hideable: false,
                     pinnable: false,
                     render: (certificate) => (
                       <TableRowActions>
-                        <TableActionButton
-                          type="button"
+                        <TableIconAction
                           icon={Upload}
+                          label={
+                            attachingId === certificate.id
+                              ? "Uploading file…"
+                              : certificate.file_path
+                                ? "Replace certificate file"
+                                : "Upload certificate file"
+                          }
+                          loading={attachingId === certificate.id}
                           disabled={attachingId === certificate.id}
                           onClick={() => startAttach(certificate)}
-                        >
-                          {attachingId === certificate.id ? "Uploading…" : certificate.file_path ? "Replace" : "Upload"}
-                        </TableActionButton>
+                        />
                       </TableRowActions>
                     ),
                   },

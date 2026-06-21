@@ -1,10 +1,11 @@
 import * as React from "react";
+import { controlledFieldValue } from "@/lib/controlled-field-value";
 import { cn } from "@/lib/utils";
 
 export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {}
 
 const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
-  ({ className, children, ...props }, ref) => (
+  ({ className, children, value, ...props }, ref) => (
     <select
       ref={ref}
       suppressHydrationWarning
@@ -13,6 +14,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
         className,
       )}
       {...props}
+      {...(value !== undefined ? { value: controlledFieldValue(value) } : {})}
     >
       {children}
     </select>

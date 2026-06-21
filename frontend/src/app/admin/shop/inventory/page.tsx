@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Save } from "lucide-react";
 import { PermissionGate } from "@/components/admin/permission-gate";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfigurableDataTable, TableEmpty, TableLoading } from "@/components/ui/data-table";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/ui/page-header";
-import { TableRowActions, TableRowButton } from "@/components/ui/table-row-actions";
+import { TableIconAction, TableRowActions, tableIconPrimaryClassName } from "@/components/ui/table-row-actions";
 import { apiClient, type Product } from "@/lib/api";
 import { useNotifications } from "@/lib/notifications";
 import { useAuthStore } from "@/stores/app";
@@ -129,18 +130,19 @@ export default function ShopInventoryAdminPage() {
                   {
                     key: "actions",
                     header: "Actions",
-                    width: 120,
+                    width: 88,
                     hideable: false,
                     pinnable: false,
                     render: (product) => (
                       <TableRowActions>
-                        <TableRowButton
-                          variant="default"
+                        <TableIconAction
+                          icon={Save}
+                          label={savingId === product.id ? "Saving stock…" : "Save stock"}
+                          className={tableIconPrimaryClassName}
+                          loading={savingId === product.id}
                           disabled={savingId === product.id}
                           onClick={() => adjust(product)}
-                        >
-                          {savingId === product.id ? "Saving…" : "Save"}
-                        </TableRowButton>
+                        />
                       </TableRowActions>
                     ),
                   },

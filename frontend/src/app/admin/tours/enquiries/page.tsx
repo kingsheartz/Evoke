@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { CheckCircle2, FileText, Phone } from "lucide-react";
 import { PermissionGate } from "@/components/admin/permission-gate";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfigurableDataTable, TableEmpty, TableLoading } from "@/components/ui/data-table";
 import { PageHeader } from "@/components/ui/page-header";
-import { TableRowActions, TableRowButton } from "@/components/ui/table-row-actions";
+import { TableIconAction, TableRowActions, tableIconPrimaryClassName } from "@/components/ui/table-row-actions";
 import { Select } from "@/components/ui/select";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { apiClient, type TourEnquiry } from "@/lib/api";
@@ -128,25 +129,32 @@ export default function TourEnquiriesAdminPage() {
                   {
                     key: "actions",
                     header: "Actions",
-                    width: 220,
+                    width: 160,
                     hideable: false,
                     pinnable: false,
                     render: (enquiry) => (
                       <TableRowActions>
                         {enquiry.status !== "contacted" && (
-                          <TableRowButton onClick={() => updateStatus(enquiry, "contacted")}>
-                            Contacted
-                          </TableRowButton>
+                          <TableIconAction
+                            icon={Phone}
+                            label="Mark as contacted"
+                            onClick={() => updateStatus(enquiry, "contacted")}
+                          />
                         )}
                         {enquiry.status !== "quoted" && (
-                          <TableRowButton onClick={() => updateStatus(enquiry, "quoted")}>
-                            Quoted
-                          </TableRowButton>
+                          <TableIconAction
+                            icon={FileText}
+                            label="Mark as quoted"
+                            onClick={() => updateStatus(enquiry, "quoted")}
+                          />
                         )}
                         {enquiry.status !== "closed" && (
-                          <TableRowButton variant="default" onClick={() => updateStatus(enquiry, "closed")}>
-                            Closed
-                          </TableRowButton>
+                          <TableIconAction
+                            icon={CheckCircle2}
+                            label="Close enquiry"
+                            className={tableIconPrimaryClassName}
+                            onClick={() => updateStatus(enquiry, "closed")}
+                          />
                         )}
                       </TableRowActions>
                     ),

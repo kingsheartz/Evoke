@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 type MediaKind = "image" | "video";
 
 interface MediaUrlFieldProps {
-  value: string;
+  value: string | null | undefined;
   onChange: (value: string) => void;
   kind?: MediaKind;
   placeholder?: string;
@@ -103,7 +103,7 @@ export function MediaUrlField({
     processIncomingFile(file);
   };
 
-  const trimmed = value.trim();
+  const trimmed = (value ?? "").trim();
   const showImagePreview = showPreview && kind === "image" && trimmed.length > 0;
   const showVideoPreview = showPreview && kind === "video" && trimmed.length > 0 && /\.(mp4|webm|mov)(\?|$)/i.test(trimmed);
 
@@ -122,7 +122,7 @@ export function MediaUrlField({
         </p>
         <Input
           id={id}
-          value={value}
+          value={value ?? ""}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder ?? defaultPlaceholder}
           className="w-full"

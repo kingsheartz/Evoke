@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Banknote, PackageCheck, Truck } from "lucide-react";
 import { PermissionGate } from "@/components/admin/permission-gate";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfigurableDataTable, TableEmpty, TableLoading } from "@/components/ui/data-table";
 import { PageHeader } from "@/components/ui/page-header";
-import { TableRowActions, TableRowButton } from "@/components/ui/table-row-actions";
+import { TableIconAction, TableRowActions, tableIconPrimaryClassName } from "@/components/ui/table-row-actions";
 import { Select } from "@/components/ui/select";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { apiClient, type ShopOrder } from "@/lib/api";
@@ -145,25 +146,33 @@ export default function ShopOrdersAdminPage() {
                   {
                     key: "actions",
                     header: "Actions",
-                    width: 200,
+                    width: 140,
                     hideable: false,
                     pinnable: false,
                     render: (order) => (
                       <TableRowActions>
                         {order.status === "pending" && (
-                          <TableRowButton variant="default" onClick={() => updateStatus(order, "processing")}>
-                            Process
-                          </TableRowButton>
+                          <TableIconAction
+                            icon={PackageCheck}
+                            label="Process order"
+                            className={tableIconPrimaryClassName}
+                            onClick={() => updateStatus(order, "processing")}
+                          />
                         )}
                         {order.status === "processing" && (
-                          <TableRowButton variant="default" onClick={() => updateStatus(order, "shipped")}>
-                            Ship
-                          </TableRowButton>
+                          <TableIconAction
+                            icon={Truck}
+                            label="Mark as shipped"
+                            className={tableIconPrimaryClassName}
+                            onClick={() => updateStatus(order, "shipped")}
+                          />
                         )}
                         {order.payment_status === "unpaid" && (
-                          <TableRowButton onClick={() => void markPaid(order)}>
-                            Mark paid
-                          </TableRowButton>
+                          <TableIconAction
+                            icon={Banknote}
+                            label="Mark as paid"
+                            onClick={() => void markPaid(order)}
+                          />
                         )}
                       </TableRowActions>
                     ),

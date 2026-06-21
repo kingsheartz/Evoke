@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Banknote, Check, X } from "lucide-react";
 import { PermissionGate } from "@/components/admin/permission-gate";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfigurableDataTable, TableEmpty, TableLoading } from "@/components/ui/data-table";
 import { PageHeader } from "@/components/ui/page-header";
-import { TableRowActions, TableRowButton } from "@/components/ui/table-row-actions";
+import { TableIconAction, TableRowActions, tableIconPrimaryClassName } from "@/components/ui/table-row-actions";
 import { Select } from "@/components/ui/select";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { apiClient, type TourBooking } from "@/lib/api";
@@ -138,25 +139,32 @@ export default function TourBookingsAdminPage() {
                   {
                     key: "actions",
                     header: "Actions",
-                    width: 200,
+                    width: 140,
                     hideable: false,
                     pinnable: false,
                     render: (booking) => (
                       <TableRowActions>
                         {booking.status === "pending" && (
                           <>
-                            <TableRowButton variant="default" onClick={() => updateStatus(booking, "confirmed")}>
-                              Confirm
-                            </TableRowButton>
-                            <TableRowButton onClick={() => updateStatus(booking, "cancelled")}>
-                              Cancel
-                            </TableRowButton>
+                            <TableIconAction
+                              icon={Check}
+                              label="Confirm booking"
+                              className={tableIconPrimaryClassName}
+                              onClick={() => updateStatus(booking, "confirmed")}
+                            />
+                            <TableIconAction
+                              icon={X}
+                              label="Cancel booking"
+                              onClick={() => updateStatus(booking, "cancelled")}
+                            />
                           </>
                         )}
                         {booking.payment_status === "unpaid" && (
-                          <TableRowButton onClick={() => void markPaid(booking)}>
-                            Mark paid
-                          </TableRowButton>
+                          <TableIconAction
+                            icon={Banknote}
+                            label="Mark as paid"
+                            onClick={() => void markPaid(booking)}
+                          />
                         )}
                       </TableRowActions>
                     ),

@@ -8,7 +8,7 @@ import { ActionButton } from "@/components/ui/action-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfigurableDataTable, TableEmpty } from "@/components/ui/data-table";
 import { PageHeader } from "@/components/ui/page-header";
-import { TableActionsDivider, TableIconAction, TableRowActions } from "@/components/ui/table-row-actions";
+import { TableActionsDivider, TableIconAction, TableRowActions, tableIconDeleteClassName } from "@/components/ui/table-row-actions";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { revalidateCmsPagePublicCache } from "@/lib/revalidate-cms";
 import { apiClient, type CmsPage } from "@/lib/api";
@@ -165,7 +165,7 @@ export default function CmsPagesListPage() {
                         label={deletingId === page.id ? "Deleting page…" : "Delete page"}
                         loading={deletingId === page.id}
                         disabled={deletingId === page.id}
-                        className="text-status-error hover:bg-status-error/10 hover:text-status-error"
+                        className={tableIconDeleteClassName}
                         onClick={() => void deletePage(page)}
                       />
                     </TableRowActions>
