@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ExternalLink, Save, Trash2 } from "lucide-react";
+import { ExternalLink, Copy, Save, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -37,6 +37,7 @@ export default function EditCmsPage() {
   const [sectionsDirty, setSectionsDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [duplicating, setDuplicating] = useState(false);
   const [builderKey, setBuilderKey] = useState(0);
 
   useEffect(() => {
@@ -84,6 +85,20 @@ export default function EditCmsPage() {
     setSections(next);
   }, []);
 
+  const duplicatePage = async () => {
+    if (!token || !page) return;
+    setDuplicating(true);
+    try {
+      const { data } = await apiClient.duplicatePage(token, id);
+      success("Page duplicated as draft.");
+      router.push(`/admin/cms/pages/${data.id}`);
+    } catch {
+      notifyError("Could not duplicate page.");
+    } finally {
+      setDuplicating(false);
+    }
+  };
+
   const deletePage = async () => {
     if (!token || !page) return;
     const confirmed = await confirm({
@@ -124,6 +139,10 @@ export default function EditCmsPage() {
             >
               Save page
             </ActionButton>
+            <Button type="button" variant="outline" size="sm" disabled={duplicating} onClick={() => void duplicatePage()}>
+              <Copy className="h-4 w-4" />
+              {duplicating ? "Duplicating…" : "Duplicate page"}
+            </Button>
             {status === "published" && (
               <Button variant="outline" size="sm" asChild>
                 <Link href={`/p/${page.slug}`} target="_blank">

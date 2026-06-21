@@ -5,7 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LogOut, Menu, ShoppingCart, User, X } from "lucide-react";
 import { EvokeLogo } from "@/components/brand/evoke-logo";
+import { SiteHeaderExtras } from "@/components/brand/site-header-extras";
 import { Button } from "@/components/ui/button";
+import { useBrand } from "@/components/providers/brand-provider";
 import { apiClient, hasAdminAccess } from "@/lib/api";
 import { useAuthHydrated } from "@/hooks/use-auth-hydration";
 import { useAuthStore } from "@/stores/app";
@@ -16,6 +18,7 @@ export function MobileNav() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const { items: links } = useDivisionNav();
+  const brand = useBrand();
   const hydrated = useAuthHydrated();
   const { user, token, roles, permissions, logout } = useAuthStore();
   const isAdmin = hasAdminAccess(roles, permissions);
@@ -91,6 +94,11 @@ export function MobileNav() {
               );
             })}
           </ul>
+          <SiteHeaderExtras
+            components={brand.header.components}
+            preview="mobile"
+            className="mt-6 flex-col items-stretch gap-2 border-t border-app-border pt-4"
+          />
           <div className="mt-auto space-y-3 pt-6">
             {isLoggedIn ? (
               <>

@@ -28,9 +28,11 @@ Route::prefix('cms')->middleware(['module.enabled:cms'])->group(function () {
         Route::get('/admin/pages', [PageController::class, 'adminIndex']);
         Route::get('/admin/pages/{page}', [PageController::class, 'adminShow']);
         Route::post('/pages', [PageController::class, 'store']);
+        Route::post('/admin/pages/{page}/duplicate', [PageController::class, 'duplicate']);
         Route::put('/pages/{page}', [PageController::class, 'update']);
         Route::delete('/pages/{page}', [PageController::class, 'destroy']);
         Route::post('/admin/pages/{page}/sections', [PageSectionController::class, 'store']);
+        Route::post('/admin/pages/{page}/sections/{section}/duplicate', [PageSectionController::class, 'duplicate'])->whereNumber('section');
         Route::put('/admin/pages/{page}/sections/reorder', [PageSectionController::class, 'reorder']);
         Route::put('/admin/pages/{page}/sections/{section}', [PageSectionController::class, 'update'])->whereNumber('section');
         Route::delete('/admin/pages/{page}/sections/{section}', [PageSectionController::class, 'destroy'])->whereNumber('section');

@@ -3,6 +3,7 @@ import { sectionTypeLabel } from "@/lib/api";
 import { isSectionEmpty } from "@/lib/cms-sections";
 import { cn } from "@/lib/utils";
 import { CmsSectionRenderer } from "@/components/cms/section-renderer";
+import { Fragment } from "react";
 
 export function CmsPageSections({ sections }: { sections: PageSection[] }) {
   const visible = sections.filter((s) => s.is_visible !== false && !isSectionEmpty(s));
@@ -13,9 +14,20 @@ export function CmsPageSections({ sections }: { sections: PageSection[] }) {
 
   return (
     <div className="space-y-8">
-      {visible.map((section) => (
-        <CmsSectionRenderer key={section.id} section={section} />
-      ))}
+      {visible.map((section) => {
+        const rendered = <CmsSectionRenderer section={section} />;
+        if (section.component_type !== "hero") {
+          return <Fragment key={section.id}>{rendered}</Fragment>;
+        }
+        return (
+          <div
+            key={section.id}
+            className="relative left-1/2 w-screen max-w-[100vw] -translate-x-1/2 px-4 sm:px-6 lg:px-8"
+          >
+            {rendered}
+          </div>
+        );
+      })}
     </div>
   );
 }

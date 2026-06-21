@@ -1,5 +1,9 @@
 import Link from "next/link";
 import { ArrowUpRight, ChevronDown, Mail, MapPin } from "lucide-react";
+import { CmsHeroSection } from "@/components/cms/cms-hero-section";
+import { CmsButtonsSection } from "@/components/cms/cms-buttons-section";
+import { CmsTableSection } from "@/components/cms/cms-table-section";
+import { CmsTabsSection } from "@/components/cms/cms-tabs-section";
 import { FormFieldPreview } from "@/components/cms/form-fields-editor";
 import { GalleryView } from "@/components/cms/gallery-view";
 import { ItinerarySection } from "@/components/cms/itinerary-section";
@@ -11,6 +15,10 @@ import {
   mapsLink,
   resolveVideoEmbed,
   type BannerContent,
+  type ButtonsContent,
+  type HeroContent,
+  type TableContent,
+  type TabsContent,
   type CardItem,
   type CardsContent,
   type CatalogContent,
@@ -28,6 +36,8 @@ import {
   type TextContent,
   type VideoContent,
 } from "@/lib/cms-sections";
+import { FormattedBody, FormattedHeading, FormattedText } from "@/components/ui/formatted-text";
+import { textFormatClassName, type TextFormat } from "@/lib/text-format";
 import { cn } from "@/lib/utils";
 
 function SectionShell({
@@ -52,23 +62,35 @@ function SectionShell({
   );
 }
 
-function SectionHeading({ children, className }: { children: React.ReactNode; className?: string }) {
-  if (!children) return null;
+function SectionHeading({
+  text,
+  format,
+  className,
+}: {
+  text?: string;
+  format?: TextFormat;
+  className?: string;
+}) {
   return (
-    <h2 className={cn("font-display text-2xl font-semibold tracking-tight text-app-text md:text-3xl", className)}>
-      {children}
-    </h2>
+    <FormattedHeading
+      text={text}
+      format={format}
+      className={cn("font-display text-2xl font-semibold tracking-tight text-app-text md:text-3xl", className)}
+    />
   );
 }
 
-function SectionBody({ text, className }: { text?: string; className?: string }) {
-  if (!text?.trim()) return null;
+function SectionBody({
+  text,
+  format,
+  className,
+}: {
+  text?: string;
+  format?: TextFormat;
+  className?: string;
+}) {
   return (
-    <div className={cn("space-y-3 text-base leading-relaxed text-app-muted", className)}>
-      {text.split("\n").map((line, i) => (
-        <p key={i}>{line}</p>
-      ))}
-    </div>
+    <FormattedBody text={text} format={format} className={cn("text-base text-app-muted", className)} />
   );
 }
 
@@ -97,17 +119,26 @@ function BannerSection({ content }: { content: BannerContent }) {
         </>
       )}
       <div className={cn("relative max-w-2xl", imageUrl && "p-8 md:p-12")}>
-        {subheading && (
-          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-accent-soft">{subheading}</p>
-        )}
-        {heading && (
-          <h2 className="mt-2 font-display text-3xl font-semibold tracking-tight text-app-text md:text-4xl">{heading}</h2>
-        )}
-        <SectionBody text={body} className="mt-4" />
+        <FormattedText
+          text={subheading}
+          format={content.subheading_format}
+          as="p"
+          className="text-xs font-semibold uppercase tracking-[0.15em] text-accent-soft"
+        />
+        <FormattedText
+          text={heading}
+          format={content.heading_format}
+          as="h2"
+          className="mt-2 font-display text-3xl font-semibold tracking-tight text-app-text md:text-4xl"
+        />
+        <SectionBody text={body} format={content.body_format} className="mt-4" />
         {ctaLabel && ctaUrl && (
           <Link
             href={ctaUrl}
-            className="mt-6 inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent-hover"
+            className={cn(
+              "mt-6 inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent-hover",
+              textFormatClassName(content.cta_label_format),
+            )}
           >
             {ctaLabel}
             <ArrowUpRight className="h-4 w-4" />
@@ -125,8 +156,8 @@ function TextSection({ content }: { content: TextContent }) {
 
   return (
     <SectionShell>
-      <SectionHeading>{heading}</SectionHeading>
-      <SectionBody text={body} className={heading ? "mt-4" : undefined} />
+      <SectionHeading text={heading} format={content.heading_format} />
+      <SectionBody text={body} format={content.body_format} className={heading ? "mt-4" : undefined} />
     </SectionShell>
   );
 }
@@ -140,8 +171,8 @@ function GallerySection({ content }: { content: GalleryContent }) {
 
   return (
     <SectionShell wide>
-      <SectionHeading>{content.heading?.trim()}</SectionHeading>
-      <SectionBody text={content.body} className={content.heading?.trim() ? "mt-3" : undefined} />
+      <SectionHeading text={content.heading} format={content.heading_format} />
+      <SectionBody text={content.body} format={content.body_format} className={content.heading?.trim() ? "mt-3" : undefined} />
       {images.length > 0 && (
         <GalleryView
           images={images}
@@ -162,7 +193,7 @@ function FaqSection({ content }: { content: FaqContent }) {
 
   return (
     <SectionShell>
-      <SectionHeading>{content.heading?.trim()}</SectionHeading>
+      <SectionHeading text={content.heading} format={content.heading_format} />
       {style === "list" ? (
         <ul className={cn("list-disc space-y-6 pl-5 marker:text-accent-soft", content.heading?.trim() ? "mt-6" : undefined)}>
           {items.map((item, index) => (
@@ -183,8 +214,8 @@ function FaqSection({ content }: { content: FaqContent }) {
 function FaqListItem({ item }: { item: FaqItem }) {
   return (
     <li className="space-y-2">
-      <p className="font-medium text-app-text">{item.question}</p>
-      <p className="text-sm leading-relaxed text-app-muted">{item.answer}</p>
+      <FormattedText text={item.question} format={item.question_format} as="p" className="font-medium text-app-text" />
+      <FormattedText text={item.answer} format={item.answer_format} as="p" className="text-sm leading-relaxed text-app-muted" />
     </li>
   );
 }
@@ -193,10 +224,10 @@ function FaqItemRow({ item }: { item: FaqItem }) {
   return (
     <details className="group py-4 first:pt-0 last:pb-0">
       <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-left font-medium text-app-text marker:content-none">
-        <span>{item.question}</span>
+        <FormattedText text={item.question} format={item.question_format} as="span" />
         <ChevronDown className="h-4 w-4 shrink-0 text-app-muted transition-transform group-open:rotate-180" />
       </summary>
-      <p className="mt-3 text-sm leading-relaxed text-app-muted">{item.answer}</p>
+      <FormattedText text={item.answer} format={item.answer_format} as="p" className="mt-3 text-sm leading-relaxed text-app-muted" />
     </details>
   );
 }
@@ -211,8 +242,8 @@ function VideoSection({ content }: { content: VideoContent }) {
 
   return (
     <SectionShell wide>
-      <SectionHeading>{heading}</SectionHeading>
-      <SectionBody text={body} className={heading ? "mt-3" : undefined} />
+      <SectionHeading text={heading} format={content.heading_format} />
+      <SectionBody text={body} format={content.body_format} className={heading ? "mt-3" : undefined} />
       {embed && (
         <div className={cn("overflow-hidden rounded-xl border border-app-border bg-black/40", heading || body ? "mt-6" : undefined)}>
           {embed.type === "iframe" ? (
@@ -230,7 +261,14 @@ function VideoSection({ content }: { content: VideoContent }) {
           )}
         </div>
       )}
-      {caption && <p className="mt-3 text-center text-sm text-app-muted">{caption}</p>}
+      {caption && (
+        <FormattedText
+          text={caption}
+          format={content.caption_format}
+          as="p"
+          className="mt-3 text-center text-sm text-app-muted"
+        />
+      )}
       {!embed && content.video_url?.trim() && (
         <p className="mt-4 text-sm text-status-error">Video URL could not be embedded. Use YouTube, Vimeo, or a direct .mp4 link.</p>
       )}
@@ -244,8 +282,8 @@ function CardsSection({ content }: { content: CardsContent }) {
 
   return (
     <SectionShell wide>
-      <SectionHeading>{content.heading?.trim()}</SectionHeading>
-      <SectionBody text={content.body} className={content.heading?.trim() ? "mt-3" : undefined} />
+      <SectionHeading text={content.heading} format={content.heading_format} />
+      <SectionBody text={content.body} format={content.body_format} className={content.heading?.trim() ? "mt-3" : undefined} />
       {items.length > 0 && (
         <div className={cn("grid gap-5 sm:grid-cols-2 lg:grid-cols-3", content.heading?.trim() || content.body?.trim() ? "mt-8" : undefined)}>
           {items.map((item, index) => (
@@ -262,9 +300,12 @@ function CardBlock({ item }: { item: CardItem }) {
   const inner = (
     <>
       {item.badge?.trim() && (
-        <span className="mb-3 inline-flex rounded-full border border-accent/25 bg-accent/10 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-accent-soft">
-          {item.badge}
-        </span>
+        <FormattedText
+          text={item.badge}
+          format={item.badge_format}
+          as="span"
+          className="mb-3 inline-flex rounded-full border border-accent/25 bg-accent/10 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-accent-soft"
+        />
       )}
       {CardIcon && (
         <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-accent/15 text-accent-soft ring-1 ring-accent/20">
@@ -277,13 +318,28 @@ function CardBlock({ item }: { item: CardItem }) {
           <img src={item.image_url} alt="" className="h-full w-full object-cover" />
         </div>
       )}
-      {item.title?.trim() && <h3 className="font-display text-lg font-semibold text-app-text">{item.title}</h3>}
-      {item.price?.trim() && <p className="mt-1 text-sm font-semibold text-accent-soft">{item.price}</p>}
-      {item.meta_line?.trim() && <p className="mt-1 text-xs text-app-muted">{item.meta_line}</p>}
-      {item.description?.trim() && <p className="mt-2 text-sm leading-relaxed text-app-muted">{item.description}</p>}
+      <FormattedText
+        text={item.title}
+        format={item.title_format}
+        as="h3"
+        className="font-display text-lg font-semibold text-app-text"
+      />
+      <FormattedText
+        text={item.price}
+        format={item.price_format}
+        as="p"
+        className="mt-1 text-sm font-semibold text-accent-soft"
+      />
+      <FormattedText text={item.meta_line} format={item.meta_line_format} as="p" className="mt-1 text-xs text-app-muted" />
+      <FormattedText
+        text={item.description}
+        format={item.description_format}
+        as="p"
+        className="mt-2 text-sm leading-relaxed text-app-muted"
+      />
       {item.link_url?.trim() && (
         <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-accent-soft">
-          {item.link_label?.trim() || "Learn more"}
+          <FormattedText text={item.link_label?.trim() || "Learn more"} format={item.link_label_format} as="span" />
           <ArrowUpRight className="h-3.5 w-3.5" />
         </span>
       )}
@@ -310,7 +366,7 @@ function TestimonialsSection({ content }: { content: TestimonialsContent }) {
 
   return (
     <SectionShell wide>
-      <SectionHeading>{content.heading?.trim()}</SectionHeading>
+      <SectionHeading text={content.heading} format={content.heading_format} />
       <div className={cn("grid gap-5 sm:grid-cols-2", content.heading?.trim() ? "mt-8" : undefined)}>
         {items.map((item, index) => (
           <TestimonialCard key={`${item.author}-${index}`} item={item} />
@@ -323,7 +379,12 @@ function TestimonialsSection({ content }: { content: TestimonialsContent }) {
 function TestimonialCard({ item }: { item: TestimonialItem }) {
   return (
     <blockquote className="rounded-xl border border-app-border bg-app-surface-muted/30 p-6">
-      <p className="text-base leading-relaxed text-app-text">&ldquo;{item.quote}&rdquo;</p>
+      <FormattedText
+        text={item.quote ? `“${item.quote}”` : undefined}
+        format={item.quote_format}
+        as="p"
+        className="text-base leading-relaxed text-app-text"
+      />
       <footer className="mt-5 flex items-center gap-3">
         {item.avatar_url?.trim() ? (
           <div className="h-10 w-10 overflow-hidden rounded-full">
@@ -336,8 +397,8 @@ function TestimonialCard({ item }: { item: TestimonialItem }) {
           </div>
         )}
         <div>
-          <cite className="not-italic font-medium text-app-text">{item.author}</cite>
-          {item.role?.trim() && <p className="text-sm text-app-muted">{item.role}</p>}
+          <FormattedText text={item.author} format={item.author_format} as="cite" className="not-italic font-medium text-app-text" />
+          <FormattedText text={item.role} format={item.role_format} as="p" className="text-sm text-app-muted" />
         </div>
       </footer>
     </blockquote>
@@ -354,8 +415,8 @@ function MapSection({ content }: { content: MapContent }) {
 
   return (
     <SectionShell wide>
-      <SectionHeading>{heading}</SectionHeading>
-      <SectionBody text={body} className={heading ? "mt-3" : undefined} />
+      <SectionHeading text={heading} format={content.heading_format} />
+      <SectionBody text={body} format={content.body_format} className={heading ? "mt-3" : undefined} />
       {embedUrl && (
         <div className={cn("overflow-hidden rounded-xl border border-app-border", heading || body ? "mt-6" : undefined)}>
           <iframe src={embedUrl} title={heading || "Map"} className="aspect-[16/9] w-full" loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
@@ -389,7 +450,7 @@ function StatsSection({ content }: { content: StatsContent }) {
 
   return (
     <SectionShell wide>
-      <SectionHeading>{content.heading?.trim()}</SectionHeading>
+      <SectionHeading text={content.heading} format={content.heading_format} />
       {items.length > 0 && (
         <div className={cn("mt-8 grid gap-6", gridClass)}>
           {items.map((item, index) => {
@@ -422,8 +483,8 @@ function FormsSection({ content }: { content: FormsContent }) {
 
   return (
     <SectionShell>
-      <SectionHeading>{heading}</SectionHeading>
-      <SectionBody text={body} className={heading ? "mt-3" : undefined} />
+      <SectionHeading text={heading} format={content.heading_format} />
+      <SectionBody text={body} format={content.body_format} className={heading ? "mt-3" : undefined} />
       {fields.length > 0 && (
         <form
           className={cn("space-y-4", heading || body ? "mt-6" : undefined)}
@@ -476,8 +537,16 @@ function renderSection(section: PageSection) {
   const content = section.content;
 
   switch (type) {
+    case "hero":
+      return <CmsHeroSection content={content as unknown as HeroContent} />;
     case "banner":
       return <BannerSection content={content as unknown as BannerContent} />;
+    case "buttons":
+      return <CmsButtonsSection content={content as unknown as ButtonsContent} />;
+    case "table":
+      return <CmsTableSection content={content as unknown as TableContent} />;
+    case "tabs":
+      return <CmsTabsSection content={content as unknown as TabsContent} />;
     case "text":
       return <TextSection content={content as unknown as TextContent} />;
     case "gallery":

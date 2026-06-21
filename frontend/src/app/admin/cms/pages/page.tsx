@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ExternalLink, Pencil, Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ExternalLink, Copy, Pencil, Plus, Trash2 } from "lucide-react";
 import { ActionButton } from "@/components/ui/action-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfigurableDataTable, TableEmpty } from "@/components/ui/data-table";
 import { PageHeader } from "@/components/ui/page-header";
-import { TableActionButton, TableDeleteButton, TableRowActions } from "@/components/ui/table-row-actions";
+import { TableActionsDivider, TableIconAction, TableRowActions } from "@/components/ui/table-row-actions";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { revalidateCmsPagePublicCache } from "@/lib/revalidate-cms";
 import { apiClient, type CmsPage } from "@/lib/api";
@@ -16,11 +17,13 @@ import { useConfirm } from "@/lib/process-modal";
 import { useAuthStore } from "@/stores/app";
 
 export default function CmsPagesListPage() {
+  const router = useRouter();
   const token = useAuthStore((s) => s.token);
   const { success, error } = useNotifications();
   const confirm = useConfirm();
   const [pages, setPages] = useState<CmsPage[]>([]);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [duplicatingId, setDuplicatingId] = useState<number | null>(null);
 
   const loadPages = () => {
     if (!token) return;
@@ -30,6 +33,20 @@ export default function CmsPagesListPage() {
   useEffect(() => {
     loadPages();
   }, [token]);
+
+  const duplicatePage = async (page: CmsPage) => {
+    if (!token) return;
+    setDuplicatingId(page.id);
+    try {
+      const { data } = await apiClient.duplicatePage(token, page.id);
+      success(`Duplicated “${page.title}”.`);
+      router.push(`/admin/cms/pages/${data.id}`);
+    } catch {
+      error("Could not duplicate page.");
+    } finally {
+      setDuplicatingId(null);
+    }
+  };
 
   const deletePage = async (page: CmsPage) => {
     if (!token) return;
@@ -127,16 +144,28 @@ export default function CmsPagesListPage() {
                 {
                   key: "actions",
                   header: "Actions",
-                  width: 180,
+                  width: 132,
                   hideable: false,
                   pinnable: false,
                   render: (page) => (
-                    <TableRowActions>
-                      <TableActionButton asChild icon={Pencil}>
-                        <Link href={`/admin/cms/pages/${page.id}`}>Edit</Link>
-                      </TableActionButton>
-                      <TableDeleteButton
+                    <TableRowActions variant="toolbar">
+                      <TableIconAction asChild icon={Pencil} label="Edit page">
+                        <Link href={`/admin/cms/pages/${page.id}`} />
+                      </TableIconAction>
+                      <TableIconAction
+                        icon={Copy}
+                        label={duplicatingId === page.id ? "Duplicating page…" : "Duplicate page"}
+                        loading={duplicatingId === page.id}
+                        disabled={duplicatingId === page.id}
+                        onClick={() => void duplicatePage(page)}
+                      />
+                      <TableActionsDivider />
+                      <TableIconAction
+                        icon={Trash2}
+                        label={deletingId === page.id ? "Deleting page…" : "Delete page"}
+                        loading={deletingId === page.id}
                         disabled={deletingId === page.id}
+                        className="text-status-error hover:bg-status-error/10 hover:text-status-error"
                         onClick={() => void deletePage(page)}
                       />
                     </TableRowActions>

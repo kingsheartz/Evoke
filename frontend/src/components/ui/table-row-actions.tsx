@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
-import { Trash2 } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
 import type { ReactNode } from "react";
+import * as React from "react";
 import { ActionButton } from "@/components/ui/action-button";
 import { Button, type ButtonProps } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -9,11 +10,85 @@ import { cn } from "@/lib/utils";
 export function TableRowActions({
   children,
   className,
+  variant = "default",
 }: {
   children: ReactNode;
   className?: string;
+  /** Compact icon toolbar — single row, no label wrap. */
+  variant?: "default" | "toolbar";
 }) {
-  return <div className={cn("table-actions", className)}>{children}</div>;
+  return (
+    <div
+      className={cn(
+        "table-actions",
+        variant === "toolbar" && "table-actions--toolbar",
+        className,
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
+/** Icon-only row action with tooltip — use inside `TableRowActions variant="toolbar"`. */
+export function TableIconAction({
+  icon: Icon,
+  label,
+  loading,
+  className,
+  asChild,
+  children,
+  ...props
+}: ButtonProps & {
+  icon: LucideIcon;
+  label: string;
+  loading?: boolean;
+  asChild?: boolean;
+}) {
+  const adornment = loading ? (
+    <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+  ) : (
+    <Icon className="h-4 w-4 shrink-0" />
+  );
+
+  if (asChild) {
+    const child = React.Children.only(children) as React.ReactElement<{ children?: React.ReactNode }>;
+
+    return (
+      <Button
+        asChild
+        variant="ghost"
+        size="icon"
+        className={cn("table-action-btn table-action-btn--icon h-8 w-8 rounded-lg", className)}
+        title={label}
+        aria-label={label}
+        disabled={loading || props.disabled}
+        {...props}
+      >
+        {React.cloneElement(child, undefined, adornment)}
+      </Button>
+    );
+  }
+
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      className={cn("table-action-btn table-action-btn--icon h-8 w-8 rounded-lg", className)}
+      title={label}
+      aria-label={label}
+      disabled={loading || props.disabled}
+      {...props}
+    >
+      {adornment}
+    </Button>
+  );
+}
+
+/** Divider between primary and destructive toolbar actions. */
+export function TableActionsDivider() {
+  return <span className="table-actions-divider" aria-hidden />;
 }
 
 /** Icon + label action for table rows — ghost style avoids double borders in inset tables. */

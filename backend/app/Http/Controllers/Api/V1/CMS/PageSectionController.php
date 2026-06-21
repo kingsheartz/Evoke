@@ -13,7 +13,7 @@ class PageSectionController extends Controller
     public function store(Request $request, int $pageId): JsonResponse
     {
         $validated = $request->validate([
-            'component_type' => 'required|string|in:banner,text,gallery,faq,video,cards,testimonials,map,forms,stats,itinerary,inclusions,catalog',
+            'component_type' => 'required|string|in:hero,banner,buttons,tabs,table,text,gallery,faq,video,cards,testimonials,map,forms,stats,itinerary,inclusions,catalog',
             'content' => 'required|array',
             'section_key' => 'nullable|string',
             'is_visible' => 'boolean',
@@ -36,7 +36,7 @@ class PageSectionController extends Controller
         abort_unless($section->page_id === $pageId, 404);
 
         $validated = $request->validate([
-            'component_type' => 'sometimes|string|in:banner,text,gallery,faq,video,cards,testimonials,map,forms,stats,itinerary,inclusions,catalog',
+            'component_type' => 'sometimes|string|in:hero,banner,buttons,tabs,table,text,gallery,faq,video,cards,testimonials,map,forms,stats,itinerary,inclusions,catalog',
             'content' => 'sometimes|array',
             'is_visible' => 'boolean',
         ]);
@@ -52,6 +52,30 @@ class PageSectionController extends Controller
         $section->delete();
 
         return response()->json(['message' => 'Section deleted.']);
+    }
+
+    public function duplicate(int $pageId, PageSection $section): JsonResponse
+    {
+        abort_unless($section->page_id === $pageId, 404);
+
+        $insertOrder = $section->sort_order + 1;
+
+        $copy = DB::transaction(function () use ($pageId, $section, $insertOrder) {
+            PageSection::where('page_id', $pageId)
+                ->where('sort_order', '>=', $insertOrder)
+                ->increment('sort_order');
+
+            return PageSection::create([
+                'page_id' => $pageId,
+                'section_key' => $section->section_key,
+                'component_type' => $section->component_type,
+                'content' => $section->content,
+                'sort_order' => $insertOrder,
+                'is_visible' => $section->is_visible,
+            ]);
+        });
+
+        return response()->json(['data' => $copy], 201);
     }
 
     public function reorder(Request $request, int $pageId): JsonResponse

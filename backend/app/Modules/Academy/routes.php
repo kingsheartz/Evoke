@@ -53,6 +53,8 @@ Route::prefix('academy')->middleware(['module.enabled:academy'])->group(function
 
     Route::middleware(['auth:sanctum', 'permission:academy.certificates.manage'])->group(function () {
         Route::get('/admin/certificates', [CertificateController::class, 'adminIndex']);
+        Route::post('/admin/certificates/upload', [CertificateController::class, 'upload']);
         Route::post('/admin/certificates', [CertificateController::class, 'store']);
+        Route::patch('/admin/certificates/{certificate}', [CertificateController::class, 'update']);
     });
 });

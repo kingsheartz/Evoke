@@ -10,11 +10,13 @@ export function GalleryUrlsField({
   addLabel = "Add image",
   values,
   onChange,
+  cropAspect = 4 / 3,
 }: {
   label?: string;
   addLabel?: string;
   values: string[];
   onChange: (next: string[]) => void;
+  cropAspect?: number;
 }) {
   return (
     <div className="rounded-xl border border-app-border/70 bg-app-surface-muted/15 p-4">
@@ -36,7 +38,7 @@ export function GalleryUrlsField({
             <MediaUrlField
               value={url}
               onChange={(next) => onChange(values.map((item, i) => (i === index ? next : item)))}
-              cropAspect={4 / 3}
+              cropAspect={cropAspect}
             />
           </div>
         ))}

@@ -17,7 +17,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Plus, Trash2 } from "lucide-react";
+import { GripVertical, Copy, Plus, Trash2 } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,10 +32,12 @@ import { useAuthStore } from "@/stores/app";
 function SortableSection({
   section,
   onUpdate,
+  onDuplicate,
   onDelete,
 }: {
   section: PageSection;
   onUpdate: (id: number, content: Record<string, unknown>) => void;
+  onDuplicate: (id: number) => void;
   onDelete: (id: number) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: section.id });
@@ -51,9 +53,14 @@ function SortableSection({
           </button>
           <SectionTypeBadge type={section.component_type} />
         </div>
-        <Button variant="ghost" size="sm" className="shrink-0" onClick={() => onDelete(section.id)}>
-          <Trash2 className="h-4 w-4 text-status-error" />
-        </Button>
+        <div className="flex shrink-0 items-center gap-1">
+          <Button variant="ghost" size="sm" title="Duplicate section" onClick={() => onDuplicate(section.id)}>
+            <Copy className="h-4 w-4 text-app-muted" />
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => onDelete(section.id)}>
+            <Trash2 className="h-4 w-4 text-status-error" />
+          </Button>
+        </div>
       </div>
       <SectionContentEditor
         type={sectionType}
@@ -96,16 +103,24 @@ export function PageSectionBuilder({
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
-  const updateSection = useCallback(
-    (id: number, content: Record<string, unknown>) => {
-      setSections((prev) => {
-        const next = prev.map((s) => (s.id === id ? { ...s, content } : s));
-        onChange(next);
-        return next;
-      });
-      onDirtyChange?.(true);
+  const syncSections = useCallback(
+    (next: PageSection[], options?: { dirty?: boolean }) => {
+      sectionsRef.current = next;
+      setSections(next);
+      onChange(next);
+      if (options?.dirty !== undefined) {
+        onDirtyChange?.(options.dirty);
+      }
     },
     [onChange, onDirtyChange],
+  );
+
+  const updateSection = useCallback(
+    (id: number, content: Record<string, unknown>) => {
+      const next = sectionsRef.current.map((s) => (s.id === id ? { ...s, content } : s));
+      syncSections(next, { dirty: true });
+    },
+    [syncSections],
   );
 
   const addSection = async () => {
@@ -115,19 +130,34 @@ export function PageSectionBuilder({
       component_type: type,
       content: createSectionContent(type, { division: inferDivisionFromSlug(pageSlug) }),
     });
-    const next = [...sectionsRef.current, data];
-    setSections(next);
-    onChange(next);
+    syncSections([...sectionsRef.current, data]);
     await maybeRevalidatePublic();
   };
 
   const deleteSection = async (id: number) => {
     if (!token) return;
     await apiClient.deletePageSection(token, pageId, id);
-    const next = sectionsRef.current.filter((s) => s.id !== id);
-    setSections(next);
-    onChange(next);
+    syncSections(sectionsRef.current.filter((s) => s.id !== id));
     await maybeRevalidatePublic();
+  };
+
+  const duplicateSection = async (id: number) => {
+    if (!token) return;
+    const previous = sectionsRef.current;
+    const sourceIndex = previous.findIndex((s) => s.id === id);
+    if (sourceIndex < 0) return;
+
+    try {
+      const { data } = await apiClient.duplicatePageSection(token, pageId, id);
+      const next = previous.map((section, index) =>
+        index > sourceIndex ? { ...section, sort_order: section.sort_order + 1 } : section,
+      );
+      next.splice(sourceIndex + 1, 0, data);
+      syncSections(next, { dirty: false });
+      await maybeRevalidatePublic();
+    } catch {
+      // keep existing order on failure
+    }
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
@@ -137,14 +167,12 @@ export function PageSectionBuilder({
     const oldIndex = previous.findIndex((s) => s.id === active.id);
     const newIndex = previous.findIndex((s) => s.id === over.id);
     const reordered = arrayMove(previous, oldIndex, newIndex).map((s, i) => ({ ...s, sort_order: i }));
-    setSections(reordered);
-    onChange(reordered);
+    syncSections(reordered);
     try {
       await apiClient.reorderPageSections(token, pageId, reordered.map((s, i) => ({ id: s.id, sort_order: i })));
       await maybeRevalidatePublic();
     } catch {
-      setSections(previous);
-      onChange(previous);
+      syncSections(previous);
     }
   };
 
@@ -156,7 +184,13 @@ export function PageSectionBuilder({
           <SortableContext items={sections.map((s) => s.id)} strategy={verticalListSortingStrategy}>
             <div className="space-y-4">
               {sections.map((section) => (
-                <SortableSection key={section.id} section={section} onUpdate={updateSection} onDelete={deleteSection} />
+                <SortableSection
+                  key={section.id}
+                  section={section}
+                  onUpdate={updateSection}
+                  onDuplicate={duplicateSection}
+                  onDelete={deleteSection}
+                />
               ))}
             </div>
           </SortableContext>

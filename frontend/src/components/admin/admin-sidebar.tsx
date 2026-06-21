@@ -5,8 +5,9 @@ import { AdminSettingsMenu } from "@/components/admin/admin-settings-menu";
 import { UserAvatar } from "@/components/admin/user-detail-panel";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
+  Award,
   Blocks,
   BookOpen,
   CalendarCheck,
@@ -17,8 +18,10 @@ import {
   Files,
   GraduationCap,
   Home,
+  Image,
   LayoutDashboard,
   LayoutGrid,
+  Mail,
   MapPin,
   Megaphone,
   Package,
@@ -29,7 +32,9 @@ import {
   ShoppingBag,
   ShoppingCart,
   SlidersHorizontal,
+  Ticket,
   Users,
+  Warehouse,
   type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -56,16 +61,21 @@ const iconMap: Record<string, LucideIcon> = {
   "shopping-bag": ShoppingBag,
   package: Package,
   "shopping-cart": ShoppingCart,
+  ticket: Ticket,
+  warehouse: Warehouse,
   plane: Plane,
   "map-pin": MapPin,
+  mail: Mail,
   calendar: CalendarDays,
   "calendar-days": CalendarDays,
   "calendar-check": CalendarCheck,
+  award: Award,
   settings: Settings,
   blocks: Blocks,
   users: Users,
   sliders: SlidersHorizontal,
   megaphone: Megaphone,
+  image: Image,
 };
 
 const childIconByHref: Record<string, LucideIcon> = {
@@ -77,8 +87,13 @@ const childIconByHref: Record<string, LucideIcon> = {
   "/admin/academy/trainers": Users,
   "/admin/shop/products": Package,
   "/admin/shop/orders": ShoppingCart,
+  "/admin/shop/coupons": Ticket,
+  "/admin/shop/inventory": Warehouse,
   "/admin/tours/packages": MapPin,
   "/admin/tours/bookings": CalendarCheck,
+  "/admin/tours/enquiries": Mail,
+  "/admin/academy/attendance": CalendarCheck,
+  "/admin/academy/certificates": Award,
   "/admin/tasks": CalendarDays,
   "/admin/settings/modules": Blocks,
   "/admin/settings/users": Users,
@@ -111,6 +126,26 @@ function buildOpenGroups(navigation: NavItem[]) {
   return open;
 }
 
+function NavIcon({ icon: Icon, size = "md" }: { icon: LucideIcon; size?: "md" | "lg" }) {
+  const slotClass = size === "lg" ? "h-5 w-5" : "h-4 w-5";
+  const iconClass = size === "lg" ? "h-5 w-5" : "h-4 w-4";
+
+  return (
+    <span className={cn("flex shrink-0 items-center justify-center", slotClass)} aria-hidden>
+      <Icon className={iconClass} />
+    </span>
+  );
+}
+
+function NavSectionDivider({ collapsed }: { collapsed?: boolean }) {
+  return (
+    <div
+      className={cn("border-t", collapsed ? "my-2 border-app-border/50" : "my-2 border-app-border/60")}
+      aria-hidden
+    />
+  );
+}
+
 function NavLink({
   href,
   label,
@@ -126,21 +161,14 @@ function NavLink({
     <Link
       href={href}
       className={cn(
-        "admin-nav-link group/link relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all duration-200",
+        "admin-nav-link group/link relative flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all duration-200",
         active ? "admin-nav-link--active" : "text-app-muted hover:text-app-text",
       )}
     >
-      <Icon className="h-4 w-4 shrink-0" />
+      <NavIcon icon={Icon} />
       <span className="truncate">{label}</span>
     </Link>
   );
-}
-
-function SectionDivider({ collapsed }: { collapsed: boolean }) {
-  if (collapsed) {
-    return <div className="mx-2 my-2 border-t border-app-border/50" aria-hidden />;
-  }
-  return null;
 }
 
 type GroupFlyout = {
@@ -152,7 +180,6 @@ type GroupFlyout = {
 
 function CollapsibleNavGroup({
   item,
-  index,
   collapsed,
   pathname,
   open,
@@ -161,10 +188,8 @@ function CollapsibleNavGroup({
   hideFlyout,
   openGroupFlyout,
   dataTour,
-  showTopBorder = true,
 }: {
   item: NavItem;
-  index: number;
   collapsed: boolean;
   pathname: string;
   open: boolean;
@@ -173,17 +198,12 @@ function CollapsibleNavGroup({
   hideFlyout: () => void;
   openGroupFlyout: (el: HTMLElement, item: NavItem) => void;
   dataTour?: string;
-  showTopBorder?: boolean;
 }) {
   const Icon = resolveIcon(item.icon, item.href);
   const children = item.children ?? [];
 
   return (
-    <div
-      data-tour={dataTour}
-      className={cn("mb-1", !collapsed && showTopBorder && index > 0 && "mt-3 border-t border-app-border/60 pt-3")}
-    >
-      {index > 0 && collapsed && <SectionDivider collapsed={collapsed} />}
+    <div data-tour={dataTour} className="mb-1">
       {collapsed ? (
         <button
           type="button"
@@ -200,7 +220,7 @@ function CollapsibleNavGroup({
               : "text-app-muted hover:text-app-text",
           )}
         >
-          <Icon className="h-5 w-5 shrink-0" />
+          <NavIcon icon={Icon} size="lg" />
         </button>
       ) : (
         <>
@@ -208,9 +228,9 @@ function CollapsibleNavGroup({
             type="button"
             onClick={onToggle}
             aria-expanded={open}
-            className="accent-rail-header mb-2 flex w-full items-center gap-2 pr-2 text-left text-[10px] font-semibold uppercase tracking-[0.12em] text-accent-soft transition-colors hover:text-accent"
+            className="mb-1 flex w-full items-center gap-3 border-l-[3px] border-l-accent/65 py-1.5 pl-[calc(0.75rem-3px)] pr-3 text-left text-[10px] font-semibold uppercase tracking-[0.12em] text-accent-soft transition-colors hover:text-accent"
           >
-            <Icon className="h-3.5 w-3.5 shrink-0 text-accent-soft/90" />
+            <NavIcon icon={Icon} />
             <span className="truncate">{item.label}</span>
             <ChevronDown
               className={cn(
@@ -413,13 +433,14 @@ export function AdminSidebar() {
         <nav className="admin-sidebar-nav min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-3 py-3">
           {mainNavigation.map((item, index) => {
             const Icon = resolveIcon(item.icon, item.href);
+            const itemKey = item.href ?? item.label;
+
+            let content: ReactNode = null;
 
             if (item.children?.length) {
-              return (
+              content = (
                 <CollapsibleNavGroup
-                  key={item.label}
                   item={item}
-                  index={index}
                   collapsed={sidebarCollapsed}
                   pathname={pathname}
                   open={openGroups[item.label] ?? true}
@@ -429,40 +450,42 @@ export function AdminSidebar() {
                   openGroupFlyout={openGroupFlyout}
                 />
               );
+            } else if (item.href) {
+              content = sidebarCollapsed ? (
+                <Link
+                  href={item.href}
+                  title={item.label}
+                  aria-label={item.label}
+                  onMouseEnter={(e) => showLinkFlyout(e.currentTarget, item.label)}
+                  onMouseLeave={hideFlyout}
+                  onFocus={(e) => showLinkFlyout(e.currentTarget, item.label)}
+                  onBlur={hideFlyout}
+                  className={cn(
+                    "admin-nav-link relative flex w-full items-center justify-center rounded-lg px-2 py-2.5 text-sm transition-all duration-200",
+                    isRouteActive(pathname, item.href)
+                      ? "admin-nav-link--active"
+                      : "text-app-muted hover:text-app-text",
+                  )}
+                >
+                  <NavIcon icon={Icon} size="lg" />
+                </Link>
+              ) : (
+                <NavLink
+                  href={item.href}
+                  label={item.label}
+                  icon={Icon}
+                  active={isRouteActive(pathname, item.href)}
+                />
+              );
             }
 
-            if (!item.href) return null;
+            if (!content) return null;
 
             return (
-              <div key={item.href} className={cn(!sidebarCollapsed && index > 0 && "mt-1 border-t border-app-border/60 pt-3")}>
-                {index > 0 && sidebarCollapsed && <SectionDivider collapsed={sidebarCollapsed} />}
-                {sidebarCollapsed ? (
-                  <Link
-                    href={item.href}
-                    title={item.label}
-                    aria-label={item.label}
-                    onMouseEnter={(e) => showLinkFlyout(e.currentTarget, item.label)}
-                    onMouseLeave={hideFlyout}
-                    onFocus={(e) => showLinkFlyout(e.currentTarget, item.label)}
-                    onBlur={hideFlyout}
-                    className={cn(
-                      "admin-nav-link relative flex items-center justify-center rounded-lg px-2 py-2.5 text-sm transition-all duration-200",
-                      isRouteActive(pathname, item.href)
-                        ? "admin-nav-link--active"
-                        : "text-app-muted hover:text-app-text",
-                    )}
-                  >
-                    <Icon className="h-5 w-5 shrink-0" />
-                  </Link>
-                ) : (
-                  <NavLink
-                    href={item.href}
-                    label={item.label}
-                    icon={Icon}
-                    active={isRouteActive(pathname, item.href)}
-                  />
-                )}
-              </div>
+              <Fragment key={itemKey}>
+                {index > 0 && <NavSectionDivider collapsed={sidebarCollapsed} />}
+                {content}
+              </Fragment>
             );
           })}
         </nav>
@@ -527,11 +550,11 @@ export function AdminSidebar() {
                     href={child.href}
                     onClick={() => setGroupFlyout(null)}
                     className={cn(
-                      "flex items-center gap-2 px-3 py-2 text-sm transition-colors",
+                      "flex items-center gap-3 px-3 py-2 text-sm transition-colors",
                       active ? "bg-accent/10 text-accent-soft" : "text-app-text hover:bg-app-surface-muted",
                     )}
                   >
-                    <ChildIcon className="h-4 w-4 shrink-0" />
+                    <NavIcon icon={ChildIcon} />
                     {child.label}
                   </Link>
                 </li>

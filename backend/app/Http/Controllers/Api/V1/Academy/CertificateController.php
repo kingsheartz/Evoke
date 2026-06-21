@@ -41,6 +41,41 @@ class CertificateController extends Controller
         return response()->json(['data' => $certificate->load(['enrollment.user', 'enrollment.batch.course'])], 201);
     }
 
+    public function upload(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'file' => [
+                'required',
+                'file',
+                'mimetypes:application/pdf,image/jpeg,image/png,image/webp',
+                'max:10240',
+            ],
+        ]);
+
+        $file = $request->file('file');
+        $path = $file->store('academy/certificates', 'public');
+
+        return response()->json([
+            'data' => [
+                'url' => asset('storage/'.$path),
+                'path' => $path,
+            ],
+        ]);
+    }
+
+    public function update(Request $request, Certificate $certificate): JsonResponse
+    {
+        $validated = $request->validate([
+            'file_path' => 'required|string|max:500',
+        ]);
+
+        $certificate->update(['file_path' => $validated['file_path']]);
+
+        return response()->json([
+            'data' => $certificate->load(['enrollment.user', 'enrollment.batch.course']),
+        ]);
+    }
+
     public function indexForUser(Request $request): JsonResponse
     {
         $certificates = Certificate::query()

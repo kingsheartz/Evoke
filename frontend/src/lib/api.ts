@@ -629,12 +629,23 @@ export const apiClient = {
     api<{ data: CmsPage }>(`/cms/pages/${id}`, { method: "PUT", token, body: JSON.stringify(payload) }),
   deletePage: (token: string, id: number) =>
     api<{ message: string }>(`/cms/pages/${id}`, { method: "DELETE", token }),
+  duplicatePage: (token: string, id: number, payload?: { title?: string }) =>
+    api<{ data: CmsPage }>(`/cms/admin/pages/${id}/duplicate`, {
+      method: "POST",
+      token,
+      body: JSON.stringify(payload ?? {}),
+    }),
   createPageSection: (token: string, pageId: number, payload: SectionPayload) =>
     api<{ data: PageSection }>(`/cms/admin/pages/${pageId}/sections`, { method: "POST", token, body: JSON.stringify(payload) }),
   updatePageSection: (token: string, pageId: number, sectionId: number, payload: Partial<SectionPayload>) =>
     api<{ data: PageSection }>(`/cms/admin/pages/${pageId}/sections/${sectionId}`, { method: "PUT", token, body: JSON.stringify(payload) }),
   deletePageSection: (token: string, pageId: number, sectionId: number) =>
     api<{ message: string }>(`/cms/admin/pages/${pageId}/sections/${sectionId}`, { method: "DELETE", token }),
+  duplicatePageSection: (token: string, pageId: number, sectionId: number) =>
+    api<{ data: PageSection }>(`/cms/admin/pages/${pageId}/sections/${sectionId}/duplicate`, {
+      method: "POST",
+      token,
+    }),
   reorderPageSections: (token: string, pageId: number, sections: { id: number; sort_order: number }[]) =>
     api<{ data: PageSection[] }>(`/cms/admin/pages/${pageId}/sections/reorder`, { method: "PUT", token, body: JSON.stringify({ sections }) }),
 
@@ -725,6 +736,30 @@ export const apiClient = {
       method: "POST",
       token,
       body: JSON.stringify(payload),
+    }),
+  uploadCertificateFile: async (token: string, file: File) => {
+    const form = new FormData();
+    form.append("file", file);
+    const url = `${getApiUrl()}/academy/admin/certificates/upload`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: form,
+    });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: "Upload failed" }));
+      throw new ApiError(response.status, error.message ?? "Upload failed");
+    }
+    return response.json() as Promise<{ data: { url: string; path: string } }>;
+  },
+  updateCertificateFile: (token: string, certificateId: number, file_path: string) =>
+    api<{ data: AcademyCertificate }>(`/academy/admin/certificates/${certificateId}`, {
+      method: "PATCH",
+      token,
+      body: JSON.stringify({ file_path }),
     }),
   getMyCertificates: (token: string) =>
     api<{ data: AcademyCertificate[] }>("/academy/certificates", { token }),
@@ -1322,7 +1357,11 @@ export interface BrandOverride {
   };
   logoDisplay?: {
     iconBlend?: boolean;
+    headerText?: string;
+    headerSubheading?: string;
+    headerFont?: "jakarta" | "geist-sans" | "geist-mono";
   };
+  header?: Partial<import("@/lib/header-config").BrandHeaderConfig>;
 }
 
 export interface Advertisement {
@@ -1410,7 +1449,11 @@ export interface AdminTaskPayload {
 }
 
 export const SECTION_TYPES = [
+  { value: "hero", label: "Hero" },
   { value: "banner", label: "Banner" },
+  { value: "buttons", label: "Button row" },
+  { value: "tabs", label: "Tabs" },
+  { value: "table", label: "Table" },
   { value: "text", label: "Text" },
   { value: "gallery", label: "Gallery" },
   { value: "faq", label: "FAQ" },

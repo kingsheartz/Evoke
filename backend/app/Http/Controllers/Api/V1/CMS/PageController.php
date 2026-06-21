@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\CMS\Page;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class PageController extends Controller
@@ -63,7 +64,7 @@ class PageController extends Controller
 
         $page = Page::create([
             ...$validated,
-            'slug' => Str::slug($validated['title']).'-'.Str::random(4),
+            'slug' => $this->uniqueSlug($validated['title']),
             'author_id' => $request->user()->id,
             'published_at' => ($validated['status'] ?? 'draft') === 'published' ? now() : null,
         ]);
@@ -96,5 +97,60 @@ class PageController extends Controller
         $page->delete();
 
         return response()->json(['message' => 'Page deleted.']);
+    }
+
+    public function duplicate(Request $request, Page $page): JsonResponse
+    {
+        $validated = $request->validate([
+            'title' => 'nullable|string|max:255',
+        ]);
+
+        $page->load(['sections' => fn ($q) => $q->orderBy('sort_order')]);
+
+        $copy = DB::transaction(function () use ($request, $page, $validated) {
+            $title = $validated['title'] ?? $page->title.' (Copy)';
+
+            $duplicate = Page::create([
+                'title' => $title,
+                'slug' => $this->uniqueSlug($title),
+                'type' => $page->type,
+                'excerpt' => $page->excerpt,
+                'content' => $page->content,
+                'status' => 'draft',
+                'seo_title' => $page->seo_title,
+                'seo_description' => $page->seo_description,
+                'featured_image' => $page->featured_image,
+                'author_id' => $request->user()->id,
+                'published_at' => null,
+            ]);
+
+            foreach ($page->sections as $index => $section) {
+                $duplicate->sections()->create([
+                    'section_key' => $section->section_key,
+                    'component_type' => $section->component_type,
+                    'content' => $section->content,
+                    'sort_order' => $section->sort_order ?? $index,
+                    'is_visible' => $section->is_visible,
+                ]);
+            }
+
+            return $duplicate->load(['sections' => fn ($q) => $q->orderBy('sort_order')]);
+        });
+
+        return response()->json(['data' => $copy], 201);
+    }
+
+    private function uniqueSlug(string $title): string
+    {
+        $base = Str::slug($title);
+        $slug = $base;
+        $suffix = 1;
+
+        while (Page::withTrashed()->where('slug', $slug)->exists()) {
+            $slug = $base.'-'.$suffix;
+            $suffix++;
+        }
+
+        return $slug;
     }
 }

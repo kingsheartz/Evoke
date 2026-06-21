@@ -59,7 +59,7 @@ export function SiteAdUnit({ ad, variant, className, onDismiss }: SiteAdUnitProp
       alt={ad.title || "Promotion"}
       className={cn(
         variant === "strip"
-          ? "h-9 w-auto max-w-full object-contain"
+          ? "max-h-9 w-auto max-w-[min(100%,280px)] object-contain"
           : "h-full w-full object-cover",
       )}
     />
@@ -79,7 +79,7 @@ export function SiteAdUnit({ ad, variant, className, onDismiss }: SiteAdUnitProp
         "site-ad-unit relative",
         variant === "floating" && "overflow-hidden rounded-xl border border-app-border bg-app-surface/95 shadow-lg ring-1 ring-app-border/80 backdrop-blur-sm",
         variant === "inline" && "overflow-hidden rounded-2xl border border-app-border bg-app-surface/95 shadow-lg ring-1 ring-app-border/80 backdrop-blur-sm",
-        variant === "strip" && "flex h-9 w-full items-center justify-center",
+        variant === "strip" && "flex h-9 max-h-9 w-full items-center justify-center overflow-hidden",
         className,
       )}
     >

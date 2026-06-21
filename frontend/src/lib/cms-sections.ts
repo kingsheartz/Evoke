@@ -1,5 +1,6 @@
 import { SECTION_TYPES } from "@/lib/api";
 import type { TimelineVariant, OfferingVertical } from "@/lib/offerings";
+import type { TextFormat } from "@/lib/text-format";
 
 export type SectionType = (typeof SECTION_TYPES)[number]["value"];
 
@@ -17,25 +18,36 @@ export interface GalleryImage {
 
 export interface FaqItem {
   question: string;
+  question_format?: TextFormat;
   answer: string;
+  answer_format?: TextFormat;
 }
 
 export interface CardItem {
   title: string;
+  title_format?: TextFormat;
   description: string;
+  description_format?: TextFormat;
   image_url?: string;
   icon?: string;
   link_url?: string;
   link_label?: string;
+  link_label_format?: TextFormat;
   price?: string;
+  price_format?: TextFormat;
   badge?: string;
+  badge_format?: TextFormat;
   meta_line?: string;
+  meta_line_format?: TextFormat;
 }
 
 export interface TestimonialItem {
   quote: string;
+  quote_format?: TextFormat;
   author: string;
+  author_format?: TextFormat;
   role?: string;
+  role_format?: TextFormat;
   avatar_url?: string;
 }
 
@@ -62,12 +74,15 @@ export type FormFieldType =
 
 export interface StatItem {
   label: string;
+  label_format?: TextFormat;
   value: string;
+  value_format?: TextFormat;
   icon?: string;
 }
 
 export interface StatsContent {
   heading?: string;
+  heading_format?: TextFormat;
   columns?: 2 | 3 | 4;
   items?: StatItem[];
 }
@@ -81,38 +96,124 @@ export interface ItineraryDay {
 
 export interface ItineraryContent {
   heading?: string;
+  heading_format?: TextFormat;
   cost_heading?: string;
+  cost_heading_format?: TextFormat;
   cost_body?: string;
+  cost_body_format?: TextFormat;
   items?: ItineraryDay[];
-  /** Controls timeline labels and milestone icons (travel, course, product). */
   variant?: TimelineVariant;
 }
 
 export interface InclusionsContent {
   heading?: string;
+  heading_format?: TextFormat;
   included?: string[];
   excluded?: string[];
   included_label?: string;
+  included_label_format?: TextFormat;
   excluded_label?: string;
+  excluded_label_format?: TextFormat;
 }
 
 export interface BannerContent {
   heading?: string;
+  heading_format?: TextFormat;
   subheading?: string;
+  subheading_format?: TextFormat;
   body?: string;
+  body_format?: TextFormat;
   image_url?: string;
   cta_label?: string;
+  cta_label_format?: TextFormat;
   cta_url?: string;
+}
+
+export interface CmsButtonItem {
+  label: string;
+  label_format?: TextFormat;
+  url: string;
+  variant?: "primary" | "outline" | "ghost";
+  new_tab?: boolean;
+}
+
+export interface HeroSlideshowSettings {
+  duration_seconds?: number;
+  transition?: "fade" | "none";
+  autoplay?: boolean;
+  show_indicators?: boolean;
+}
+
+export interface HeroContent {
+  eyebrow?: string;
+  eyebrow_format?: TextFormat;
+  heading?: string;
+  heading_format?: TextFormat;
+  heading_accent?: string;
+  heading_accent_format?: TextFormat;
+  heading_suffix?: string;
+  heading_suffix_format?: TextFormat;
+  body?: string;
+  body_format?: TextFormat;
+  image_url?: string;
+  background_images?: string[];
+  slideshow?: HeroSlideshowSettings;
+  video_url?: string;
+  background_type?: "image" | "video";
+  overlay?: "dark" | "gradient" | "light" | "none";
+  height?: "full" | "tall" | "medium";
+  align?: "left" | "center";
+  buttons?: CmsButtonItem[];
+}
+
+export interface ButtonsContent {
+  heading?: string;
+  heading_format?: TextFormat;
+  body?: string;
+  body_format?: TextFormat;
+  align?: "left" | "center";
+  buttons?: CmsButtonItem[];
+}
+
+export interface TableContent {
+  heading?: string;
+  heading_format?: TextFormat;
+  body?: string;
+  body_format?: TextFormat;
+  columns?: string[];
+  rows?: string[][];
+  striped?: boolean;
+  highlight_header?: boolean;
+}
+
+export interface TabItem {
+  label: string;
+  label_format?: TextFormat;
+  body?: string;
+  body_format?: TextFormat;
+}
+
+export interface TabsContent {
+  heading?: string;
+  heading_format?: TextFormat;
+  body?: string;
+  body_format?: TextFormat;
+  style?: "pills" | "underline";
+  tabs?: TabItem[];
 }
 
 export interface TextContent {
   heading?: string;
+  heading_format?: TextFormat;
   body?: string;
+  body_format?: TextFormat;
 }
 
 export interface GalleryContent {
   heading?: string;
+  heading_format?: TextFormat;
   body?: string;
+  body_format?: TextFormat;
   columns?: 2 | 3 | 4;
   preview_limit?: number;
   images?: GalleryImage[];
@@ -120,55 +221,74 @@ export interface GalleryContent {
 
 export interface FaqContent {
   heading?: string;
+  heading_format?: TextFormat;
   style?: "details" | "list";
   items?: FaqItem[];
 }
 
 export interface VideoContent {
   heading?: string;
+  heading_format?: TextFormat;
   body?: string;
+  body_format?: TextFormat;
   video_url?: string;
   caption?: string;
+  caption_format?: TextFormat;
 }
 
 export interface CardsContent {
   heading?: string;
+  heading_format?: TextFormat;
   body?: string;
+  body_format?: TextFormat;
   items?: CardItem[];
 }
 
 export interface TestimonialsContent {
   heading?: string;
+  heading_format?: TextFormat;
   items?: TestimonialItem[];
 }
 
 export interface MapContent {
   heading?: string;
+  heading_format?: TextFormat;
   body?: string;
+  body_format?: TextFormat;
   embed_url?: string;
   address?: string;
 }
 
 export interface FormsContent {
   heading?: string;
+  heading_format?: TextFormat;
   body?: string;
+  body_format?: TextFormat;
   submit_label?: string;
+  submit_label_format?: TextFormat;
   contact_email?: string;
   fields?: FormField[];
 }
 
 export interface CatalogContent {
   heading?: string;
+  heading_format?: TextFormat;
   body?: string;
+  body_format?: TextFormat;
   vertical: SectionDefaultsDivision;
   featured_only?: boolean;
   catalog_source?: "featured" | "trending" | "latest";
   limit?: number;
   view_all_label?: string;
+  view_all_label_format?: TextFormat;
 }
 
 export type SectionContentByType = {
   banner: BannerContent;
+  hero: HeroContent;
+  buttons: ButtonsContent;
+  table: TableContent;
+  tabs: TabsContent;
   text: TextContent;
   gallery: GalleryContent;
   faq: FaqContent;
@@ -315,6 +435,60 @@ export function defaultSectionContent(
         cta_label: "",
         cta_url: "",
       };
+    case "hero":
+      return {
+        eyebrow: "EST. 2024 | FOR REAL EXPLORERS",
+        heading: "WHERE MOUNTAIN",
+        heading_accent: "meets",
+        heading_suffix: "SEA.",
+        body: "Small-group expedition company for sailing adventures, mountain journeys, and life-changing experiences in the outdoors.",
+        image_url: HERO_BACKGROUND_EXAMPLES[0].url,
+        background_images: HERO_BACKGROUND_EXAMPLES.map((item) => item.url),
+        slideshow: { ...DEFAULT_HERO_SLIDESHOW },
+        video_url: "",
+        background_type: "image",
+        overlay: "gradient",
+        height: "full",
+        align: "left",
+        buttons: [
+          { label: "Adventure trips", url: "/tours", variant: "primary" },
+          { label: "Build a custom trip", url: "/contact", variant: "outline" },
+        ],
+      };
+    case "buttons":
+      return {
+        heading: "",
+        body: "",
+        align: "left",
+        buttons: [
+          { label: "Primary action", url: "/", variant: "primary" },
+          { label: "Secondary action", url: "/contact", variant: "outline" },
+        ],
+      };
+    case "table":
+      return {
+        heading: "Comparison",
+        body: "",
+        columns: ["Package", "Duration", "Price", "Group size"],
+        rows: [
+          ["Coastal sailing", "5 days", "₹45,000", "6–10"],
+          ["Mountain trek", "7 days", "₹38,000", "4–8"],
+          ["Custom expedition", "Flexible", "On request", "2–12"],
+        ],
+        striped: true,
+        highlight_header: true,
+      };
+    case "tabs":
+      return {
+        heading: "Explore",
+        body: "",
+        style: "pills",
+        tabs: [
+          { label: "Overview", body: "Summary of what this page covers." },
+          { label: "Details", body: "Additional information visitors can switch between." },
+          { label: "FAQ", body: "Common questions answered in a tab panel." },
+        ],
+      };
     case "text":
       return { heading: "New section", body: "" };
     case "gallery":
@@ -416,6 +590,43 @@ export function mapsLink(address: string): string {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
 }
 
+export const HERO_BACKGROUND_EXAMPLES = [
+  {
+    label: "Mountain starscape",
+    url: "https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=2070&auto=format&fit=crop",
+  },
+  {
+    label: "Alpine summit",
+    url: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=2070&auto=format&fit=crop",
+  },
+  {
+    label: "Ocean horizon",
+    url: "https://images.unsplash.com/photo-1505142468610-359e7d316be0?q=80&w=2070&auto=format&fit=crop",
+  },
+] as const;
+
+export const DEFAULT_HERO_SLIDESHOW: HeroSlideshowSettings = {
+  duration_seconds: 6,
+  transition: "fade",
+  autoplay: true,
+  show_indicators: true,
+};
+
+export function normalizeUrlList(values: string[] | undefined): string[] {
+  return (values ?? []).map((item) => item.trim()).filter(Boolean);
+}
+
+export function heroBackgroundImages(content: Pick<HeroContent, "image_url" | "background_images">): string[] {
+  const fromArray = normalizeUrlList(content.background_images);
+  if (fromArray.length > 0) return fromArray;
+  const legacy = content.image_url?.trim();
+  return legacy ? [legacy] : [];
+}
+
+export function heroSlideshowSettings(content: Pick<HeroContent, "slideshow">): HeroSlideshowSettings {
+  return { ...DEFAULT_HERO_SLIDESHOW, ...content.slideshow };
+}
+
 export function isSectionEmpty(section: { component_type: string; content: Record<string, unknown> }): boolean {
   const type = section.component_type;
   const content = section.content;
@@ -424,6 +635,33 @@ export function isSectionEmpty(section: { component_type: string; content: Recor
     case "banner": {
       const c = content as unknown as BannerContent;
       return !c.heading?.trim() && !c.subheading?.trim() && !c.body?.trim() && !c.image_url?.trim();
+    }
+    case "hero": {
+      const c = content as unknown as HeroContent;
+      const images = heroBackgroundImages(c);
+      return (
+        !c.heading?.trim() &&
+        !c.heading_suffix?.trim() &&
+        !c.body?.trim() &&
+        images.length === 0 &&
+        !c.video_url?.trim()
+      );
+    }
+    case "buttons": {
+      const c = content as unknown as ButtonsContent;
+      const buttons = (c.buttons ?? []).filter((item) => item.label?.trim() && item.url?.trim());
+      return buttons.length === 0 && !c.heading?.trim() && !c.body?.trim();
+    }
+    case "table": {
+      const c = content as unknown as TableContent;
+      const columns = (c.columns ?? []).filter((col) => col.trim());
+      const rows = (c.rows ?? []).filter((row) => row.some((cell) => cell.trim()));
+      return columns.length === 0 && rows.length === 0 && !c.heading?.trim() && !c.body?.trim();
+    }
+    case "tabs": {
+      const c = content as unknown as TabsContent;
+      const tabs = (c.tabs ?? []).filter((tab) => tab.label?.trim());
+      return tabs.length === 0 && !c.heading?.trim() && !c.body?.trim();
     }
     case "text": {
       const c = content as unknown as TextContent;

@@ -55,14 +55,14 @@ export function SiteAdCarousel({ ads, variant, className, rotateMs = 8000, showD
 
   if (visible.length === 1) {
     return (
-      <div className={className}>
+      <div className={cn(variant === "strip" && "h-9 overflow-hidden", className)}>
         <SiteAdUnit ad={current} variant={variant} />
       </div>
     );
   }
 
   return (
-    <div className={cn("relative", className)}>
+    <div className={cn("relative", variant === "strip" && "h-9 overflow-hidden", className)}>
       {visible.map((ad, i) => (
         <div
           key={ad.id}

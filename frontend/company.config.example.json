@@ -11,6 +11,19 @@
     "mobile": "/logo-icon.png"
   },
   "logoDisplay": {
-    "iconBlend": false
+    "iconBlend": false,
+    "headerText": "",
+    "headerSubheading": "",
+    "headerFont": "jakarta"
+  },
+  "header": {
+    "announcement": {
+      "enabled": false,
+      "text": "",
+      "href": "",
+      "dismissible": true,
+      "tone": "accent"
+    },
+    "components": []
   }
 }

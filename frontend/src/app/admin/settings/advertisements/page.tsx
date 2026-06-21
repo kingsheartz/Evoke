@@ -123,6 +123,7 @@ export default function AdvertisementsSettingsPage() {
                     kind="image"
                     value={ad.image_url}
                     onChange={(url) => update(ad.id, { image_url: url })}
+                    previewFit="contain"
                   />
                 </div>
                 <div className="space-y-2 md:col-span-2">

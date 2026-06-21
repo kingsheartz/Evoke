@@ -1,6 +1,12 @@
 import { DEFAULT_BRAND, type BrandConfig, type BrandLogoDisplay } from "@/lib/brand-defaults";
+import {
+  DEFAULT_HEADER_CONFIG,
+  headerConfigEquals,
+  mergeHeaderConfig,
+  type BrandHeaderConfig,
+} from "@/lib/header-config";
 
-export type { BrandConfig };
+export type { BrandConfig, BrandHeaderConfig, BrandLogoDisplay };
 export { DEFAULT_BRAND };
 
 export type BrandLogoVariant =
@@ -23,9 +29,8 @@ export type BrandOverride = Partial<{
   description: string;
   logos: Partial<BrandConfig["logos"]>;
   logoDisplay: Partial<BrandLogoDisplay>;
+  header: Partial<BrandHeaderConfig>;
 }>;
-
-export type { BrandLogoDisplay };
 
 export function mobileHeaderIcon(logos: BrandConfig["logos"]): string {
   return logos.mobile?.trim() || logos.icon;
@@ -47,7 +52,15 @@ export function mergeBrand(defaults: BrandConfig, override: BrandOverride | null
     },
     logoDisplay: {
       iconBlend: override.logoDisplay?.iconBlend ?? defaults.logoDisplay.iconBlend,
+      headerText: override.logoDisplay?.headerText ?? defaults.logoDisplay.headerText ?? "",
+      headerText_format: override.logoDisplay?.headerText_format ?? defaults.logoDisplay.headerText_format,
+      headerSubheading:
+        override.logoDisplay?.headerSubheading ?? defaults.logoDisplay.headerSubheading ?? "",
+      headerSubheading_format:
+        override.logoDisplay?.headerSubheading_format ?? defaults.logoDisplay.headerSubheading_format,
+      headerFont: override.logoDisplay?.headerFont ?? defaults.logoDisplay.headerFont ?? "jakarta",
     },
+    header: mergeHeaderConfig(defaults.header, override.header),
   };
 }
 
@@ -75,7 +88,36 @@ export function overrideFromFormState(form: BrandConfig): BrandOverride {
   };
 
   if (form.logoDisplay.iconBlend !== DEFAULT_BRAND.logoDisplay.iconBlend) {
-    override.logoDisplay = { iconBlend: form.logoDisplay.iconBlend };
+    override.logoDisplay = { ...override.logoDisplay, iconBlend: form.logoDisplay.iconBlend };
+  }
+
+  const headerText = (form.logoDisplay.headerText ?? "").trim();
+  if (headerText !== (DEFAULT_BRAND.logoDisplay.headerText ?? "").trim()) {
+    override.logoDisplay = { ...override.logoDisplay, headerText };
+  }
+
+  const headerSubheading = (form.logoDisplay.headerSubheading ?? "").trim();
+  if (headerSubheading !== (DEFAULT_BRAND.logoDisplay.headerSubheading ?? "").trim()) {
+    override.logoDisplay = { ...override.logoDisplay, headerSubheading };
+  }
+
+  if (form.logoDisplay.headerText_format) {
+    override.logoDisplay = { ...override.logoDisplay, headerText_format: form.logoDisplay.headerText_format };
+  }
+  if (form.logoDisplay.headerSubheading_format) {
+    override.logoDisplay = {
+      ...override.logoDisplay,
+      headerSubheading_format: form.logoDisplay.headerSubheading_format,
+    };
+  }
+
+  const headerFont = form.logoDisplay.headerFont ?? DEFAULT_BRAND.logoDisplay.headerFont ?? "jakarta";
+  if (headerFont !== (DEFAULT_BRAND.logoDisplay.headerFont ?? "jakarta")) {
+    override.logoDisplay = { ...override.logoDisplay, headerFont };
+  }
+
+  if (!headerConfigEquals(form.header, DEFAULT_BRAND.header)) {
+    override.header = form.header;
   }
 
   return override;

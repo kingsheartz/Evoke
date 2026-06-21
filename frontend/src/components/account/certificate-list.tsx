@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Download, Eye } from "lucide-react";
+import { CertificatePreviewModal } from "@/components/academy/certificate-preview-modal";
 import { apiClient, type AcademyCertificate } from "@/lib/api";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, TableEmpty, TableLoading } from "@/components/ui/data-table";
 
@@ -14,6 +17,7 @@ export function CertificateList({
 }) {
   const [certificates, setCertificates] = useState<AcademyCertificate[]>([]);
   const [loading, setLoading] = useState(true);
+  const [preview, setPreview] = useState<{ url: string; title: string } | null>(null);
 
   useEffect(() => {
     apiClient
@@ -33,36 +37,75 @@ export function CertificateList({
   }
 
   return (
-    <Card variant="glass">
-      {!compact && (
-        <CardHeader>
-          <CardTitle className="text-lg">Certificates</CardTitle>
-        </CardHeader>
-      )}
-      <CardContent flush={!compact} className={compact ? "p-0" : undefined}>
-        {rows.length === 0 ? (
-          <TableEmpty inset={!compact} message="No certificates issued yet." />
-        ) : (
-          <DataTable inset>
-            <thead>
-              <tr>
-                <th>Certificate</th>
-                <th>Course</th>
-                <th>Issued</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((certificate) => (
-                <tr key={certificate.id}>
-                  <td className="font-mono text-xs">{certificate.certificate_number}</td>
-                  <td>{certificate.enrollment?.batch?.course?.title ?? "—"}</td>
-                  <td>{certificate.issued_at?.slice(0, 10)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </DataTable>
+    <>
+      <Card variant="glass">
+        {!compact && (
+          <CardHeader>
+            <CardTitle className="text-lg">Certificates</CardTitle>
+          </CardHeader>
         )}
-      </CardContent>
-    </Card>
+        <CardContent flush={!compact} className={compact ? "p-0" : undefined}>
+          {rows.length === 0 ? (
+            <TableEmpty inset={!compact} message="No certificates issued yet." />
+          ) : (
+            <DataTable inset>
+              <thead>
+                <tr>
+                  <th>Certificate</th>
+                  <th>Course</th>
+                  <th>Issued</th>
+                  <th>File</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((certificate) => (
+                  <tr key={certificate.id}>
+                    <td className="font-mono text-xs">{certificate.certificate_number}</td>
+                    <td>{certificate.enrollment?.batch?.course?.title ?? "—"}</td>
+                    <td>{certificate.issued_at?.slice(0, 10)}</td>
+                    <td>
+                      {certificate.file_path ? (
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 px-2"
+                            onClick={() =>
+                              setPreview({
+                                url: certificate.file_path!,
+                                title: certificate.certificate_number,
+                              })
+                            }
+                          >
+                            <Eye className="h-4 w-4" />
+                            Preview
+                          </Button>
+                          <Button type="button" variant="outline" size="sm" className="h-8 px-2" asChild>
+                            <a href={certificate.file_path} target="_blank" rel="noopener noreferrer" download>
+                              <Download className="h-4 w-4" />
+                              Download
+                            </a>
+                          </Button>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-app-muted">Pending</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </DataTable>
+          )}
+        </CardContent>
+      </Card>
+
+      <CertificatePreviewModal
+        open={Boolean(preview)}
+        url={preview?.url ?? null}
+        title={preview?.title}
+        onClose={() => setPreview(null)}
+      />
+    </>
   );
 }

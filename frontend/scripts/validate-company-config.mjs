@@ -56,4 +56,13 @@ if (
   process.exit(1);
 }
 
+const validHeaderFonts = new Set(["jakarta", "geist-sans", "geist-mono"]);
+if (
+  config.logoDisplay?.headerFont !== undefined &&
+  !validHeaderFonts.has(config.logoDisplay.headerFont)
+) {
+  console.error("logoDisplay.headerFont must be jakarta, geist-sans, or geist-mono");
+  process.exit(1);
+}
+
 console.log(`Company config OK: ${config.name}`);

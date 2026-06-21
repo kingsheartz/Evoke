@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Camera, Trash2, User as UserIcon } from "lucide-react";
 import { ImageCropModal } from "@/components/ui/image-crop-modal";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { FormError, FormSuccess } from "@/components/admin/admin-form-primitives";
 import { useImageCropFlow } from "@/hooks/use-image-crop-flow";
+import { usePasteMediaFile } from "@/hooks/use-paste-media-file";
 import { apiClient, type ProfilePayload, type User } from "@/lib/api";
 import { UPLOADABLE_IMAGE_ACCEPT } from "@/lib/media";
 import { useNotifications } from "@/lib/notifications";
@@ -23,6 +24,7 @@ export function ProfileEditor({ user, token }: ProfileEditorProps) {
   const { setAuth } = useAuthStore();
   const { success, error: notifyError } = useNotifications();
   const fileRef = useRef<HTMLInputElement>(null);
+  const avatarSectionRef = useRef<HTMLDivElement>(null);
   const { pendingCrop, startCrop, cancelCrop } = useImageCropFlow();
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -96,12 +98,21 @@ export function ProfileEditor({ user, token }: ProfileEditorProps) {
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (startCrop(file)) {
-      if (fileRef.current) fileRef.current.value = "";
-      return;
-    }
-    void uploadAvatarFile(file);
+    processAvatarFile(file);
   };
+
+  const processAvatarFile = useCallback(
+    (file: File) => {
+      if (startCrop(file)) {
+        if (fileRef.current) fileRef.current.value = "";
+        return;
+      }
+      void uploadAvatarFile(file);
+    },
+    [startCrop, uploadAvatarFile],
+  );
+
+  usePasteMediaFile(avatarSectionRef, processAvatarFile, { kind: "image" });
 
   const handleRemoveAvatar = async () => {
     setUploading(true);
@@ -121,7 +132,7 @@ export function ProfileEditor({ user, token }: ProfileEditorProps) {
 
   return (
     <form onSubmit={handleSave} className="space-y-8">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+      <div ref={avatarSectionRef} className="flex flex-col gap-4 sm:flex-row sm:items-center">
         <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-full border border-app-border bg-app-surface-muted">
           {user.avatar_url ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -134,7 +145,7 @@ export function ProfileEditor({ user, token }: ProfileEditorProps) {
         </div>
         <div className="space-y-2">
           <p className="text-sm font-medium text-app-text">Profile photo</p>
-          <p className="text-xs text-app-muted">Optional — add anytime from your account.</p>
+          <p className="text-xs text-app-muted">Optional — upload or paste an image (Ctrl+V) when this section is focused.</p>
           <div className="flex flex-wrap gap-2">
             <Button
               type="button"

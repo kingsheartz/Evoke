@@ -1,17 +1,23 @@
 "use client";
 
 import { Plus, Trash2 } from "lucide-react";
+import { HeroBackgroundImagesField } from "@/components/cms/hero-background-images-field";
 import { MediaUrlField } from "@/components/cms/media-url-field";
 import { FormFieldsEditor } from "@/components/cms/form-fields-editor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
+import { FormattedTextField, SectionFormattedField } from "@/components/ui/formatted-text-field";
 import { Textarea } from "@/components/ui/textarea";
 import {
   defaultSectionContent,
+  type HeroSlideshowSettings,
+  heroSlideshowSettings,
+  normalizeUrlList,
   type CardItem,
   type CatalogContent,
+  type CmsButtonItem,
   type FaqItem,
   type FormField,
   type GalleryImage,
@@ -19,6 +25,7 @@ import {
   type SectionDefaultsContext,
   type SectionType,
   type StatItem,
+  type TabItem,
   type TestimonialItem,
 } from "@/lib/cms-sections";
 import type { TimelineVariant } from "@/lib/offerings";
@@ -127,6 +134,70 @@ function timelineItemLabels(variant: TimelineVariant) {
 
 const sectionStack = "space-y-4";
 
+function ButtonsListEditor({
+  label,
+  buttons,
+  onChange,
+}: {
+  label: string;
+  buttons: CmsButtonItem[];
+  onChange: (next: CmsButtonItem[]) => void;
+}) {
+  return (
+    <ListFieldGroup
+      label={label}
+      addLabel="Add button"
+      onAdd={() => onChange([...buttons, { label: "New button", url: "/", variant: "primary" }])}
+    >
+      <div className="space-y-3">
+        {buttons.map((button, index) => (
+          <ItemCard key={index} onRemove={() => onChange(buttons.filter((_, i) => i !== index))}>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <FormattedTextField
+                label="Label"
+                value={button.label}
+                format={button.label_format}
+                preset="button"
+                onChange={(label, label_format) => onChange(updateList(buttons, index, { label, label_format }))}
+              />
+              <FieldGroup label="URL">
+                <Input
+                  value={button.url}
+                  onChange={(e) => onChange(updateList(buttons, index, { url: e.target.value }))}
+                  placeholder="/contact"
+                />
+              </FieldGroup>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <FieldGroup label="Style">
+                <Select
+                  value={button.variant ?? "primary"}
+                  onChange={(e) =>
+                    onChange(updateList(buttons, index, { variant: e.target.value as CmsButtonItem["variant"] }))
+                  }
+                >
+                  <option value="primary">Primary</option>
+                  <option value="outline">Outline</option>
+                  <option value="ghost">Ghost</option>
+                </Select>
+              </FieldGroup>
+              <label className="flex items-center gap-2 self-end pb-2 text-sm text-app-text">
+                <input
+                  type="checkbox"
+                  className="form-checkbox"
+                  checked={Boolean(button.new_tab)}
+                  onChange={(e) => onChange(updateList(buttons, index, { new_tab: e.target.checked }))}
+                />
+                Open in new tab
+              </label>
+            </div>
+          </ItemCard>
+        ))}
+      </div>
+    </ListFieldGroup>
+  );
+}
+
 export function SectionContentEditor({
   type,
   content,
@@ -139,18 +210,233 @@ export function SectionContentEditor({
   const patch = (updates: Record<string, unknown>) => onChange({ ...content, ...updates });
 
   switch (type) {
+    case "hero":
+      return (
+        <div className={sectionStack}>
+          <SectionFormattedField label="Eyebrow / tagline" field="eyebrow" content={content} onPatch={patch} preset="eyebrow" />
+          <div className="grid gap-4 sm:grid-cols-3">
+            <SectionFormattedField label="Heading line 1" field="heading" content={content} onPatch={patch} preset="heading" />
+            <SectionFormattedField
+              label="Accent word (script)"
+              field="heading_accent"
+              content={content}
+              onPatch={patch}
+              preset="heading"
+              placeholder="meets"
+            />
+            <SectionFormattedField label="Heading line 2" field="heading_suffix" content={content} onPatch={patch} preset="heading" />
+          </div>
+          <SectionFormattedField label="Description" field="body" content={content} onPatch={patch} multiline rows={3} preset="body" />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FieldGroup label="Background type">
+              <Select
+                value={String(content.background_type ?? "image")}
+                onChange={(e) => patch({ background_type: e.target.value })}
+              >
+                <option value="image">Image</option>
+                <option value="video">Video</option>
+              </Select>
+            </FieldGroup>
+            <FieldGroup label="Overlay">
+              <Select
+                value={String(content.overlay ?? "gradient")}
+                onChange={(e) => patch({ overlay: e.target.value })}
+              >
+                <option value="gradient">Gradient</option>
+                <option value="dark">Dark</option>
+                <option value="light">Light</option>
+                <option value="none">None</option>
+              </Select>
+            </FieldGroup>
+          </div>
+          {content.background_type === "video" ? (
+            <FieldGroup label="Background video">
+              <MediaUrlField
+                kind="video"
+                value={String(content.video_url ?? "")}
+                onChange={(url) => patch({ video_url: url })}
+              />
+            </FieldGroup>
+          ) : (
+            <HeroBackgroundImagesField
+              images={normalizeUrlList(content.background_images as string[] | undefined).length > 0
+                ? (content.background_images as string[])
+                : content.image_url
+                  ? [String(content.image_url)]
+                  : [""]}
+              settings={heroSlideshowSettings(content as { slideshow?: HeroSlideshowSettings })}
+              onChange={(background_images, slideshow) => {
+                const urls = normalizeUrlList(background_images);
+                patch({
+                  background_images: urls,
+                  image_url: urls[0] ?? "",
+                  slideshow,
+                });
+              }}
+            />
+          )}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FieldGroup label="Height">
+              <Select value={String(content.height ?? "full")} onChange={(e) => patch({ height: e.target.value })}>
+                <option value="full">Full viewport</option>
+                <option value="tall">Tall</option>
+                <option value="medium">Medium</option>
+              </Select>
+            </FieldGroup>
+            <FieldGroup label="Content alignment">
+              <Select value={String(content.align ?? "left")} onChange={(e) => patch({ align: e.target.value })}>
+                <option value="left">Left</option>
+                <option value="center">Center</option>
+              </Select>
+            </FieldGroup>
+          </div>
+          <ButtonsListEditor
+            label="Call-to-action buttons"
+            buttons={(content.buttons as CmsButtonItem[] | undefined) ?? []}
+            onChange={(buttons) => patch({ buttons })}
+          />
+        </div>
+      );
+
+    case "buttons":
+      return (
+        <div className={sectionStack}>
+          <SectionFormattedField label="Heading (optional)" field="heading" content={content} onPatch={patch} preset="heading" />
+          <SectionFormattedField
+            label="Description (optional)"
+            field="body"
+            content={content}
+            onPatch={patch}
+            multiline
+            rows={2}
+            preset="body"
+          />
+          <FieldGroup label="Alignment">
+            <Select value={String(content.align ?? "left")} onChange={(e) => patch({ align: e.target.value })}>
+              <option value="left">Left</option>
+              <option value="center">Center</option>
+            </Select>
+          </FieldGroup>
+          <ButtonsListEditor
+            label="Buttons"
+            buttons={(content.buttons as CmsButtonItem[] | undefined) ?? []}
+            onChange={(buttons) => patch({ buttons })}
+          />
+        </div>
+      );
+
+    case "table": {
+      const columns = (content.columns as string[] | undefined) ?? [];
+      const rows = (content.rows as string[][] | undefined) ?? [];
+      return (
+        <div className={sectionStack}>
+          <SectionFormattedField label="Heading" field="heading" content={content} onPatch={patch} preset="heading" />
+          <SectionFormattedField label="Description" field="body" content={content} onPatch={patch} multiline rows={2} preset="body" />
+          <StringListEditor
+            label="Columns"
+            addLabel="Add column"
+            values={columns}
+            onChange={(next) => patch({ columns: next })}
+            placeholder="Column name"
+          />
+          <ListFieldGroup
+            label="Rows"
+            addLabel="Add row"
+            onAdd={() => patch({ rows: [...rows, columns.map(() => "")] })}
+          >
+            <div className="space-y-3">
+              {rows.map((row, rowIndex) => (
+                <ItemCard key={rowIndex} onRemove={() => patch({ rows: rows.filter((_, i) => i !== rowIndex) })}>
+                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                    {Array.from({ length: Math.max(columns.length, row.length, 1) }).map((_, colIndex) => (
+                      <Input
+                        key={colIndex}
+                        placeholder={columns[colIndex] ?? `Column ${colIndex + 1}`}
+                        value={row[colIndex] ?? ""}
+                        onChange={(e) => {
+                          const nextRows = rows.map((existing, i) => {
+                            if (i !== rowIndex) return existing;
+                            const nextRow = [...existing];
+                            nextRow[colIndex] = e.target.value;
+                            return nextRow;
+                          });
+                          patch({ rows: nextRows });
+                        }}
+                      />
+                    ))}
+                  </div>
+                </ItemCard>
+              ))}
+            </div>
+          </ListFieldGroup>
+          <label className="flex items-center gap-2 text-sm text-app-text">
+            <input
+              type="checkbox"
+              className="form-checkbox"
+              checked={content.striped !== false}
+              onChange={(e) => patch({ striped: e.target.checked })}
+            />
+            Striped rows
+          </label>
+          <label className="flex items-center gap-2 text-sm text-app-text">
+            <input
+              type="checkbox"
+              className="form-checkbox"
+              checked={content.highlight_header !== false}
+              onChange={(e) => patch({ highlight_header: e.target.checked })}
+            />
+            Highlight header row
+          </label>
+        </div>
+      );
+    }
+
+    case "tabs": {
+      const tabs = (content.tabs as TabItem[] | undefined) ?? [];
+      return (
+        <div className={sectionStack}>
+          <SectionFormattedField label="Heading" field="heading" content={content} onPatch={patch} preset="heading" />
+          <SectionFormattedField label="Description" field="body" content={content} onPatch={patch} multiline rows={2} preset="body" />
+          <FieldGroup label="Tab style">
+            <Select value={String(content.style ?? "pills")} onChange={(e) => patch({ style: e.target.value })}>
+              <option value="pills">Pills</option>
+              <option value="underline">Underline</option>
+            </Select>
+          </FieldGroup>
+          <ListFieldGroup label="Tabs" addLabel="Add tab" onAdd={() => patch({ tabs: [...tabs, { label: "New tab", body: "" }] })}>
+            <div className="space-y-3">
+              {tabs.map((tab, index) => (
+                <ItemCard key={index} onRemove={() => patch({ tabs: tabs.filter((_, i) => i !== index) })}>
+                  <FormattedTextField
+                    label="Tab label"
+                    value={tab.label}
+                    format={tab.label_format}
+                    preset="label"
+                    onChange={(label, label_format) => patch({ tabs: updateList(tabs, index, { label, label_format }) })}
+                  />
+                  <FormattedTextField
+                    label="Tab content"
+                    value={tab.body ?? ""}
+                    format={tab.body_format}
+                    preset="body"
+                    multiline
+                    rows={4}
+                    onChange={(body, body_format) => patch({ tabs: updateList(tabs, index, { body, body_format }) })}
+                  />
+                </ItemCard>
+              ))}
+            </div>
+          </ListFieldGroup>
+        </div>
+      );
+    }
+
     case "banner":
       return (
         <div className={sectionStack}>
-          <FieldGroup label="Heading">
-            <Input value={String(content.heading ?? "")} onChange={(e) => patch({ heading: e.target.value })} />
-          </FieldGroup>
-          <FieldGroup label="Subheading">
-            <Input value={String(content.subheading ?? "")} onChange={(e) => patch({ subheading: e.target.value })} />
-          </FieldGroup>
-          <FieldGroup label="Body">
-            <Textarea value={String(content.body ?? "")} onChange={(e) => patch({ body: e.target.value })} rows={3} />
-          </FieldGroup>
+          <SectionFormattedField label="Heading" field="heading" content={content} onPatch={patch} preset="heading" />
+          <SectionFormattedField label="Subheading" field="subheading" content={content} onPatch={patch} preset="eyebrow" />
+          <SectionFormattedField label="Body" field="body" content={content} onPatch={patch} multiline rows={3} preset="body" />
           <FieldGroup label="Background image">
             <MediaUrlField
               kind="image"
@@ -159,9 +445,7 @@ export function SectionContentEditor({
             />
           </FieldGroup>
           <div className="grid gap-4 sm:grid-cols-2">
-            <FieldGroup label="CTA label">
-              <Input value={String(content.cta_label ?? "")} onChange={(e) => patch({ cta_label: e.target.value })} />
-            </FieldGroup>
+            <SectionFormattedField label="CTA label" field="cta_label" content={content} onPatch={patch} preset="button" />
             <FieldGroup label="CTA URL">
               <Input value={String(content.cta_url ?? "")} onChange={(e) => patch({ cta_url: e.target.value })} placeholder="/contact" />
             </FieldGroup>
@@ -172,12 +456,8 @@ export function SectionContentEditor({
     case "text":
       return (
         <div className={sectionStack}>
-          <FieldGroup label="Heading">
-            <Input value={String(content.heading ?? "")} onChange={(e) => patch({ heading: e.target.value })} />
-          </FieldGroup>
-          <FieldGroup label="Body">
-            <Textarea value={String(content.body ?? "")} onChange={(e) => patch({ body: e.target.value })} rows={5} />
-          </FieldGroup>
+          <SectionFormattedField label="Heading" field="heading" content={content} onPatch={patch} preset="heading" />
+          <SectionFormattedField label="Body" field="body" content={content} onPatch={patch} multiline rows={5} preset="body" />
         </div>
       );
 
@@ -186,12 +466,8 @@ export function SectionContentEditor({
       const columns = Number(content.columns ?? 3);
       return (
         <div className={sectionStack}>
-          <FieldGroup label="Heading">
-            <Input value={String(content.heading ?? "")} onChange={(e) => patch({ heading: e.target.value })} />
-          </FieldGroup>
-          <FieldGroup label="Description">
-            <Textarea value={String(content.body ?? "")} onChange={(e) => patch({ body: e.target.value })} rows={2} />
-          </FieldGroup>
+          <SectionFormattedField label="Heading" field="heading" content={content} onPatch={patch} preset="heading" />
+          <SectionFormattedField label="Description" field="body" content={content} onPatch={patch} multiline rows={2} preset="body" />
           <FieldGroup label="Columns">
             <select
               value={columns}
@@ -259,9 +535,7 @@ export function SectionContentEditor({
       const style = content.style === "list" ? "list" : "details";
       return (
         <div className={sectionStack}>
-          <FieldGroup label="Heading">
-            <Input value={String(content.heading ?? "")} onChange={(e) => patch({ heading: e.target.value })} />
-          </FieldGroup>
+          <SectionFormattedField label="Heading" field="heading" content={content} onPatch={patch} preset="heading" />
           <FieldGroup label="Layout">
             <select
               value={style}
@@ -302,12 +576,8 @@ export function SectionContentEditor({
     case "video":
       return (
         <div className={sectionStack}>
-          <FieldGroup label="Heading">
-            <Input value={String(content.heading ?? "")} onChange={(e) => patch({ heading: e.target.value })} />
-          </FieldGroup>
-          <FieldGroup label="Description">
-            <Textarea value={String(content.body ?? "")} onChange={(e) => patch({ body: e.target.value })} rows={2} />
-          </FieldGroup>
+          <SectionFormattedField label="Heading" field="heading" content={content} onPatch={patch} preset="heading" />
+          <SectionFormattedField label="Description" field="body" content={content} onPatch={patch} multiline rows={2} preset="body" />
           <FieldGroup label="Video (YouTube, Vimeo, or .mp4)">
             <MediaUrlField
               kind="video"
@@ -325,12 +595,8 @@ export function SectionContentEditor({
       const items = (content.items as CardItem[] | undefined) ?? [];
       return (
         <div className={sectionStack}>
-          <FieldGroup label="Heading">
-            <Input value={String(content.heading ?? "")} onChange={(e) => patch({ heading: e.target.value })} />
-          </FieldGroup>
-          <FieldGroup label="Description">
-            <Textarea value={String(content.body ?? "")} onChange={(e) => patch({ body: e.target.value })} rows={2} />
-          </FieldGroup>
+          <SectionFormattedField label="Heading" field="heading" content={content} onPatch={patch} preset="heading" />
+          <SectionFormattedField label="Description" field="body" content={content} onPatch={patch} multiline rows={2} preset="body" />
           <ListFieldGroup
             label="Cards"
             addLabel="Add card"
@@ -420,9 +686,7 @@ export function SectionContentEditor({
       const items = (content.items as TestimonialItem[] | undefined) ?? [];
       return (
         <div className={sectionStack}>
-          <FieldGroup label="Heading">
-            <Input value={String(content.heading ?? "")} onChange={(e) => patch({ heading: e.target.value })} />
-          </FieldGroup>
+          <SectionFormattedField label="Heading" field="heading" content={content} onPatch={patch} preset="heading" />
           <ListFieldGroup
             label="Testimonials"
             addLabel="Add testimonial"
@@ -465,12 +729,8 @@ export function SectionContentEditor({
     case "map":
       return (
         <div className={sectionStack}>
-          <FieldGroup label="Heading">
-            <Input value={String(content.heading ?? "")} onChange={(e) => patch({ heading: e.target.value })} />
-          </FieldGroup>
-          <FieldGroup label="Description">
-            <Textarea value={String(content.body ?? "")} onChange={(e) => patch({ body: e.target.value })} rows={2} />
-          </FieldGroup>
+          <SectionFormattedField label="Heading" field="heading" content={content} onPatch={patch} preset="heading" />
+          <SectionFormattedField label="Description" field="body" content={content} onPatch={patch} multiline rows={2} preset="body" />
           <FieldGroup label="Map embed URL (Google Maps iframe src)">
             <Input value={String(content.embed_url ?? "")} onChange={(e) => patch({ embed_url: e.target.value })} placeholder="https://www.google.com/maps/embed?..." />
           </FieldGroup>
@@ -484,12 +744,8 @@ export function SectionContentEditor({
       const fields = (content.fields as FormField[] | undefined) ?? [];
       return (
         <div className={sectionStack}>
-          <FieldGroup label="Heading">
-            <Input value={String(content.heading ?? "")} onChange={(e) => patch({ heading: e.target.value })} />
-          </FieldGroup>
-          <FieldGroup label="Description">
-            <Textarea value={String(content.body ?? "")} onChange={(e) => patch({ body: e.target.value })} rows={2} />
-          </FieldGroup>
+          <SectionFormattedField label="Heading" field="heading" content={content} onPatch={patch} preset="heading" />
+          <SectionFormattedField label="Description" field="body" content={content} onPatch={patch} multiline rows={2} preset="body" />
           <div className="grid gap-4 sm:grid-cols-2">
             <FieldGroup label="Submit button label">
               <Input value={String(content.submit_label ?? "")} onChange={(e) => patch({ submit_label: e.target.value })} />
@@ -689,12 +945,8 @@ export function SectionContentEditor({
               <option value="academy">Academy</option>
             </select>
           </FieldGroup>
-          <FieldGroup label="Heading">
-            <Input value={String(catalogContent.heading ?? "")} onChange={(e) => patch({ heading: e.target.value })} />
-          </FieldGroup>
-          <FieldGroup label="Description">
-            <Textarea value={String(catalogContent.body ?? "")} onChange={(e) => patch({ body: e.target.value })} rows={2} />
-          </FieldGroup>
+          <SectionFormattedField label="Heading" field="heading" content={content} onPatch={patch} preset="heading" />
+          <SectionFormattedField label="Description" field="body" content={content} onPatch={patch} multiline rows={2} preset="body" />
           <div className="grid gap-4 sm:grid-cols-2">
             <FieldGroup label="Item limit">
               <Input
@@ -752,12 +1004,8 @@ export function SectionContentEditor({
     default:
       return (
         <div className={sectionStack}>
-          <FieldGroup label="Heading">
-            <Input value={String(content.heading ?? "")} onChange={(e) => patch({ heading: e.target.value })} />
-          </FieldGroup>
-          <FieldGroup label="Body">
-            <Textarea value={String(content.body ?? "")} onChange={(e) => patch({ body: e.target.value })} rows={5} />
-          </FieldGroup>
+          <SectionFormattedField label="Heading" field="heading" content={content} onPatch={patch} preset="heading" />
+          <SectionFormattedField label="Body" field="body" content={content} onPatch={patch} multiline rows={5} preset="body" />
         </div>
       );
   }
