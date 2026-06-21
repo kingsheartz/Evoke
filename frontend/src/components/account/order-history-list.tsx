@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { apiClient, type ShopOrder } from "@/lib/api";
 import { formatOfferingPrice } from "@/lib/offerings";
+import { AccountRecordCard, AccountRecordRow } from "@/components/account/account-record-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, TableEmpty, TableLoading } from "@/components/ui/data-table";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -62,7 +63,24 @@ export function OrderHistoryList({
           />
         ) : (
           <>
-            <DataTable inset>
+            <ul className="space-y-3 p-4 md:hidden">
+              {rows.map((order) => (
+                <li key={order.id}>
+                  <AccountRecordCard>
+                    <AccountRecordRow label="Order" value={<span className="font-mono text-xs">{order.order_number}</span>} />
+                    <AccountRecordRow label="Date" value={order.created_at?.slice(0, 10) ?? "—"} />
+                    <AccountRecordRow label="Status" value={<StatusBadge status={order.status} />} />
+                    <AccountRecordRow label="Payment" value={order.payment_status ?? "—"} />
+                    <AccountRecordRow
+                      label="Total"
+                      value={formatOfferingPrice(orderTotal(order), { prefix: false })}
+                    />
+                  </AccountRecordCard>
+                </li>
+              ))}
+            </ul>
+            <div className="hidden md:block table-wrap table-wrap--scrollable">
+              <DataTable inset>
               <thead>
                 <tr>
                   <th>Order</th>
@@ -86,6 +104,7 @@ export function OrderHistoryList({
                 ))}
               </tbody>
             </DataTable>
+            </div>
             {compact && orders.length > 5 && (
               <p className="mt-3 text-sm">
                 <Link href="/account/orders" className="font-medium text-accent-soft hover:text-accent">

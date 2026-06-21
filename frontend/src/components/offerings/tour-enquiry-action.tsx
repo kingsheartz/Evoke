@@ -52,7 +52,7 @@ export function TourEnquiryAction({
 
   if (!open) {
     return (
-      <Button type="button" variant="outline" className="h-12 rounded-xl px-6" onClick={() => setOpen(true)}>
+      <Button type="button" variant="outline" className="h-12 w-full rounded-xl px-6 sm:w-auto" onClick={() => setOpen(true)}>
         Ask a question
       </Button>
     );
@@ -82,11 +82,11 @@ export function TourEnquiryAction({
           <Label>Message</Label>
           <Textarea rows={3} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} />
         </div>
-        <div className="flex gap-2">
-          <Button type="button" onClick={submit} disabled={submitting}>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Button type="button" className="w-full sm:w-auto" onClick={submit} disabled={submitting}>
             {submitting ? "Sending…" : "Send enquiry"}
           </Button>
-          <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+          <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => setOpen(false)}>
             Cancel
           </Button>
         </div>

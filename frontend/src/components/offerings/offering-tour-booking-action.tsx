@@ -74,7 +74,7 @@ export function TourBookingAction({
       {!open ? (
         <Button
           type="button"
-          className="h-12 rounded-xl px-6 text-sm font-semibold"
+          className="h-12 w-full rounded-xl px-6 text-sm font-semibold sm:w-auto"
           onClick={() => (token ? setOpen(true) : router.push(signInHref))}
         >
           Book now
@@ -100,11 +100,11 @@ export function TourBookingAction({
               <Label>Special requests (optional)</Label>
               <Textarea rows={2} value={requests} onChange={(e) => setRequests(e.target.value)} />
             </div>
-            <div className="flex flex-wrap gap-2">
-              <Button type="button" onClick={submit} disabled={submitting}>
+            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+              <Button type="button" className="w-full sm:w-auto" onClick={submit} disabled={submitting}>
                 {submitting ? "Submitting…" : "Submit booking"}
               </Button>
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+              <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => setOpen(false)}>
                 Cancel
               </Button>
             </div>

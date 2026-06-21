@@ -66,7 +66,7 @@ export function ShopBuyAction({
   }
 
   return (
-    <div className="flex w-full max-w-md flex-col gap-3 sm:items-end">
+    <div className="flex w-full max-w-md flex-col gap-3">
       {variants.length > 0 && (
         <div className="w-full space-y-2">
           <Label>Variant</Label>
@@ -83,18 +83,23 @@ export function ShopBuyAction({
           </Select>
         </div>
       )}
-      <div className="flex w-full flex-wrap items-end gap-3">
+      <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-end">
         <div className="space-y-2">
           <Label>Qty</Label>
           <Input
             type="number"
             min={1}
-            className="w-24"
+            className="w-full sm:w-24"
             value={quantity}
             onChange={(e) => setQuantity(Number(e.target.value) || 1)}
           />
         </div>
-        <Button type="button" className="h-12 rounded-xl px-6 text-sm font-semibold" onClick={addToCart} disabled={submitting}>
+        <Button
+          type="button"
+          className="h-12 w-full rounded-xl px-6 text-sm font-semibold sm:w-auto"
+          onClick={addToCart}
+          disabled={submitting}
+        >
           {submitting ? "Adding…" : "Add to cart"}
         </Button>
       </div>

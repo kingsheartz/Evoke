@@ -77,7 +77,7 @@ export function AcademyEnrollAction({
   }
 
   return (
-    <div className="flex w-full max-w-md flex-col gap-3 sm:items-end">
+    <div className="flex w-full max-w-md flex-col gap-3">
       <div className="w-full space-y-2">
         <Label>Batch</Label>
         <Select
@@ -92,7 +92,12 @@ export function AcademyEnrollAction({
           ))}
         </Select>
       </div>
-      <Button type="button" className="h-12 rounded-xl px-6 text-sm font-semibold" onClick={enroll} disabled={submitting}>
+      <Button
+        type="button"
+        className="h-12 w-full rounded-xl px-6 text-sm font-semibold sm:w-auto"
+        onClick={enroll}
+        disabled={submitting}
+      >
         {submitting ? "Enrolling…" : "Enroll now"}
       </Button>
       {!token && (

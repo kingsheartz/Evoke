@@ -77,7 +77,7 @@ export function OfferingCard({
           {title}
         </h3>
         {meta && <p className="mt-2 text-sm text-app-muted">{meta}</p>}
-        <span className="mt-auto inline-flex items-center gap-1 pt-4 text-sm font-medium text-accent-soft opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+        <span className="mt-auto inline-flex items-center gap-1 pt-4 text-sm font-medium text-accent-soft opacity-100 sm:opacity-0 sm:transition-opacity sm:duration-300 sm:group-hover:opacity-100">
           View details
           <ArrowUpRight className="h-3.5 w-3.5" />
         </span>

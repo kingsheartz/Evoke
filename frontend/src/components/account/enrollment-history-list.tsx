@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { apiClient, type Enrollment } from "@/lib/api";
+import { AccountRecordCard, AccountRecordRow } from "@/components/account/account-record-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, TableEmpty, TableLoading } from "@/components/ui/data-table";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -62,7 +63,34 @@ export function EnrollmentHistoryList({
           />
         ) : (
           <>
-            <DataTable inset>
+            <ul className="space-y-3 p-4 md:hidden">
+              {rows.map((enrollment) => (
+                <li key={enrollment.id}>
+                  <AccountRecordCard>
+                    <AccountRecordRow
+                      label="Course"
+                      value={
+                        enrollment.batch?.course?.slug ? (
+                          <Link
+                            href={`/academy/courses/${enrollment.batch.course.slug}`}
+                            className="hover:text-accent-soft"
+                          >
+                            {enrollment.batch.course.title}
+                          </Link>
+                        ) : (
+                          enrollment.batch?.course?.title ?? "—"
+                        )
+                      }
+                    />
+                    <AccountRecordRow label="Batch" value={enrollment.batch?.name ?? "—"} />
+                    <AccountRecordRow label="Status" value={<StatusBadge status={enrollment.status} />} />
+                    <AccountRecordRow label="Payment" value={enrollment.payment_status} />
+                  </AccountRecordCard>
+                </li>
+              ))}
+            </ul>
+            <div className="hidden md:block table-wrap table-wrap--scrollable">
+              <DataTable inset>
               <thead>
                 <tr>
                   <th>Course</th>
@@ -95,6 +123,7 @@ export function EnrollmentHistoryList({
                 ))}
               </tbody>
             </DataTable>
+            </div>
             {compact && enrollments.length > 5 && (
               <p className="mt-3 text-sm">
                 <Link href="/account/enrollments" className="font-medium text-accent-soft hover:text-accent">

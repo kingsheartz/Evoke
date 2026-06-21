@@ -25,8 +25,54 @@ export const accountNavItems = [
   { href: "/account/settings", label: "Theme & display", icon: Palette },
 ] as const;
 
-export function AccountNav({ className, onNavigate }: { className?: string; onNavigate?: () => void }) {
+export function AccountNav({
+  className,
+  onNavigate,
+  variant = "sidebar",
+}: {
+  className?: string;
+  onNavigate?: () => void;
+  variant?: "sidebar" | "horizontal";
+}) {
   const pathname = usePathname();
+
+  if (variant === "horizontal") {
+    return (
+      <nav
+        className={cn(
+          "account-nav-horizontal flex gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+          className,
+        )}
+        aria-label="Account"
+      >
+        {accountNavItems.map((item) => {
+          const active =
+            item.href === "/shop/cart"
+              ? pathname === "/shop/cart"
+              : "exact" in item && item.exact
+                ? pathname === item.href
+                : pathname.startsWith(item.href);
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={onNavigate}
+              className={cn(
+                "inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-2 text-xs font-medium transition-colors sm:text-sm",
+                active
+                  ? "bg-accent/15 text-accent-soft ring-1 ring-accent/25"
+                  : "bg-app-surface-muted/50 text-app-muted hover:bg-app-surface-muted hover:text-app-text",
+              )}
+            >
+              <Icon className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" aria-hidden />
+              <span className="whitespace-nowrap">{item.label}</span>
+            </Link>
+          );
+        })}
+      </nav>
+    );
+  }
 
   return (
     <nav className={cn("flex flex-col gap-1", className)} aria-label="Account">

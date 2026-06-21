@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Download, Eye } from "lucide-react";
 import { CertificatePreviewModal } from "@/components/academy/certificate-preview-modal";
+import { AccountRecordCard, AccountRecordRow } from "@/components/account/account-record-card";
 import { apiClient, type AcademyCertificate } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -48,7 +49,53 @@ export function CertificateList({
           {rows.length === 0 ? (
             <TableEmpty inset={!compact} message="No certificates issued yet." />
           ) : (
-            <DataTable inset>
+            <>
+              <ul className="space-y-3 p-4 md:hidden">
+                {rows.map((certificate) => (
+                  <li key={certificate.id}>
+                    <AccountRecordCard>
+                      <AccountRecordRow
+                        label="Certificate"
+                        value={<span className="font-mono text-xs">{certificate.certificate_number}</span>}
+                      />
+                      <AccountRecordRow
+                        label="Course"
+                        value={certificate.enrollment?.batch?.course?.title ?? "—"}
+                      />
+                      <AccountRecordRow label="Issued" value={certificate.issued_at?.slice(0, 10) ?? "—"} />
+                      {certificate.file_path ? (
+                        <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="w-full sm:w-auto"
+                            onClick={() =>
+                              setPreview({
+                                url: certificate.file_path!,
+                                title: certificate.certificate_number,
+                              })
+                            }
+                          >
+                            <Eye className="h-4 w-4" />
+                            Preview
+                          </Button>
+                          <Button type="button" variant="outline" size="sm" className="w-full sm:w-auto" asChild>
+                            <a href={certificate.file_path} target="_blank" rel="noopener noreferrer" download>
+                              <Download className="h-4 w-4" />
+                              Download
+                            </a>
+                          </Button>
+                        </div>
+                      ) : (
+                        <p className="mt-2 text-xs text-app-muted">File pending</p>
+                      )}
+                    </AccountRecordCard>
+                  </li>
+                ))}
+              </ul>
+              <div className="hidden md:block table-wrap table-wrap--scrollable">
+                <DataTable inset>
               <thead>
                 <tr>
                   <th>Certificate</th>
@@ -96,6 +143,8 @@ export function CertificateList({
                 ))}
               </tbody>
             </DataTable>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

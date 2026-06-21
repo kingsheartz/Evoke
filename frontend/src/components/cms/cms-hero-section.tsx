@@ -28,7 +28,12 @@ export function CmsHeroSection({ content }: { content: HeroContent }) {
   const videoUrl = content.video_url?.trim();
   const useVideo = content.background_type === "video" && Boolean(videoUrl);
   const hasBackground = backgroundImages.length > 0 || useVideo;
+  const hasForegroundContent = Boolean(
+    heading || headingSuffix || body || content.eyebrow?.trim() || content.buttons?.length,
+  );
   const height = content.height ?? "full";
+  const effectiveHeight =
+    hasBackground && !hasForegroundContent && height === "full" ? "medium" : height;
   const align = content.align ?? "left";
   const overlay = content.overlay ?? "gradient";
 
@@ -38,7 +43,7 @@ export function CmsHeroSection({ content }: { content: HeroContent }) {
     <section
       className={cn(
         "relative isolate overflow-hidden rounded-none md:rounded-2xl",
-        heightClass[height],
+        heightClass[effectiveHeight],
         !hasBackground && "bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900",
       )}
     >
@@ -59,6 +64,7 @@ export function CmsHeroSection({ content }: { content: HeroContent }) {
         <div className={cn("absolute inset-0", overlayClass[overlay])} />
       ) : null}
 
+      {hasForegroundContent ? (
       <div
         className={cn(
           "relative flex h-full min-h-[inherit] items-end px-6 pb-14 pt-28 md:px-12 md:pb-16 md:pt-32",
@@ -106,6 +112,7 @@ export function CmsHeroSection({ content }: { content: HeroContent }) {
           <CmsCtaButtonRow buttons={content.buttons} align={align} context="hero" className="mt-8" />
         </div>
       </div>
+      ) : null}
     </section>
   );
 }

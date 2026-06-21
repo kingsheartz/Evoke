@@ -23,11 +23,11 @@ export function OfferingCatalogSection({
   if (items.length === 0) return null;
 
   return (
-    <section className={cn("border-t border-app-border bg-app-surface/30 py-16", className)}>
+    <section className={cn("border-t border-app-border bg-app-surface/30 py-10 md:py-16", className)}>
       <PageContainer>
-        <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+        <div className="mb-6 flex flex-wrap items-end justify-between gap-4 md:mb-8">
           <div>
-            <h2 className="font-display text-3xl font-semibold tracking-tight text-app-text">{heading}</h2>
+            <h2 className="font-display text-2xl font-semibold tracking-tight text-app-text sm:text-3xl">{heading}</h2>
             {description?.trim() && <p className="mt-2 max-w-2xl text-app-muted">{description}</p>}
           </div>
           {viewAllHref && (
@@ -62,14 +62,16 @@ export function OfferingCatalogPageView({
   emptyMessage?: string;
 }) {
   return (
-    <PageContainer className="py-16">
+    <PageContainer className="py-10 md:py-16">
       <div className="max-w-2xl">
-        <h1 className="font-display text-4xl font-semibold tracking-tight text-app-text md:text-5xl">{title}</h1>
-        {description?.trim() && <p className="mt-4 text-lg text-app-muted">{description}</p>}
+        <h1 className="font-display text-3xl font-semibold tracking-tight text-app-text sm:text-4xl md:text-5xl">
+          {title}
+        </h1>
+        {description?.trim() && <p className="mt-3 text-base text-app-muted sm:mt-4 sm:text-lg">{description}</p>}
       </div>
 
       {items.length > 0 ? (
-        <OfferingCardGrid className="mt-12">
+        <OfferingCardGrid className="mt-8 md:mt-12">
           {items.map((item) => (
             <OfferingCard key={item.href} {...item} />
           ))}

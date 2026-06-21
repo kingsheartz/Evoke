@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { apiClient, type TourBooking } from "@/lib/api";
 import { formatOfferingPrice } from "@/lib/offerings";
+import { AccountRecordCard, AccountRecordRow } from "@/components/account/account-record-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, TableEmpty, TableLoading } from "@/components/ui/data-table";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -58,7 +59,38 @@ export function BookingHistoryList({
           />
         ) : (
           <>
-            <DataTable inset>
+            <ul className="space-y-3 p-4 md:hidden">
+              {rows.map((booking) => (
+                <li key={booking.id}>
+                  <AccountRecordCard>
+                    <AccountRecordRow
+                      label="Reference"
+                      value={<span className="font-mono text-xs">{booking.booking_number}</span>}
+                    />
+                    <AccountRecordRow
+                      label="Package"
+                      value={
+                        booking.package?.slug ? (
+                          <Link href={`/tours/${booking.package.slug}`} className="hover:text-accent-soft">
+                            {booking.package.title}
+                          </Link>
+                        ) : (
+                          booking.package?.title ?? "—"
+                        )
+                      }
+                    />
+                    <AccountRecordRow label="Travel date" value={booking.travel_date?.slice(0, 10) ?? "—"} />
+                    <AccountRecordRow label="Status" value={<StatusBadge status={booking.status} />} />
+                    <AccountRecordRow
+                      label="Total"
+                      value={formatOfferingPrice(booking.total_amount, { prefix: false })}
+                    />
+                  </AccountRecordCard>
+                </li>
+              ))}
+            </ul>
+            <div className="hidden md:block table-wrap table-wrap--scrollable">
+              <DataTable inset>
               <thead>
                 <tr>
                   <th>Reference</th>
@@ -90,6 +122,7 @@ export function BookingHistoryList({
                 ))}
               </tbody>
             </DataTable>
+            </div>
             {compact && bookings.length > 5 && (
               <p className="mt-3 text-sm">
                 <Link href="/account/bookings" className="font-medium text-accent-soft hover:text-accent">

@@ -7,7 +7,7 @@ import { SiteAdFloatingRails } from "@/components/site/site-ad-floating-rails";
 
 export default function SiteLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative flex min-h-screen flex-col overflow-hidden bg-app-bg">
+    <div className="relative flex min-h-screen flex-col overflow-x-clip bg-app-bg">
       <SiteChromeMarker />
       <SiteHeader />
       <SiteChromeSpacer />

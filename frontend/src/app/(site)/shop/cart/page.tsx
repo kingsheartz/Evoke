@@ -5,9 +5,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ShoppingBag, Trash2 } from "lucide-react";
 import { CustomerAuthGuard } from "@/components/auth/customer-auth-guard";
+import { AccountMobileHeader } from "@/components/account/account-mobile-header";
 import { AccountNav } from "@/components/account/account-nav";
 import { PageContainer } from "@/components/layout/app-shell";
 import { CartOrderSummary } from "@/components/shop/cart-order-summary";
+import { MobileCheckoutBar } from "@/components/shop/mobile-checkout-bar";
 import { Button } from "@/components/ui/button";
 import { apiClient, type Cart } from "@/lib/api";
 import { formatOfferingPrice } from "@/lib/offerings";
@@ -36,8 +38,8 @@ function CartLineItem({
   const lineTotal = Number(unitPrice) * quantity;
 
   return (
-    <div className="flex gap-4 rounded-xl border border-app-border bg-app-surface/80 p-4">
-      <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-app-surface-muted ring-1 ring-app-border">
+    <div className="flex gap-3 rounded-xl border border-app-border bg-app-surface/80 p-3 sm:gap-4 sm:p-4">
+      <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-app-surface-muted ring-1 ring-app-border sm:h-20 sm:w-20">
         {image ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={image} alt="" className="h-full w-full object-cover" />
@@ -166,7 +168,8 @@ function CartContent() {
   if (!user || !token) return null;
 
   return (
-    <PageContainer className="py-12 md:py-16">
+    <PageContainer className="py-8 md:py-12 lg:py-16">
+      <AccountMobileHeader />
       <div className="mx-auto flex max-w-6xl flex-col gap-8 lg:flex-row lg:items-start lg:gap-10">
         <aside className="hidden lg:block lg:w-56 lg:shrink-0">
           <div className="rounded-2xl border border-app-border bg-app-surface/60 p-4 lg:sticky lg:top-24">
@@ -174,7 +177,7 @@ function CartContent() {
           </div>
         </aside>
 
-        <div className="min-w-0 flex-1">
+        <div className={cn("min-w-0 flex-1", items.length > 0 && "pb-24 lg:pb-0")}>
           <Link
             href="/shop/products"
             className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-app-muted hover:text-accent-soft"
@@ -183,7 +186,9 @@ function CartContent() {
             Continue shopping
           </Link>
 
-          <h1 className="font-display text-3xl font-semibold tracking-tight text-app-text md:text-4xl">Your cart</h1>
+          <h1 className="font-display text-2xl font-semibold tracking-tight text-app-text sm:text-3xl md:text-4xl">
+            Your cart
+          </h1>
           <p className="mt-2 text-app-muted">
             {items.length === 0 ? "Your cart is empty." : `${items.length} item${items.length === 1 ? "" : "s"} ready for checkout.`}
           </p>
@@ -241,6 +246,15 @@ function CartContent() {
           {items.length === 0 && message && <p className="mt-4 text-sm text-status-error">{message}</p>}
         </div>
       </div>
+
+      {items.length > 0 && (
+        <MobileCheckoutBar
+          total={total}
+          checkingOut={checkingOut}
+          disabled={!user.address_line1 || !user.city || !user.postal_code}
+          onCheckout={checkout}
+        />
+      )}
     </PageContainer>
   );
 }

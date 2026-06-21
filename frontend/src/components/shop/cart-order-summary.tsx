@@ -60,14 +60,15 @@ export function CartOrderSummary({
           <Tag className="h-3.5 w-3.5" />
           Coupon code
         </Label>
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row">
           <Input
             id="cart-coupon"
             value={couponCode}
             onChange={(e) => onCouponChange(e.target.value.toUpperCase())}
             placeholder="SAVE10"
+            className="min-w-0 flex-1"
           />
-          <Button type="button" variant="outline" onClick={onApplyCoupon}>
+          <Button type="button" variant="outline" className="w-full shrink-0 sm:w-auto" onClick={onApplyCoupon}>
             Apply
           </Button>
         </div>
@@ -103,7 +104,12 @@ export function CartOrderSummary({
         )}
       </div>
 
-      <Button type="button" className="mt-6 w-full" onClick={onCheckout} disabled={checkingOut || !addressComplete}>
+      <Button
+        type="button"
+        className="mt-6 hidden w-full lg:inline-flex"
+        onClick={onCheckout}
+        disabled={checkingOut || !addressComplete}
+      >
         {checkingOut ? "Placing order…" : "Place order"}
       </Button>
 

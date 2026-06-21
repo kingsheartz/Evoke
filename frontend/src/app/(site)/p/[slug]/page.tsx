@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ExternalLink } from "lucide-react";
-import { CmsPageSections } from "@/components/cms/cms-page-view";
+import { ArrowLeft } from "lucide-react";
+import { CmsPageSections, pageUsesHeroLead } from "@/components/cms/cms-page-view";
 import { PageContainer } from "@/components/layout/app-shell";
 import { apiClient } from "@/lib/api";
 
@@ -18,6 +18,27 @@ export default async function PublicCmsPage({
     page = response.data;
   } catch {
     notFound();
+  }
+
+  const sections = page.sections ?? [];
+  const heroLead = pageUsesHeroLead(sections);
+
+  if (heroLead) {
+    return (
+      <div className="relative pb-16">
+        <PageContainer className="pointer-events-none absolute inset-x-0 top-0 z-20 py-4 md:py-6">
+          <Link
+            href="/"
+            className="pointer-events-auto inline-flex items-center gap-2 text-sm font-medium text-white/90 drop-shadow-sm transition-colors hover:text-white"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to home
+          </Link>
+        </PageContainer>
+
+        <CmsPageSections sections={sections} layout="hero-lead" />
+      </div>
+    );
   }
 
   return (
@@ -41,16 +62,8 @@ export default async function PublicCmsPage({
       </header>
 
       <div className="mt-12">
-        <CmsPageSections sections={page.sections ?? []} />
+        <CmsPageSections sections={sections} />
       </div>
-
-      <p className="mt-16 text-xs text-app-muted">
-        Public URL:{" "}
-        <Link href={`/p/${page.slug}`} className="inline-flex items-center gap-1 text-accent-soft hover:text-accent">
-          /p/{page.slug}
-          <ExternalLink className="h-3 w-3" />
-        </Link>
-      </p>
     </PageContainer>
   );
 }
