@@ -2,6 +2,7 @@ import type { DivisionFeaturedCatalogConfig } from "@/lib/division-page";
 import { apiClient, isNextProductionBuild, type Course, type Product, type TourPackage } from "@/lib/api";
 import type { StatItem } from "@/lib/cms-sections";
 import type { GalleryImage } from "@/lib/cms-sections";
+import type { TextFormat } from "@/lib/text-format";
 
 export type OfferingVertical = "tours" | "shop" | "academy";
 
@@ -10,6 +11,7 @@ export type TimelineVariant = "travel" | "course" | "product";
 export interface TimelineItem {
   title: string;
   body?: string;
+  body_format?: TextFormat;
   milestone?: "start" | "end";
 }
 
@@ -110,6 +112,9 @@ export function productToOffering(product: Product): OfferingCardData {
   const imageUrl = resolveMediaUrl(images[0]) ?? null;
   const stockLabel =
     product.stock <= 0 ? "Out of stock" : product.stock <= 5 ? `${product.stock} left` : "In stock";
+  const comparePrice = product.compare_price ? Number.parseFloat(product.compare_price) : 0;
+  const price = Number.parseFloat(product.price);
+  const onSale = comparePrice > price;
 
   return {
     title: product.name,
@@ -117,8 +122,8 @@ export function productToOffering(product: Product): OfferingCardData {
     imageUrl,
     imageAlt: product.name,
     priceLabel: formatOfferingPrice(product.price),
-    metaParts: [product.category?.name, stockLabel],
-    badge: product.is_featured ? "Featured" : undefined,
+    metaParts: [product.category?.name, stockLabel, product.sku],
+    badge: onSale ? "Sale" : product.is_featured ? "Featured" : undefined,
     galleryCount: images.length,
     vertical: "shop",
   };
@@ -141,11 +146,17 @@ export function courseToOffering(course: Course, options?: { nextBatchLabel?: st
 }
 
 export function itineraryDaysToTimeline(
-  days: Array<{ day_number: number; title: string; description?: string | null }>,
+  days: Array<{
+    day_number: number;
+    title: string;
+    description?: string | null;
+    description_format?: TextFormat | null;
+  }>,
 ): TimelineItem[] {
   return days.map((day, index, all) => ({
     title: day.title?.trim() || `Day ${String(day.day_number).padStart(2, "0")}`,
     body: day.description ?? undefined,
+    body_format: day.description_format ?? undefined,
     milestone: index === 0 ? "start" : index === all.length - 1 ? "end" : undefined,
   }));
 }

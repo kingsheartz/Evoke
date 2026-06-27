@@ -1,5 +1,6 @@
 import type { HeroContent } from "@/lib/cms-sections";
 import { heroBackgroundImages, heroSlideshowSettings } from "@/lib/cms-sections";
+import { resolvePublicMediaUrl } from "@/lib/media";
 import { FormattedText } from "@/components/ui/formatted-text";
 import { cn } from "@/lib/utils";
 import { CmsCtaButtonRow } from "@/components/cms/cms-cta-button";
@@ -25,7 +26,7 @@ export function CmsHeroSection({ content }: { content: HeroContent }) {
   const body = content.body?.trim();
   const backgroundImages = heroBackgroundImages(content);
   const slideshow = heroSlideshowSettings(content);
-  const videoUrl = content.video_url?.trim();
+  const videoUrl = resolvePublicMediaUrl(content.video_url);
   const useVideo = content.background_type === "video" && Boolean(videoUrl);
   const hasBackground = backgroundImages.length > 0 || useVideo;
   const hasForegroundContent = Boolean(
@@ -76,7 +77,7 @@ export function CmsHeroSection({ content }: { content: HeroContent }) {
             text={content.eyebrow}
             format={content.eyebrow_format}
             as="p"
-            className="text-xs font-semibold uppercase tracking-[0.2em] text-accent-soft"
+            className="text-xs font-semibold tracking-[0.2em] text-accent-soft"
           />
 
           {(heading || headingAccent || headingSuffix) && (

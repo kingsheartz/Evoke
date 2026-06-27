@@ -152,6 +152,34 @@ export function getDivisionCardAccent(style: DivisionAccentStyle = "accent") {
   return cardAccent[style] ?? cardAccent.accent;
 }
 
+const heroAccent: Record<DivisionAccentStyle, { border: string; bg: string; text: string }> = {
+  accent: { border: "border-accent/20", bg: "bg-accent/10", text: "text-accent-soft" },
+  violet: { border: "border-violet-500/20", bg: "bg-violet-500/10", text: "text-violet-400" },
+  blue: { border: "border-blue-500/20", bg: "bg-blue-500/10", text: "text-blue-400" },
+  emerald: { border: "border-emerald-500/20", bg: "bg-emerald-500/10", text: "text-emerald-400" },
+  orange: { border: "border-orange-500/20", bg: "bg-orange-500/10", text: "text-orange-400" },
+  rose: { border: "border-rose-500/20", bg: "bg-rose-500/10", text: "text-rose-400" },
+  amber: { border: "border-amber-500/20", bg: "bg-amber-500/10", text: "text-amber-400" },
+};
+
+const cardHoverBorder: Record<DivisionAccentStyle, string> = {
+  accent: "hover:border-accent/25",
+  violet: "hover:border-violet-500/25",
+  blue: "hover:border-blue-500/25",
+  emerald: "hover:border-emerald-500/25",
+  orange: "hover:border-orange-500/25",
+  rose: "hover:border-rose-500/25",
+  amber: "hover:border-amber-500/25",
+};
+
+export function getDivisionHeroAccent(style: DivisionAccentStyle = "accent") {
+  return heroAccent[style] ?? heroAccent.accent;
+}
+
+export function getDivisionCardHoverBorder(style: DivisionAccentStyle = "accent") {
+  return cardHoverBorder[style] ?? cardHoverBorder.accent;
+}
+
 export function slugifyDivision(input: string): string {
   return input
     .toLowerCase()

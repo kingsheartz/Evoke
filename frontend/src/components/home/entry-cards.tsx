@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowUpRight, GraduationCap, Plane, ShoppingBag } from "lucide-react";
 import type { EntryCard } from "@/lib/api";
 import { PageContainer } from "@/components/layout/app-shell";
+import { gradientBackgroundStyle } from "@/lib/gradients";
 import { cn } from "@/lib/utils";
 
 const iconMap = {
@@ -16,10 +17,10 @@ const bentoLayout: Record<string, string> = {
   tours: "md:col-span-1",
 };
 
-const accentGradients: Record<string, string> = {
-  academy: "from-violet-600/80 via-indigo-600/60 to-blue-700/80",
-  shop: "from-emerald-600/80 via-teal-600/60 to-cyan-700/80",
-  tours: "from-orange-600/80 via-rose-600/60 to-pink-700/80",
+const fallbackGradients: Record<string, string> = {
+  academy: "from-blue-600 to-indigo-700",
+  shop: "from-emerald-600 to-teal-700",
+  tours: "from-orange-600 to-rose-700",
 };
 
 interface EntryCardsProps {
@@ -44,7 +45,9 @@ export function EntryCards({ cards }: EntryCardsProps) {
         {cards.map((card, i) => {
           const Icon = iconMap[card.icon as keyof typeof iconMap] ?? GraduationCap;
           const layout = bentoLayout[card.slug] ?? "";
-          const gradient = accentGradients[card.slug] ?? card.gradient;
+          const gradientValue =
+            card.gradient?.trim() || fallbackGradients[card.slug] || "from-blue-600 to-indigo-700";
+          const gradientStyle = gradientBackgroundStyle(gradientValue);
 
           return (
             <Link
@@ -59,10 +62,8 @@ export function EntryCards({ cards }: EntryCardsProps) {
               )}
             >
               <div
-                className={cn(
-                  "absolute inset-0 bg-gradient-to-br opacity-60 transition-opacity duration-500 group-hover:opacity-80",
-                  gradient,
-                )}
+                className="absolute inset-0 opacity-60 transition-opacity duration-500 group-hover:opacity-80"
+                style={gradientStyle}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-app-bg via-app-bg/50 to-app-bg/20" />
 

@@ -3,6 +3,7 @@ import { DivisionContent, DivisionHero } from "@/components/layout/division-hero
 import { HomepageExtraSections } from "@/components/home/homepage-extra-sections";
 import {
   getDivisionCardAccent,
+  getDivisionCardHoverBorder,
   parseDivisionMeta,
   resolveDivisionIcon,
   type DivisionPageData,
@@ -17,7 +18,9 @@ export function DivisionLandingView({
   featuredCatalog?: React.ReactNode;
 }) {
   const HeroIcon = resolveDivisionIcon(page.icon);
-  const accent = getDivisionCardAccent(page.accent_style ?? "accent");
+  const accentStyle = page.accent_style ?? "accent";
+  const accent = getDivisionCardAccent(accentStyle);
+  const cardHoverBorder = getDivisionCardHoverBorder(accentStyle);
   const { sections } = parseDivisionMeta(page.meta);
 
   return (
@@ -27,6 +30,7 @@ export function DivisionLandingView({
         title={page.title}
         description={page.description}
         icon={HeroIcon}
+        accentStyle={accentStyle}
       />
       <DivisionContent>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -52,8 +56,10 @@ export function DivisionLandingView({
                 )}
               </>
             );
-            const className =
-              "rounded-2xl border border-app-border bg-app-surface/80 p-6 ring-1 ring-app-border transition-colors hover:border-accent/25 hover:bg-app-surface";
+            const className = cn(
+              "rounded-2xl border border-app-border bg-app-surface/80 p-6 ring-1 ring-app-border transition-colors hover:bg-app-surface",
+              cardHoverBorder,
+            );
 
             if (card.link_url?.trim()) {
               return (

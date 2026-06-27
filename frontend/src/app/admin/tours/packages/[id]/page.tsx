@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { Plus, Trash2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { GalleryUrlsField, normalizeUrlList } from "@/components/admin/gallery-urls-field";
 import { StringListField, normalizeStringList } from "@/components/admin/string-list-field";
@@ -15,6 +14,7 @@ import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { PageHeader } from "@/components/ui/page-header";
 import { PageLoading } from "@/components/ui/page-loading";
+import { ItineraryDaysEditor } from "@/components/admin/itinerary-days-editor";
 import { apiClient, type ItineraryDay, type TourPackage } from "@/lib/api";
 import { revalidateTourPublicCache } from "@/lib/revalidate-cms";
 import { useAuthStore } from "@/stores/app";
@@ -43,7 +43,6 @@ export default function EditPackagePage() {
   const [exclusions, setExclusions] = useState<string[]>([]);
   const [relatedSlugs, setRelatedSlugs] = useState<string[]>([]);
   const [message, setMessage] = useState<string | null>(null);
-  const [newDay, setNewDay] = useState({ day_number: 1, title: "", description: "" });
   const { register, handleSubmit, reset } = useForm<PackageForm>();
 
   const load = () => {
@@ -91,21 +90,6 @@ export default function EditPackagePage() {
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "Could not save package.");
     }
-  };
-
-  const addDay = async () => {
-    if (!token || !newDay.title) return;
-    await apiClient.createItineraryDay(token, id, { ...newDay, activities: [] });
-    await revalidateTourPublicCache(pkg?.slug);
-    setNewDay({ day_number: days.length + 1, title: "", description: "" });
-    load();
-  };
-
-  const removeDay = async (dayId: number) => {
-    if (!token) return;
-    await apiClient.deleteItineraryDay(token, id, dayId);
-    await revalidateTourPublicCache(pkg?.slug);
-    load();
   };
 
   if (!pkg) return <PageLoading label="Loading package..." />;
@@ -170,25 +154,13 @@ export default function EditPackagePage() {
         <CardHeader>
           <CardTitle>Itinerary (public detail page)</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-sm text-app-muted">
-            These days appear on the public tour detail page. CMS timeline sections on marketing pages stay separate.
-          </p>
-          {days.map((day) => (
-            <div key={day.id} className="flex items-start justify-between rounded-lg border border-app-border bg-app-surface/80 p-4 ring-1 ring-app-border">
-              <div>
-                <p className="font-medium text-app-text">Day {day.day_number}: {day.title}</p>
-                <p className="mt-1 text-sm text-app-muted">{day.description}</p>
-              </div>
-              <Button variant="ghost" size="sm" onClick={() => removeDay(day.id)}><Trash2 className="h-4 w-4 text-status-error" /></Button>
-            </div>
-          ))}
-          <div className="grid gap-3 rounded-lg border border-dashed border-app-border bg-app-surface/60 p-4 ring-1 ring-app-border md:grid-cols-3">
-            <div className="space-y-2"><Label>Day #</Label><Input type="number" value={newDay.day_number} onChange={(e) => setNewDay({ ...newDay, day_number: Number(e.target.value) })} /></div>
-            <div className="space-y-2 md:col-span-2"><Label>Title</Label><Input value={newDay.title} onChange={(e) => setNewDay({ ...newDay, title: e.target.value })} /></div>
-            <div className="space-y-2 md:col-span-3"><Label>Description</Label><Textarea value={newDay.description} onChange={(e) => setNewDay({ ...newDay, description: e.target.value })} /></div>
-            <div><Button type="button" onClick={addDay}><Plus className="mr-2 h-4 w-4" />Add day</Button></div>
-          </div>
+        <CardContent>
+          <ItineraryDaysEditor
+            packageId={id}
+            packageSlug={pkg.slug}
+            days={days}
+            onChange={setDays}
+          />
         </CardContent>
       </Card>
     </div>

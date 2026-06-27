@@ -10,7 +10,7 @@ class ItineraryDay extends Model
     protected $table = 'tour_itinerary_days';
 
     protected $fillable = [
-        'package_id', 'day_number', 'title', 'description', 'activities',
+        'package_id', 'day_number', 'title', 'description', 'description_format', 'activities',
         'accommodation', 'meals',
     ];
 
@@ -19,6 +19,7 @@ class ItineraryDay extends Model
         return [
             'activities' => 'array',
             'meals' => 'array',
+            'description_format' => 'array',
         ];
     }
 

@@ -10,7 +10,7 @@ use RuntimeException;
 
 class ImageNormalizer
 {
-    private const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic', 'heif'];
+    private const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'heic', 'heif'];
 
     private const ALLOWED_MIMES = [
         'image/jpeg',
@@ -18,6 +18,7 @@ class ImageNormalizer
         'image/gif',
         'image/webp',
         'image/x-webp',
+        'image/svg+xml',
         'image/heic',
         'image/heif',
         'image/heic-sequence',
@@ -39,7 +40,7 @@ class ImageNormalizer
                     return;
                 }
 
-                $fail('The '.$attribute.' must be an image (JPEG, PNG, GIF, WebP, or HEIC).');
+                $fail('The '.$attribute.' must be an image (JPEG, PNG, GIF, WebP, SVG, or HEIC).');
             },
         ];
     }

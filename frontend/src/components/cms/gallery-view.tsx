@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight, Grid3X3, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { resolvePublicMediaUrl } from "@/lib/media";
 import type { GalleryImage } from "@/lib/cms-sections";
 
 type GalleryViewProps = {
@@ -57,12 +58,13 @@ export function GalleryView({ images, columns = 3, previewLimit = 6, className }
 }
 
 function GalleryTile({ image, onClick }: { image: GalleryImage; onClick: () => void }) {
+  const src = resolvePublicMediaUrl(image.url);
   return (
     <figure className="group overflow-hidden rounded-xl border border-app-border bg-app-surface-muted/40">
       <button type="button" onClick={onClick} className="relative block aspect-[4/3] w-full overflow-hidden">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={image.url}
+          src={src}
           alt={image.alt?.trim() || "Gallery image"}
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
@@ -111,7 +113,7 @@ function GalleryModal({
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={image.url}
+              src={resolvePublicMediaUrl(image.url)}
               alt={image.alt?.trim() || "Gallery image"}
               className="aspect-square w-full object-cover transition group-hover:scale-105"
             />
@@ -159,7 +161,7 @@ function Lightbox({
       <figure className="max-h-[85vh] max-w-5xl" onClick={(e) => e.stopPropagation()}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={image.url}
+          src={resolvePublicMediaUrl(image.url)}
           alt={image.alt?.trim() || "Gallery image"}
           className="max-h-[75vh] w-auto rounded-lg object-contain"
         />

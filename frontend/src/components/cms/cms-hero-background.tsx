@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { HeroSlideshowSettings } from "@/lib/cms-sections";
+import { resolvePublicMediaUrl } from "@/lib/media";
 import { cn } from "@/lib/utils";
 
 interface CmsHeroBackgroundProps {
@@ -34,15 +35,18 @@ export function CmsHeroBackground({ images, settings, className }: CmsHeroBackgr
   if (images.length === 0) return null;
 
   if (images.length === 1) {
+    const src = resolvePublicMediaUrl(images[0]);
     return (
       // eslint-disable-next-line @next/next/no-img-element
-      <img src={images[0]} alt="" className={cn("absolute inset-0 h-full w-full object-cover", className)} />
+      <img src={src} alt="" className={cn("absolute inset-0 h-full w-full object-cover", className)} />
     );
   }
 
   return (
     <>
-      {images.map((src, i) => (
+      {images.map((raw, i) => {
+        const src = resolvePublicMediaUrl(raw);
+        return (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           key={`${src}-${i}`}
@@ -56,7 +60,8 @@ export function CmsHeroBackground({ images, settings, className }: CmsHeroBackgr
           )}
           aria-hidden={i !== index}
         />
-      ))}
+      );
+      })}
 
       {showIndicators && (
         <div

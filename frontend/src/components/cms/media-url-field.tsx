@@ -11,7 +11,7 @@ import { clipboardPasteHint } from "@/lib/clipboard-image";
 import { apiClient } from "@/lib/api";
 import { useNotifications } from "@/lib/notifications";
 import { useAuthStore } from "@/stores/app";
-import { UPLOADABLE_IMAGE_ACCEPT } from "@/lib/media";
+import { UPLOADABLE_IMAGE_ACCEPT, resolvePublicMediaUrl } from "@/lib/media";
 import { cn } from "@/lib/utils";
 
 type MediaKind = "image" | "video";
@@ -104,8 +104,9 @@ export function MediaUrlField({
   };
 
   const trimmed = (value ?? "").trim();
-  const showImagePreview = showPreview && kind === "image" && trimmed.length > 0;
-  const showVideoPreview = showPreview && kind === "video" && trimmed.length > 0 && /\.(mp4|webm|mov)(\?|$)/i.test(trimmed);
+  const previewSrc = resolvePublicMediaUrl(trimmed);
+  const showImagePreview = showPreview && kind === "image" && previewSrc.length > 0;
+  const showVideoPreview = showPreview && kind === "video" && previewSrc.length > 0 && /\.(mp4|webm|mov)(\?|$)/i.test(previewSrc);
 
   const pasteHint = clipboardPasteHint(kind === "video" ? "video" : "image");
   const cropHint =
@@ -143,7 +144,7 @@ export function MediaUrlField({
           <div className="overflow-hidden rounded-lg border border-app-border">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={trimmed}
+              src={previewSrc}
               alt=""
               className={cn(
                 "max-h-40 w-full",
@@ -156,7 +157,7 @@ export function MediaUrlField({
         )}
         {showVideoPreview && (
           <div className="overflow-hidden rounded-lg border border-app-border">
-            <video src={trimmed} controls className="aspect-video max-h-40 w-full bg-black object-contain" />
+            <video src={previewSrc} controls className="aspect-video max-h-40 w-full bg-black object-contain" />
           </div>
         )}
       </div>

@@ -1,6 +1,26 @@
 /** File input accept string for CMS, brand, and profile image uploads (includes HEIC from iOS). */
 export const UPLOADABLE_IMAGE_ACCEPT =
-  "image/jpeg,image/png,image/gif,image/webp,image/heic,image/heif,.heic,.heif,image/*";
+  "image/jpeg,image/png,image/gif,image/webp,image/svg+xml,image/heic,image/heif,.heic,.heif,.svg,image/*";
+
+function apiStorageOrigin(): string {
+  const api =
+    (typeof window !== "undefined"
+      ? process.env.NEXT_PUBLIC_API_URL
+      : process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL) ?? "http://localhost:8000/api/v1";
+  return api.replace(/\/api\/v1\/?$/, "");
+}
+
+/** Resolve CMS/media URLs for browser display (storage paths, protocol-relative, etc.). */
+export function resolvePublicMediaUrl(value: string | null | undefined): string {
+  const trimmed = (value ?? "").trim();
+  if (!trimmed) return "";
+
+  if (/^(https?:|data:|blob:)/i.test(trimmed)) return trimmed;
+  if (trimmed.startsWith("//")) return `https:${trimmed}`;
+  if (trimmed.startsWith("/storage/")) return `${apiStorageOrigin()}${trimmed}`;
+
+  return trimmed;
+}
 
 /** Academy completion certificates — PDF or image. */
 export const CERTIFICATE_FILE_ACCEPT =

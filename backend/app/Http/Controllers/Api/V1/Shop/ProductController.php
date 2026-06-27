@@ -36,14 +36,36 @@ class ProductController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        $sort = $request->input('sort', 'newest');
+        $search = $request->input('q', $request->input('search'));
+
         $products = Product::query()
             ->where('is_active', true)
             ->with(['category', 'variants'])
             ->when($request->category, fn ($q, $cat) => $q->whereHas('category', fn ($c) => $c->where('slug', $cat)))
-            ->when($request->featured, fn ($q) => $q->where('is_featured', true))
-            ->paginate($request->integer('per_page', 15));
+            ->when($request->boolean('featured'), fn ($q) => $q->where('is_featured', true))
+            ->when($request->boolean('in_stock'), fn ($q) => $q->where('stock', '>', 0))
+            ->when($request->boolean('on_sale'), fn ($q) => $q->whereNotNull('compare_price')->whereColumn('compare_price', '>', 'price'))
+            ->when(filled($search), function ($q) use ($search) {
+                $q->where(function ($inner) use ($search) {
+                    $inner->whereLikeInsensitive('name', "%{$search}%")
+                        ->orWhereLikeInsensitive('description', "%{$search}%")
+                        ->orWhereLikeInsensitive('sku', "%{$search}%");
+                });
+            })
+            ->when($request->filled('min_price'), fn ($q) => $q->where('price', '>=', $request->input('min_price')))
+            ->when($request->filled('max_price'), fn ($q) => $q->where('price', '<=', $request->input('max_price')));
 
-        return response()->json($products);
+        match ($sort) {
+            'price_asc' => $products->orderBy('price')->orderBy('name'),
+            'price_desc' => $products->orderByDesc('price')->orderBy('name'),
+            'name_asc' => $products->orderBy('name'),
+            'name_desc' => $products->orderByDesc('name'),
+            'featured' => $products->orderByDesc('is_featured')->orderByDesc('created_at'),
+            default => $products->latest(),
+        };
+
+        return response()->json($products->paginate($request->integer('per_page', 24)));
     }
 
     public function show(string $slug): JsonResponse

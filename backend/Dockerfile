@@ -14,6 +14,8 @@ RUN apk add --no-cache \
     libheif-tools \
     && docker-php-ext-install pdo pdo_pgsql pdo_mysql zip mbstring bcmath
 
+COPY docker/php/uploads.ini /usr/local/etc/php/conf.d/uploads.ini
+
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html

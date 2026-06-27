@@ -33,9 +33,18 @@ class MediaController extends Controller
             $rules['file'] = ImageNormalizer::validationRules(5120);
         }
 
+        $file = $request->file('file');
+        if ($file && ! $file->isValid()) {
+            $limit = ini_get('upload_max_filesize');
+            $message = match ($file->getError()) {
+                UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => "File is too large. Server limit is {$limit}.",
+                default => 'The file failed to upload.',
+            };
+            abort(422, $message);
+        }
+
         $request->validate($rules);
 
-        $file = $request->file('file');
         $folder = $type === 'video' ? 'cms/videos' : 'cms/images';
 
         try {

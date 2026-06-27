@@ -30,9 +30,41 @@ class HomepageController extends Controller
                     'cta_text' => $homepage->hero_cta_text,
                     'cta_url' => $homepage->hero_cta_url,
                 ],
-                'entry_cards' => json_decode($homepage->entry_cards ?? '[]', true),
+                'entry_cards' => $this->mergeDivisionGradientsIntoEntryCards(
+                    json_decode($homepage->entry_cards ?? '[]', true) ?: [],
+                ),
                 'meta' => json_decode($homepage->meta ?? '{}', true),
             ],
         ]);
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $entryCards
+     * @return list<array<string, mixed>>
+     */
+    private function mergeDivisionGradientsIntoEntryCards(array $entryCards): array
+    {
+        if ($entryCards === []) {
+            return $entryCards;
+        }
+
+        $gradients = DB::table('division_page_settings')
+            ->where('is_active', true)
+            ->whereNotNull('home_gradient')
+            ->where('home_gradient', '!=', '')
+            ->pluck('home_gradient', 'slug');
+
+        if ($gradients->isEmpty()) {
+            return $entryCards;
+        }
+
+        return array_map(function (array $card) use ($gradients) {
+            $slug = $card['slug'] ?? null;
+            if ($slug && $gradients->has($slug)) {
+                $card['gradient'] = $gradients->get($slug);
+            }
+
+            return $card;
+        }, $entryCards);
     }
 }

@@ -47,3 +47,11 @@ export function parseGradientValue(value: string | null | undefined): {
 export function gradientPreviewStyle(from: string, to: string): { background: string } {
   return { background: `linear-gradient(135deg, ${from}, ${to})` };
 }
+
+/** Inline gradient for runtime CMS values — avoids Tailwind JIT missing arbitrary classes in prod. */
+export function gradientBackgroundStyle(value: string | null | undefined): { background: string } | undefined {
+  const normalized = (value ?? "").trim();
+  if (!normalized) return undefined;
+  const { from, to } = parseGradientValue(normalized);
+  return gradientPreviewStyle(from, to);
+}

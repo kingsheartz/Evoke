@@ -27,6 +27,7 @@ Route::prefix('tours')->middleware(['module.enabled:tours'])->group(function () 
         Route::put('/packages/{package}', [PackageController::class, 'update']);
         Route::get('/admin/packages/{package}/itinerary', [ItineraryController::class, 'index']);
         Route::post('/admin/packages/{package}/itinerary', [ItineraryController::class, 'store']);
+        Route::put('/admin/packages/{package}/itinerary/reorder', [ItineraryController::class, 'reorder']);
         Route::put('/admin/packages/{package}/itinerary/{day}', [ItineraryController::class, 'update']);
         Route::delete('/admin/packages/{package}/itinerary/{day}', [ItineraryController::class, 'destroy']);
     });

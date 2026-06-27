@@ -37,6 +37,7 @@ import {
   type VideoContent,
 } from "@/lib/cms-sections";
 import { FormattedBody, FormattedHeading, FormattedText } from "@/components/ui/formatted-text";
+import { resolvePublicMediaUrl } from "@/lib/media";
 import { textFormatClassName, type TextFormat } from "@/lib/text-format";
 import { cn } from "@/lib/utils";
 
@@ -98,7 +99,7 @@ function BannerSection({ content }: { content: BannerContent }) {
   const heading = content.heading?.trim();
   const subheading = content.subheading?.trim();
   const body = content.body?.trim();
-  const imageUrl = content.image_url?.trim();
+  const imageUrl = resolvePublicMediaUrl(content.image_url);
   const ctaLabel = content.cta_label?.trim();
   const ctaUrl = content.cta_url?.trim();
 
@@ -315,7 +316,7 @@ function CardBlock({ item }: { item: CardItem }) {
       {item.image_url?.trim() && (
         <div className="relative mb-4 aspect-[16/10] overflow-hidden rounded-lg">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={item.image_url} alt="" className="h-full w-full object-cover" />
+          <img src={resolvePublicMediaUrl(item.image_url)} alt="" className="h-full w-full object-cover" />
         </div>
       )}
       <FormattedText
@@ -389,7 +390,7 @@ function TestimonialCard({ item }: { item: TestimonialItem }) {
         {item.avatar_url?.trim() ? (
           <div className="h-10 w-10 overflow-hidden rounded-full">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={item.avatar_url} alt="" className="h-full w-full object-cover" />
+            <img src={resolvePublicMediaUrl(item.avatar_url)} alt="" className="h-full w-full object-cover" />
           </div>
         ) : (
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent/15 text-sm font-semibold text-accent-soft">

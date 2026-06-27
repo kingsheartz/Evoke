@@ -157,7 +157,7 @@ export const apiClient = {
     });
     if (!response.ok) {
       const error = await response.json().catch(() => ({ message: "Upload failed" }));
-      throw new ApiError(response.status, error.message ?? "Upload failed");
+      throw new ApiError(response.status, formatApiErrorMessage(error));
     }
     return response.json() as Promise<{ data: { url: string; path: string; type: string } }>;
   },
@@ -228,8 +228,8 @@ export const apiClient = {
       next: { revalidate: 60, tags: [OFFERINGS_CACHE_TAGS.tours] },
     }),
 
-  getShopProducts: (params?: CatalogListParams) =>
-    api<Paginated<Product>>(`/shop/products${catalogQuery(params)}`, {
+  getShopProducts: (params?: ShopCatalogListParams) =>
+    api<Paginated<Product>>(`/shop/products${shopCatalogQuery(params)}`, {
       next: { revalidate: 60, tags: [OFFERINGS_CACHE_TAGS.shop] },
     }),
 
@@ -508,6 +508,12 @@ export const apiClient = {
     api<{ data: ItineraryDay }>(`/tours/admin/packages/${packageId}/itinerary/${dayId}`, { method: "PUT", token, body: JSON.stringify(payload) }),
   deleteItineraryDay: (token: string, packageId: number, dayId: number) =>
     api<{ message: string }>(`/tours/admin/packages/${packageId}/itinerary/${dayId}`, { method: "DELETE", token }),
+  reorderItineraryDays: (token: string, packageId: number, days: Array<{ id: number; day_number: number }>) =>
+    api<{ data: ItineraryDay[] }>(`/tours/admin/packages/${packageId}/itinerary/reorder`, {
+      method: "PUT",
+      token,
+      body: JSON.stringify({ days }),
+    }),
 
   createBooking: (
     token: string,
@@ -1160,11 +1166,41 @@ export interface CatalogListParams {
   per_page?: number;
 }
 
+export interface ShopCatalogListParams extends CatalogListParams {
+  q?: string;
+  sort?: string;
+  min_price?: number;
+  max_price?: number;
+  in_stock?: boolean;
+  on_sale?: boolean;
+}
+
 function catalogQuery(params?: CatalogListParams): string {
   if (!params) return "";
   const query = new URLSearchParams();
   if (params.featured) query.set("featured", "1");
   if (params.category) query.set("category", params.category);
+  if (params.page) query.set("page", String(params.page));
+  if (params.per_page) query.set("per_page", String(params.per_page));
+  const value = query.toString();
+  return value ? `?${value}` : "";
+}
+
+function shopCatalogQuery(params?: ShopCatalogListParams): string {
+  if (!params) return "";
+  const query = new URLSearchParams();
+  if (params.q?.trim()) query.set("q", params.q.trim());
+  if (params.category) query.set("category", params.category);
+  if (params.sort) query.set("sort", params.sort);
+  if (params.min_price != null && params.min_price > 0) {
+    query.set("min_price", String(params.min_price));
+  }
+  if (params.max_price != null && params.max_price > 0) {
+    query.set("max_price", String(params.max_price));
+  }
+  if (params.in_stock) query.set("in_stock", "1");
+  if (params.on_sale) query.set("on_sale", "1");
+  if (params.featured) query.set("featured", "1");
   if (params.page) query.set("page", String(params.page));
   if (params.per_page) query.set("per_page", String(params.per_page));
   const value = query.toString();
@@ -1268,6 +1304,7 @@ export interface ItineraryDay {
   day_number: number;
   title: string;
   description: string | null;
+  description_format?: import("@/lib/text-format").TextFormat | null;
   activities: string[] | null;
   accommodation: string | null;
   meals: string[] | null;
@@ -1277,6 +1314,7 @@ export interface ItineraryPayload {
   day_number: number;
   title: string;
   description?: string;
+  description_format?: import("@/lib/text-format").TextFormat;
   activities?: string[];
   accommodation?: string;
   meals?: string[];

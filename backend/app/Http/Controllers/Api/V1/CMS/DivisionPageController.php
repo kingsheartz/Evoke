@@ -168,6 +168,10 @@ class DivisionPageController extends Controller
 
         DB::table('division_page_settings')->where('id', $page->id)->update($payload);
 
+        if (array_key_exists('home_gradient', $validated)) {
+            $this->syncHomepageEntryCardGradient($slug, $payload['home_gradient'] ?? null);
+        }
+
         $fresh = DB::table('division_page_settings')->where('id', $page->id)->first();
 
         return response()->json([
@@ -189,6 +193,41 @@ class DivisionPageController extends Controller
     private function assertValidSlug(string $slug): void
     {
         abort_if(in_array($slug, self::RESERVED_SLUGS, true), 422, 'This URL slug is reserved.');
+    }
+
+    private function syncHomepageEntryCardGradient(string $slug, ?string $gradient): void
+    {
+        if (! filled($gradient)) {
+            return;
+        }
+
+        $homepage = DB::table('homepage_settings')->where('is_active', true)->latest()->first();
+        if (! $homepage) {
+            return;
+        }
+
+        $cards = json_decode($homepage->entry_cards ?? '[]', true);
+        if (! is_array($cards)) {
+            return;
+        }
+
+        $updated = false;
+        foreach ($cards as &$card) {
+            if (($card['slug'] ?? null) === $slug) {
+                $card['gradient'] = $gradient;
+                $updated = true;
+            }
+        }
+        unset($card);
+
+        if (! $updated) {
+            return;
+        }
+
+        DB::table('homepage_settings')->where('id', $homepage->id)->update([
+            'entry_cards' => json_encode($cards),
+            'updated_at' => now(),
+        ]);
     }
 
     private function format(object $page, bool $navOnly = false): array

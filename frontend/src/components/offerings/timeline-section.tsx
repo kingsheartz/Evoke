@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { BookOpen, ChevronDown, MapPin, Package } from "lucide-react";
+import { FormattedBody } from "@/components/ui/formatted-text";
 import type { TimelineContent, TimelineVariant } from "@/lib/offerings";
 import { timelineVariantLabels } from "@/lib/offerings";
 import { cn } from "@/lib/utils";
@@ -172,9 +173,11 @@ export function TimelineSection({
                     {isOpen && (
                       <div className="border-t border-app-border/60 px-4 pb-4 pt-3">
                         {item.body?.trim() ? (
-                          <p className="whitespace-pre-wrap text-sm leading-relaxed text-app-muted">
-                            {item.body}
-                          </p>
+                          <FormattedBody
+                            text={item.body}
+                            format={item.body_format}
+                            className="text-sm leading-relaxed text-app-muted"
+                          />
                         ) : (
                           <p className="text-sm italic text-app-muted/80">{labels.emptyBody}</p>
                         )}
