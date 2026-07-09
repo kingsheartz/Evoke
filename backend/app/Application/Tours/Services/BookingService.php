@@ -12,6 +12,11 @@ class BookingService
     public function create(User $user, array $data): Booking
     {
         $package = Package::findOrFail($data['package_id']);
+
+        if (! $package->isTravelDateAllowed($data['travel_date'])) {
+            throw new \InvalidArgumentException('Travel date is outside the package availability window.');
+        }
+
         $total = $package->price * $data['travelers_count'];
 
         return Booking::create([

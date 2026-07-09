@@ -6,6 +6,7 @@ use App\Application\Academy\Services\EnrollmentService;
 use App\Events\Academy\EnrollmentCreated;
 use App\Http\Controllers\Controller;
 use App\Models\Academy\Enrollment;
+use App\Support\ProfileRequirements;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -30,6 +31,11 @@ class EnrollmentController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        $profileMessage = ProfileRequirements::courseOrTravelMessage($request->user());
+        if ($profileMessage) {
+            abort(422, $profileMessage);
+        }
+
         $validated = $request->validate([
             'batch_id' => 'required|exists:academy_batches,id',
         ]);

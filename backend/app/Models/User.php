@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\EvokeIdGenerator;
 use App\Support\UserValidation;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -22,6 +23,11 @@ class User extends Authenticatable
         'phone',
         'password',
         'avatar',
+        'evoke_id',
+        'gender',
+        'age',
+        'blood_group',
+        'learning_mode',
         'address_line1',
         'address_line2',
         'city',
@@ -55,6 +61,12 @@ class User extends Authenticatable
 
     protected static function booted(): void
     {
+        static::creating(function (self $user): void {
+            if (! filled($user->evoke_id)) {
+                $user->evoke_id = EvokeIdGenerator::generate();
+            }
+        });
+
         static::deleting(function (self $user): void {
             if ($user->isForceDeleting()) {
                 return;

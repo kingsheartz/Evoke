@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\V1\Admin\ContextController;
 use App\Http\Controllers\Api\V1\Admin\DashboardController;
 use App\Http\Controllers\Api\V1\Admin\ModuleController;
 use App\Http\Controllers\Api\V1\Admin\PlatformSettingsController;
+use App\Http\Controllers\Api\V1\Admin\RoleController;
 use App\Http\Controllers\Api\V1\Admin\TaskController;
 use App\Http\Controllers\Api\V1\Admin\UserController;
 use Illuminate\Http\Request;
@@ -25,8 +26,13 @@ Route::prefix('admin')->middleware(['auth:sanctum'])->group(function () {
         Route::put('/modules/{module}', [ModuleController::class, 'update']);
     });
 
-    Route::middleware('permission:users.manage')->group(function () {
+    Route::middleware('permission:users.manage|roles.manage')->group(function () {
         Route::get('/roles', [UserController::class, 'roles']);
+        Route::get('/permissions', [RoleController::class, 'permissions']);
+        Route::get('/roles/manage', [RoleController::class, 'index']);
+        Route::post('/roles/manage', [RoleController::class, 'store']);
+        Route::put('/roles/manage/{role}', [RoleController::class, 'update']);
+        Route::delete('/roles/manage/{role}', [RoleController::class, 'destroy']);
         Route::get('/branches', [UserController::class, 'branches']);
         Route::get('/users', [UserController::class, 'index']);
         Route::get('/users/{user}', [UserController::class, 'show']);
@@ -39,9 +45,9 @@ Route::prefix('admin')->middleware(['auth:sanctum'])->group(function () {
 
     Route::middleware('permission:platform.manage')->group(function () {
         Route::get('/settings/{key}', [PlatformSettingsController::class, 'show'])
-            ->where('key', 'admin_preferences|advertisements');
+            ->where('key', 'admin_preferences|advertisements|payments');
         Route::put('/settings/{key}', [PlatformSettingsController::class, 'update'])
-            ->where('key', 'admin_preferences|advertisements');
+            ->where('key', 'admin_preferences|advertisements|payments');
     });
 
     Route::middleware('permission:platform.manage|cms.homepage.manage|cms.pages.manage')->group(function () {

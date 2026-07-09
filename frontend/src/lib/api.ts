@@ -626,6 +626,32 @@ export const apiClient = {
       token,
       body: JSON.stringify({ value }),
     }),
+  getPaymentsSettings: (token: string) =>
+    api<{ data: PaymentsSettingsPayload | null }>("/admin/settings/payments", { token }),
+  updatePaymentsSettings: (token: string, value: PaymentsSettingsPayload) =>
+    api<{ data: PaymentsSettingsPayload }>("/admin/settings/payments", {
+      method: "PUT",
+      token,
+      body: JSON.stringify({ value }),
+    }),
+  getPermissionSections: (token: string) =>
+    api<{ data: PermissionSection[] }>("/admin/permissions", { token }),
+  getManagedRoles: (token: string) =>
+    api<{ data: AdminRoleRecord[] }>("/admin/roles/manage", { token }),
+  createManagedRole: (token: string, payload: { name: string; permissions: string[] }) =>
+    api<{ data: AdminRoleRecord }>("/admin/roles/manage", {
+      method: "POST",
+      token,
+      body: JSON.stringify(payload),
+    }),
+  updateManagedRole: (token: string, roleId: number, payload: { name?: string; permissions?: string[] }) =>
+    api<{ data: AdminRoleRecord }>(`/admin/roles/manage/${roleId}`, {
+      method: "PUT",
+      token,
+      body: JSON.stringify(payload),
+    }),
+  deleteManagedRole: (token: string, roleId: number) =>
+    api<{ message: string }>(`/admin/roles/manage/${roleId}`, { method: "DELETE", token }),
 
   // CMS Pages
   getPublicPage: (slug: string) =>
@@ -724,9 +750,10 @@ export const apiClient = {
       body: JSON.stringify(payload),
     }),
 
-  getAdminAttendance: (token: string, params?: { date?: string }) => {
+  getAdminAttendance: (token: string, params?: { date?: string; course_id?: number }) => {
     const query = new URLSearchParams();
     if (params?.date) query.set("date", params.date);
+    if (params?.course_id) query.set("course_id", String(params.course_id));
     const qs = query.toString();
     return api<Paginated<AttendanceRecord>>(`/academy/admin/attendance${qs ? `?${qs}` : ""}`, { token });
   },
@@ -739,8 +766,13 @@ export const apiClient = {
       token,
       body: JSON.stringify(payload),
     }),
-  getAttendanceEnrollments: (token: string) =>
-    api<Paginated<Enrollment>>("/academy/admin/attendance/enrollments", { token }),
+  getAttendanceEnrollments: (token: string, params?: { course_id?: number; batch_id?: number }) => {
+    const query = new URLSearchParams();
+    if (params?.course_id) query.set("course_id", String(params.course_id));
+    if (params?.batch_id) query.set("batch_id", String(params.batch_id));
+    const qs = query.toString();
+    return api<Paginated<Enrollment>>(`/academy/admin/attendance/enrollments${qs ? `?${qs}` : ""}`, { token });
+  },
 
   getAdminCertificates: (token: string) =>
     api<Paginated<AcademyCertificate>>("/academy/admin/certificates", { token }),
@@ -931,9 +963,14 @@ export interface SearchResult {
 
 export interface User {
   id: number;
+  evoke_id?: string | null;
   name: string;
   email: string;
   phone?: string | null;
+  gender?: string | null;
+  age?: number | null;
+  blood_group?: string | null;
+  learning_mode?: "offline" | "online" | null;
   avatar_url?: string | null;
   address_line1?: string | null;
   address_line2?: string | null;
@@ -948,6 +985,10 @@ export interface User {
 export interface ProfilePayload {
   name?: string;
   phone?: string;
+  gender?: string;
+  age?: number;
+  blood_group?: string;
+  learning_mode?: "offline" | "online";
   address_line1?: string;
   address_line2?: string;
   city?: string;
@@ -1271,6 +1312,8 @@ export interface TourPackage {
   destination: string;
   type: string;
   duration_days: number;
+  available_from?: string | null;
+  available_until?: string | null;
   price: string;
   description: string | null;
   gallery?: string[] | null;
@@ -1290,6 +1333,8 @@ export interface PackagePayload {
   destination: string;
   type: string;
   duration_days: number;
+  available_from?: string;
+  available_until?: string;
   price: number;
   gallery?: string[];
   inclusions?: string[];
@@ -1420,6 +1465,27 @@ export interface BrandOverride {
     headerFont?: "jakarta" | "geist-sans" | "geist-mono";
   };
   header?: Partial<import("@/lib/header-config").BrandHeaderConfig>;
+}
+
+export interface PaymentsSettingsPayload {
+  razorpay_enabled: boolean;
+  payment_link_url?: string | null;
+  payment_link_label?: string;
+  contact_email?: string;
+  contact_whatsapp?: string;
+}
+
+export interface PermissionSection {
+  section: string;
+  permissions: { id: number; name: string }[];
+}
+
+export interface AdminRoleRecord {
+  id: number;
+  name: string;
+  permissions: string[];
+  users_count?: number;
+  is_system?: boolean;
 }
 
 export interface Advertisement {

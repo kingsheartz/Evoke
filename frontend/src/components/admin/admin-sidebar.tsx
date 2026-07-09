@@ -14,6 +14,7 @@ import {
   CalendarDays,
   ChevronDown,
   ClipboardList,
+  CreditCard,
   FileText,
   Files,
   GraduationCap,
@@ -29,6 +30,7 @@ import {
   PanelLeftOpen,
   Plane,
   Settings,
+  Shield,
   ShoppingBag,
   ShoppingCart,
   SlidersHorizontal,
@@ -78,6 +80,8 @@ const iconMap: Record<string, LucideIcon> = {
   sliders: SlidersHorizontal,
   megaphone: Megaphone,
   image: Image,
+  shield: Shield,
+  "credit-card": CreditCard,
 };
 
 const childIconByHref: Record<string, LucideIcon> = {
@@ -102,6 +106,8 @@ const childIconByHref: Record<string, LucideIcon> = {
   "/admin/settings/brand": SlidersHorizontal,
   "/admin/settings/preferences": SlidersHorizontal,
   "/admin/settings/advertisements": Megaphone,
+  "/admin/settings/payments": CreditCard,
+  "/admin/settings/roles": Shield,
 };
 
 function resolveIcon(name?: string, href?: string): LucideIcon {

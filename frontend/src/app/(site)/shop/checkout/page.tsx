@@ -21,7 +21,7 @@ import {
 import { MobileCheckoutBar } from "@/components/shop/mobile-checkout-bar";
 import { Button } from "@/components/ui/button";
 import { apiClient, type Cart } from "@/lib/api";
-import { openRazorpayCheckout } from "@/lib/razorpay-checkout";
+import { completeCheckoutPayment } from "@/lib/payments";
 import { revalidateShopPublicCache } from "@/lib/revalidate-cms";
 import { useAuthStore } from "@/stores/app";
 import { cn } from "@/lib/utils";
@@ -124,18 +124,14 @@ function CheckoutContent() {
       sessionStorage.removeItem(COUPON_STORAGE_KEY);
       setStep(3);
 
-      try {
-        await openRazorpayCheckout({
-          token,
-          payableType: "shop_order",
-          payableId: response.data.id,
-          userName: user.name,
-          userEmail: user.email,
-          userPhone: user.phone ?? undefined,
-        });
-      } catch {
-        /* Payment optional when Razorpay is not configured */
-      }
+      await completeCheckoutPayment({
+        token,
+        payableType: "shop_order",
+        payableId: response.data.id,
+        userName: user.name,
+        userEmail: user.email,
+        userPhone: user.phone ?? undefined,
+      });
 
       router.push(
         `/confirmation?type=order&ref=${encodeURIComponent(response.data.order_number)}&id=${response.data.id}`,

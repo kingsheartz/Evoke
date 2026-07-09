@@ -119,7 +119,7 @@ export function createHeaderComponent(type: HeaderComponentType): HeaderComponen
     case "email":
       return { ...base, label: "hello@example.com", href: "mailto:hello@example.com", icon: "mail" };
     case "whatsapp":
-      return { ...base, label: "WhatsApp", href: "https://wa.me/919876543210", icon: "brand-whatsapp" };
+      return { ...base, label: "WhatsApp", href: "https://wa.me/917902264073", icon: "brand-whatsapp" };
     case "social_links":
       return {
         ...base,

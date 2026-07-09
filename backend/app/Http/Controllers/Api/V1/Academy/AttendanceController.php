@@ -16,6 +16,7 @@ class AttendanceController extends Controller
             ->with(['enrollment.user', 'enrollment.batch.course', 'markedBy'])
             ->when($request->date, fn ($q, $date) => $q->whereDate('date', $date))
             ->when($request->enrollment_id, fn ($q, $id) => $q->where('enrollment_id', $id))
+            ->when($request->course_id, fn ($q, $courseId) => $q->whereHas('enrollment.batch', fn ($batch) => $batch->where('course_id', $courseId)))
             ->latest('date')
             ->paginate($request->integer('per_page', 30));
 
@@ -50,12 +51,14 @@ class AttendanceController extends Controller
     {
         $validated = $request->validate([
             'batch_id' => 'nullable|exists:academy_batches,id',
+            'course_id' => 'nullable|exists:academy_courses,id',
         ]);
 
         $enrollments = Enrollment::query()
             ->with(['user', 'batch.course'])
             ->whereIn('status', ['approved', 'completed'])
             ->when($validated['batch_id'] ?? null, fn ($q, $batchId) => $q->where('batch_id', $batchId))
+            ->when($validated['course_id'] ?? null, fn ($q, $courseId) => $q->whereHas('batch', fn ($batch) => $batch->where('course_id', $courseId)))
             ->latest()
             ->paginate($request->integer('per_page', 50));
 

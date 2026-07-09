@@ -2,12 +2,17 @@
 
 namespace App\Application\Payments\Services;
 
+use App\Support\PlatformConfig;
 use Razorpay\Api\Api;
 
 class PaymentService
 {
     public function isConfigured(): bool
     {
+        if (! PlatformConfig::razorpayEnabled()) {
+            return false;
+        }
+
         return filled(config('services.razorpay.key')) && filled(config('services.razorpay.secret'));
     }
 

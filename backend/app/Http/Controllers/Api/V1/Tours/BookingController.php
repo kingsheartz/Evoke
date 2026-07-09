@@ -6,8 +6,10 @@ use App\Application\Tours\Services\BookingService;
 use App\Events\Tours\BookingCreated;
 use App\Http\Controllers\Controller;
 use App\Models\Tours\Booking;
+use App\Support\ProfileRequirements;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use InvalidArgumentException;
 
 class BookingController extends Controller
 {
@@ -24,6 +26,11 @@ class BookingController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        $profileMessage = ProfileRequirements::courseOrTravelMessage($request->user());
+        if ($profileMessage) {
+            abort(422, $profileMessage);
+        }
+
         $validated = $request->validate([
             'package_id' => 'required|exists:tour_packages,id',
             'travel_date' => 'required|date|after:today',
@@ -32,7 +39,11 @@ class BookingController extends Controller
             'special_requests' => 'nullable|string',
         ]);
 
-        $booking = $this->bookingService->create($request->user(), $validated);
+        try {
+            $booking = $this->bookingService->create($request->user(), $validated);
+        } catch (InvalidArgumentException $e) {
+            abort(422, $e->getMessage());
+        }
 
         BookingCreated::dispatch($booking);
 

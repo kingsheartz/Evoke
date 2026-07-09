@@ -1,22 +1,37 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { WhatsAppButton } from "@/components/site/whatsapp-button";
 import { apiClient } from "@/lib/api";
-import { openRazorpayCheckout } from "@/lib/razorpay-checkout";
+import { DEFAULT_WHATSAPP_E164, tourWhatsAppMessage } from "@/lib/contact";
+import { completeCheckoutPayment } from "@/lib/payments";
+import { profileCompletionMessage } from "@/lib/profile";
 import { revalidateTourPublicCache } from "@/lib/revalidate-cms";
 import { useAuthStore } from "@/stores/app";
 
+function toDateInput(value?: string | null): string | undefined {
+  if (!value) return undefined;
+  return value.slice(0, 10);
+}
+
 export function TourBookingAction({
   packageId,
+  packageTitle,
   redirectPath,
+  availableFrom,
+  availableUntil,
 }: {
   packageId: number;
+  packageTitle?: string;
   redirectPath: string;
+  availableFrom?: string | null;
+  availableUntil?: string | null;
 }) {
   const router = useRouter();
   const { token, user } = useAuthStore();
@@ -27,15 +42,39 @@ export function TourBookingAction({
   const [message, setMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
+  const minDate = toDateInput(availableFrom);
+  const maxDate = toDateInput(availableUntil);
+  const profileMessage = user ? profileCompletionMessage(user) : null;
+
+  const dateHint = useMemo(() => {
+    if (minDate && maxDate) return `Travel between ${minDate} and ${maxDate}.`;
+    if (minDate) return `Earliest travel date: ${minDate}.`;
+    if (maxDate) return `Latest travel date: ${maxDate}.`;
+    return null;
+  }, [minDate, maxDate]);
+
   const signInHref = `/sign-in?redirect=${encodeURIComponent(redirectPath)}`;
+  const profileHref = `/account/profile?redirect=${encodeURIComponent(redirectPath)}`;
 
   const submit = async () => {
     if (!token || !user) {
       router.push(signInHref);
       return;
     }
+    if (profileMessage) {
+      setMessage(profileMessage);
+      return;
+    }
     if (!travelDate) {
       setMessage("Choose a travel date.");
+      return;
+    }
+    if (minDate && travelDate < minDate) {
+      setMessage(`Travel date must be on or after ${minDate}.`);
+      return;
+    }
+    if (maxDate && travelDate > maxDate) {
+      setMessage(`Travel date must be on or before ${maxDate}.`);
       return;
     }
     setSubmitting(true);
@@ -49,18 +88,14 @@ export function TourBookingAction({
       });
       await revalidateTourPublicCache();
 
-      try {
-        await openRazorpayCheckout({
-          token,
-          payableType: "tour_booking",
-          payableId: response.data.id,
-          userName: user.name,
-          userEmail: user.email,
-          userPhone: user.phone ?? undefined,
-        });
-      } catch {
-        // Payment optional when Razorpay is not configured
-      }
+      await completeCheckoutPayment({
+        token,
+        payableType: "tour_booking",
+        payableId: response.data.id,
+        userName: user.name,
+        userEmail: user.email,
+        userPhone: user.phone ?? undefined,
+      });
 
       router.push(`/confirmation?type=booking&ref=${encodeURIComponent(response.data.booking_number)}`);
     } catch (e) {
@@ -72,19 +107,44 @@ export function TourBookingAction({
   return (
     <div className="flex flex-col items-stretch gap-3 sm:items-end">
       {!open ? (
-        <Button
-          type="button"
-          className="h-12 w-full rounded-xl px-6 text-sm font-semibold sm:w-auto"
-          onClick={() => (token ? setOpen(true) : router.push(signInHref))}
-        >
-          Book now
-        </Button>
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:items-end">
+          <Button
+            type="button"
+            className="h-12 w-full rounded-xl px-6 text-sm font-semibold sm:w-auto"
+            onClick={() => (token ? setOpen(true) : router.push(signInHref))}
+          >
+            Book now
+          </Button>
+          {packageTitle && (
+            <WhatsAppButton
+              phone={DEFAULT_WHATSAPP_E164}
+              message={tourWhatsAppMessage(packageTitle)}
+              label="Chat on WhatsApp"
+              className="h-12 w-full rounded-xl sm:w-auto"
+            />
+          )}
+        </div>
       ) : (
         <div className="w-full max-w-md rounded-xl border border-app-border bg-app-surface p-4 ring-1 ring-app-border">
           <div className="grid gap-3">
+            {profileMessage && (
+              <p className="text-sm text-status-error">
+                {profileMessage}{" "}
+                <Link href={profileHref} className="font-medium text-accent-soft hover:text-accent">
+                  Update profile
+                </Link>
+              </p>
+            )}
             <div className="space-y-2">
               <Label>Travel date</Label>
-              <Input type="date" value={travelDate} onChange={(e) => setTravelDate(e.target.value)} />
+              <Input
+                type="date"
+                value={travelDate}
+                min={minDate}
+                max={maxDate}
+                onChange={(e) => setTravelDate(e.target.value)}
+              />
+              {dateHint && <p className="text-xs text-app-muted">{dateHint}</p>}
             </div>
             <div className="space-y-2">
               <Label>Travelers</Label>

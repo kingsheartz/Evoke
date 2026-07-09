@@ -58,7 +58,13 @@ export default async function TourPackageDetailPage({
         ctaLabel={cta.label}
         ctaAction={
           <div className="flex flex-col items-stretch gap-3 sm:items-end">
-            <TourBookingAction packageId={pkg.id} redirectPath={redirectPath} />
+            <TourBookingAction
+              packageId={pkg.id}
+              packageTitle={pkg.title}
+              redirectPath={redirectPath}
+              availableFrom={pkg.available_from}
+              availableUntil={pkg.available_until}
+            />
             <TourEnquiryAction packageId={pkg.id} packageTitle={pkg.title} />
           </div>
         }

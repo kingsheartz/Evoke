@@ -18,6 +18,7 @@ class RolePermissionSeeder extends Seeder
             'modules.manage',
             'branches.manage',
             'users.manage',
+            'roles.manage',
             'analytics.view',
             'audit.view',
             'tasks.manage',

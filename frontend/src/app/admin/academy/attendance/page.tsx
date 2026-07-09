@@ -7,10 +7,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfigurableDataTable, TableEmpty, TableLoading } from "@/components/ui/data-table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { PageHeader } from "@/components/ui/page-header";
 import { TableIconAction, TableRowActions, tableIconPrimaryClassName } from "@/components/ui/table-row-actions";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { apiClient, type AttendanceRecord, type Enrollment } from "@/lib/api";
+import { apiClient, type AttendanceRecord, type Course, type Enrollment } from "@/lib/api";
 import { useNotifications } from "@/lib/notifications";
 import { useAuthStore } from "@/stores/app";
 
@@ -22,6 +23,8 @@ export default function AcademyAttendanceAdminPage() {
   const token = useAuthStore((s) => s.token);
   const { success, error: notifyError } = useNotifications();
   const [date, setDate] = useState(todayIso);
+  const [courseId, setCourseId] = useState<number | "">("");
+  const [courses, setCourses] = useState<Course[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,9 +41,10 @@ export default function AcademyAttendanceAdminPage() {
   const load = () => {
     if (!token) return;
     setLoading(true);
+    const courseFilter = courseId === "" ? undefined : courseId;
     Promise.all([
-      apiClient.getAttendanceEnrollments(token),
-      apiClient.getAdminAttendance(token, { date }),
+      apiClient.getAttendanceEnrollments(token, { course_id: courseFilter }),
+      apiClient.getAdminAttendance(token, { date, course_id: courseFilter }),
     ])
       .then(([enrollmentRes, attendanceRes]) => {
         setEnrollments(enrollmentRes.data ?? []);
@@ -50,7 +54,15 @@ export default function AcademyAttendanceAdminPage() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(load, [token, date]);
+  useEffect(load, [token, date, courseId]);
+
+  useEffect(() => {
+    if (!token) return;
+    apiClient
+      .getAdminCourses(token, { status: "published" })
+      .then((response) => setCourses(response.data ?? []))
+      .catch(() => setCourses([]));
+  }, [token]);
 
   const mark = async (enrollment: Enrollment, status: "present" | "absent") => {
     if (!token) return;
@@ -89,17 +101,37 @@ export default function AcademyAttendanceAdminPage() {
         <Card>
           <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
             <CardTitle>Mark attendance</CardTitle>
-            <div className="flex items-center gap-2">
-              <Label htmlFor="attendance-date" className="sr-only">
-                Date
-              </Label>
-              <Input
-                id="attendance-date"
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="w-40"
-              />
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="space-y-1">
+                <Label htmlFor="attendance-course" className="sr-only">
+                  Course
+                </Label>
+                <Select
+                  id="attendance-course"
+                  value={courseId === "" ? "" : String(courseId)}
+                  onChange={(e) => setCourseId(e.target.value ? Number(e.target.value) : "")}
+                  className="w-52"
+                >
+                  <option value="">All courses</option>
+                  {courses.map((course) => (
+                    <option key={course.id} value={course.id}>
+                      {course.title}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="attendance-date" className="sr-only">
+                  Date
+                </Label>
+                <Input
+                  id="attendance-date"
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  className="w-40"
+                />
+              </div>
             </div>
           </CardHeader>
           <CardContent flush>

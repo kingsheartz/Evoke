@@ -161,6 +161,10 @@ class ContextController extends Controller
             if ($can('platform.manage')) {
                 $settingsChildren[] = ['label' => 'Preferences', 'href' => '/admin/settings/preferences', 'icon' => 'sliders'];
                 $settingsChildren[] = ['label' => 'Modules', 'href' => '/admin/settings/modules', 'icon' => 'blocks'];
+                $settingsChildren[] = ['label' => 'Payments & contact', 'href' => '/admin/settings/payments', 'icon' => 'credit-card'];
+            }
+            if ($can('users.manage') || $can('roles.manage')) {
+                $settingsChildren[] = ['label' => 'Roles & permissions', 'href' => '/admin/settings/roles', 'icon' => 'shield'];
             }
             if ($settingsChildren !== []) {
                 $items[] = [

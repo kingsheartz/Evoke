@@ -22,7 +22,7 @@ class PlatformSettingsController extends Controller
 
     public function update(Request $request, string $key): JsonResponse
     {
-        abort_unless(in_array($key, ['admin_preferences', 'advertisements', 'brand'], true), 404);
+        abort_unless(in_array($key, ['admin_preferences', 'advertisements', 'brand', 'payments'], true), 404);
 
         $this->authorizeSettingsKey($request, $key);
 
@@ -50,6 +50,23 @@ class PlatformSettingsController extends Controller
         return response()->json([
             'data' => is_array($data) ? $data : null,
             'revision' => $row?->updated_at,
+        ]);
+    }
+
+    /** Public contact + payment defaults for site CTAs. */
+    public function publicContact(): JsonResponse
+    {
+        $payments = \App\Support\PlatformConfig::payments();
+
+        return response()->json([
+            'data' => [
+                'email' => $payments['contact_email'],
+                'whatsapp' => $payments['contact_whatsapp'],
+                'whatsapp_url' => 'https://wa.me/'.$payments['contact_whatsapp'],
+                'payment_link_url' => $payments['payment_link_url'],
+                'payment_link_label' => $payments['payment_link_label'],
+                'razorpay_enabled' => (bool) ($payments['razorpay_enabled'] ?? false),
+            ],
         ]);
     }
 

@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { WhatsAppButton } from "@/components/site/whatsapp-button";
 import { apiClient } from "@/lib/api";
+import { DEFAULT_WHATSAPP_E164, tourWhatsAppMessage } from "@/lib/contact";
 
 export function TourEnquiryAction({
   packageId,
@@ -25,6 +27,8 @@ export function TourEnquiryAction({
     preferred_date: "",
     message: "",
   });
+
+  const whatsappMessage = packageTitle ? tourWhatsAppMessage(packageTitle) : "Hi Evoke Groups, I have a question about your tour packages.";
 
   const submit = async () => {
     if (!form.name.trim() || !form.email.trim()) {
@@ -52,9 +56,17 @@ export function TourEnquiryAction({
 
   if (!open) {
     return (
-      <Button type="button" variant="outline" className="h-12 w-full rounded-xl px-6 sm:w-auto" onClick={() => setOpen(true)}>
-        Ask a question
-      </Button>
+      <div className="flex w-full flex-col gap-2 sm:w-auto">
+        <Button type="button" variant="outline" className="h-12 w-full rounded-xl px-6 sm:w-auto" onClick={() => setOpen(true)}>
+          Ask a question
+        </Button>
+        <WhatsAppButton
+          phone={DEFAULT_WHATSAPP_E164}
+          message={whatsappMessage}
+          label="WhatsApp us"
+          className="h-12 w-full rounded-xl sm:w-auto"
+        />
+      </div>
     );
   }
 
@@ -82,10 +94,11 @@ export function TourEnquiryAction({
           <Label>Message</Label>
           <Textarea rows={3} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} />
         </div>
-        <div className="flex flex-col gap-2 sm:flex-row">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
           <Button type="button" className="w-full sm:w-auto" onClick={submit} disabled={submitting}>
             {submitting ? "Sending…" : "Send enquiry"}
           </Button>
+          <WhatsAppButton phone={DEFAULT_WHATSAPP_E164} message={whatsappMessage} label="WhatsApp" className="w-full sm:w-auto" />
           <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => setOpen(false)}>
             Cancel
           </Button>

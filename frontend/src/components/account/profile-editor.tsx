@@ -6,6 +6,7 @@ import { ImageCropModal } from "@/components/ui/image-crop-modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { FormError, FormSuccess } from "@/components/admin/admin-form-primitives";
 import { useImageCropFlow } from "@/hooks/use-image-crop-flow";
@@ -34,6 +35,10 @@ export function ProfileEditor({ user, token }: ProfileEditorProps) {
   const [form, setForm] = useState<ProfilePayload & { name: string }>({
     name: user.name,
     phone: user.phone ?? "",
+    gender: user.gender ?? "",
+    age: user.age ?? undefined,
+    blood_group: user.blood_group ?? "",
+    learning_mode: user.learning_mode ?? undefined,
     address_line1: user.address_line1 ?? "",
     address_line2: user.address_line2 ?? "",
     city: user.city ?? "",
@@ -42,7 +47,7 @@ export function ProfileEditor({ user, token }: ProfileEditorProps) {
     country: user.country ?? "India",
   });
 
-  const updateField = (key: keyof typeof form, value: string) => {
+  const updateField = (key: keyof typeof form, value: string | number | undefined) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -59,6 +64,10 @@ export function ProfileEditor({ user, token }: ProfileEditorProps) {
       const { data } = await apiClient.updateProfile(token, {
         name: form.name,
         phone: form.phone || undefined,
+        gender: form.gender || undefined,
+        age: form.age ? Number(form.age) : undefined,
+        blood_group: form.blood_group || undefined,
+        learning_mode: form.learning_mode || undefined,
         address_line1: form.address_line1 || undefined,
         address_line2: form.address_line2 || undefined,
         city: form.city || undefined,
@@ -191,12 +200,73 @@ export function ProfileEditor({ user, token }: ProfileEditorProps) {
           <Input value={user.email} disabled className="opacity-70" />
         </div>
         <div className="space-y-2">
+          <Label>Evoke ID</Label>
+          <Input value={user.evoke_id ?? "Assigned after save"} disabled className="opacity-70" />
+        </div>
+        <div className="space-y-2">
           <Label htmlFor="profile-phone">Phone (optional)</Label>
           <Input id="profile-phone" value={form.phone ?? ""} onChange={(e) => updateField("phone", e.target.value)} autoComplete="tel" />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="profile-country">Country</Label>
-          <Input id="profile-country" value={form.country ?? ""} onChange={(e) => updateField("country", e.target.value)} autoComplete="country-name" />
+      </div>
+
+      <div className="rounded-xl border border-app-border bg-app-surface/50 p-4">
+        <p className="text-sm font-medium text-app-text">Academy & travel details</p>
+        <p className="mt-1 text-xs text-app-muted">
+          Optional for shop purchases. Required before course enrollment or tour booking.
+        </p>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="profile-gender">Gender</Label>
+            <Select
+              id="profile-gender"
+              value={form.gender ?? ""}
+              onChange={(e) => updateField("gender", e.target.value)}
+            >
+              <option value="">Select gender</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
+              <option value="prefer_not_to_say">Prefer not to say</option>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="profile-age">Age</Label>
+            <Input
+              id="profile-age"
+              type="number"
+              min={1}
+              max={120}
+              value={form.age ?? ""}
+              onChange={(e) => updateField("age", e.target.value ? Number(e.target.value) : undefined)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="profile-blood">Blood group</Label>
+            <Select
+              id="profile-blood"
+              value={form.blood_group ?? ""}
+              onChange={(e) => updateField("blood_group", e.target.value)}
+            >
+              <option value="">Select blood group</option>
+              {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((group) => (
+                <option key={group} value={group}>
+                  {group}
+                </option>
+              ))}
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="profile-mode">Learning / travel mode</Label>
+            <Select
+              id="profile-mode"
+              value={form.learning_mode ?? ""}
+              onChange={(e) => updateField("learning_mode", e.target.value as "offline" | "online" | undefined)}
+            >
+              <option value="">Select mode</option>
+              <option value="offline">Offline</option>
+              <option value="online">Online</option>
+            </Select>
+          </div>
         </div>
       </div>
 
@@ -234,6 +304,10 @@ export function ProfileEditor({ user, token }: ProfileEditorProps) {
           <div className="space-y-2">
             <Label htmlFor="profile-postal">Postal code</Label>
             <Input id="profile-postal" value={form.postal_code ?? ""} onChange={(e) => updateField("postal_code", e.target.value)} autoComplete="postal-code" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="profile-country">Country</Label>
+            <Input id="profile-country" value={form.country ?? ""} onChange={(e) => updateField("country", e.target.value)} autoComplete="country-name" />
           </div>
         </div>
       </div>

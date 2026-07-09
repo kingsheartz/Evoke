@@ -22,6 +22,8 @@ const schema = z.object({
   duration_days: z.number().min(1),
   price: z.number().min(0),
   description: z.string().optional(),
+  available_from: z.string().optional(),
+  available_until: z.string().optional(),
   seo_title: z.string().optional(),
   seo_description: z.string().optional(),
 });
@@ -64,6 +66,8 @@ export default function NewPackagePage() {
             </div>
             <div className="space-y-2"><Label>Duration (days)</Label><Input type="number" {...register("duration_days", { valueAsNumber: true })} /></div>
             <div className="space-y-2"><Label>Price (₹)</Label><Input type="number" {...register("price", { valueAsNumber: true })} /></div>
+            <div className="space-y-2"><Label>Available from</Label><Input type="date" {...register("available_from")} /></div>
+            <div className="space-y-2"><Label>Available until</Label><Input type="date" {...register("available_until")} /></div>
             <div className="space-y-2 md:col-span-2"><Label>SEO title</Label><Input {...register("seo_title")} /></div>
             <div className="space-y-2 md:col-span-2"><Label>SEO description</Label><Textarea rows={2} {...register("seo_description")} /></div>
             <div className="md:col-span-2"><Button type="submit" disabled={isSubmitting}>Create Package</Button></div>

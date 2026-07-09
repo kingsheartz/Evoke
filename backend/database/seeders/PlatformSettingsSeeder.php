@@ -36,6 +36,13 @@ class PlatformSettingsSeeder extends Seeder
                 ],
             ],
             'advertisements' => [],
+            'payments' => [
+                'razorpay_enabled' => false,
+                'payment_link_url' => null,
+                'payment_link_label' => 'Pay online',
+                'contact_email' => 'evokeacademy@gmail.com',
+                'contact_whatsapp' => '917902264073',
+            ],
         ];
 
         foreach ($defaults as $key => $value) {

@@ -17,6 +17,7 @@ Route::get('/divisions', [DivisionPageController::class, 'index']);
 Route::get('/divisions/{slug}', [DivisionPageController::class, 'show']);
 Route::get('/ads', [PlatformSettingsController::class, 'publicAds']);
 Route::get('/brand', [PlatformSettingsController::class, 'publicBrand']);
+Route::get('/contact', [PlatformSettingsController::class, 'publicContact']);
 Route::get('/modules', [ModuleController::class, 'index']);
 Route::get('/search', [SearchController::class, 'search']);
 

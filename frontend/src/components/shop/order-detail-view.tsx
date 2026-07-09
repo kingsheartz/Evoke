@@ -6,7 +6,7 @@ import { MapPin, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { formatOfferingPrice } from "@/lib/offerings";
-import { openRazorpayCheckout } from "@/lib/razorpay-checkout";
+import { completeCheckoutPayment } from "@/lib/payments";
 import type { ShopOrder } from "@/lib/api";
 import { useAuthStore } from "@/stores/app";
 
@@ -43,7 +43,7 @@ export function OrderDetailView({ order, onRefresh }: { order: ShopOrder; onRefr
     setPaying(true);
     setMessage(null);
     try {
-      const paid = await openRazorpayCheckout({
+      const result = await completeCheckoutPayment({
         token,
         payableType: "shop_order",
         payableId: order.id,
@@ -51,9 +51,11 @@ export function OrderDetailView({ order, onRefresh }: { order: ShopOrder; onRefr
         userEmail: user.email,
         userPhone: user.phone ?? undefined,
       });
-      if (paid) {
+      if (result.paid) {
         setMessage("Payment successful.");
         onRefresh();
+      } else if (result.method === "payment_link") {
+        setMessage("Complete payment in the opened tab, then refresh this page.");
       }
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "Payment failed.");

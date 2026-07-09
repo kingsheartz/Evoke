@@ -25,6 +25,8 @@ interface PackageForm {
   destination: string;
   type: string;
   duration_days: number;
+  available_from: string;
+  available_until: string;
   price: number;
   seo_title: string;
   seo_description: string;
@@ -60,6 +62,8 @@ export default function EditPackagePage() {
         destination: r.data.destination,
         type: r.data.type,
         duration_days: r.data.duration_days,
+        available_from: r.data.available_from?.slice(0, 10) ?? "",
+        available_until: r.data.available_until?.slice(0, 10) ?? "",
         price: Number(r.data.price),
         seo_title: r.data.seo_title ?? "",
         seo_description: r.data.seo_description ?? "",
@@ -77,6 +81,8 @@ export default function EditPackagePage() {
     try {
       await apiClient.updatePackage(token, id, {
         ...data,
+        available_from: data.available_from || undefined,
+        available_until: data.available_until || undefined,
         gallery: normalizeUrlList(gallery),
         inclusions: normalizeStringList(inclusions),
         exclusions: normalizeStringList(exclusions),
@@ -122,6 +128,17 @@ export default function EditPackagePage() {
               </div>
               <div className="space-y-2"><Label>Duration (days)</Label><Input type="number" {...register("duration_days", { valueAsNumber: true })} /></div>
               <div className="space-y-2"><Label>Price (₹)</Label><Input type="number" {...register("price", { valueAsNumber: true })} /></div>
+              <div className="space-y-2">
+                <Label>Available from</Label>
+                <Input type="date" {...register("available_from")} />
+              </div>
+              <div className="space-y-2">
+                <Label>Available until</Label>
+                <Input type="date" {...register("available_until")} />
+              </div>
+              <p className="text-xs text-app-muted md:col-span-2">
+                Optional booking window. Leave blank to allow any travel date.
+              </p>
               <div className="space-y-2 md:col-span-2"><Label>SEO title</Label><Input {...register("seo_title")} placeholder="Optional page title" /></div>
               <div className="space-y-2 md:col-span-2"><Label>SEO description</Label><Textarea rows={2} {...register("seo_description")} /></div>
               <div className="flex items-center gap-4 md:col-span-2">

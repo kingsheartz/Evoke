@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import type { CourseBatch } from "@/lib/api";
 import { apiClient } from "@/lib/api";
-import { openRazorpayCheckout } from "@/lib/razorpay-checkout";
+import { completeCheckoutPayment } from "@/lib/payments";
+import { profileCompletionMessage } from "@/lib/profile";
 import { revalidateAcademyPublicCache } from "@/lib/revalidate-cms";
 import { useAuthStore } from "@/stores/app";
 
@@ -32,10 +33,16 @@ export function AcademyEnrollAction({
   const [submitting, setSubmitting] = useState(false);
 
   const signInHref = `/sign-in?redirect=${encodeURIComponent(redirectPath)}`;
+  const profileHref = `/account/profile?redirect=${encodeURIComponent(redirectPath)}`;
+  const profileMessage = user ? profileCompletionMessage(user) : null;
 
   const enroll = async () => {
     if (!token || !user) {
       router.push(signInHref);
+      return;
+    }
+    if (profileMessage) {
+      setMessage(profileMessage);
       return;
     }
     if (batchId === "") {
@@ -48,18 +55,14 @@ export function AcademyEnrollAction({
       const response = await apiClient.createEnrollment(token, { batch_id: batchId });
       await revalidateAcademyPublicCache();
 
-      try {
-        await openRazorpayCheckout({
-          token,
-          payableType: "academy_enrollment",
-          payableId: response.data.id,
-          userName: user.name,
-          userEmail: user.email,
-          userPhone: user.phone ?? undefined,
-        });
-      } catch {
-        // Payment optional when Razorpay is not configured
-      }
+      await completeCheckoutPayment({
+        token,
+        payableType: "academy_enrollment",
+        payableId: response.data.id,
+        userName: user.name,
+        userEmail: user.email,
+        userPhone: user.phone ?? undefined,
+      });
 
       router.push(`/confirmation?type=enrollment&ref=${encodeURIComponent(String(response.data.id))}`);
     } catch (e) {
@@ -92,6 +95,14 @@ export function AcademyEnrollAction({
           ))}
         </Select>
       </div>
+      {profileMessage && token && (
+        <p className="text-sm text-status-error">
+          {profileMessage}{" "}
+          <Link href={profileHref} className="font-medium text-accent-soft hover:text-accent">
+            Update profile
+          </Link>
+        </p>
+      )}
       <Button
         type="button"
         className="h-12 w-full rounded-xl px-6 text-sm font-semibold sm:w-auto"
