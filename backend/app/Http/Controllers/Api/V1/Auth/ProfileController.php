@@ -17,7 +17,7 @@ class ProfileController extends Controller
         $user->update($request->validated());
 
         return response()->json([
-            'data' => $user->fresh()->load('roles', 'permissions', 'branch'),
+            'data' => $user->fresh()->forAuthResponse(),
         ]);
     }
 
@@ -41,7 +41,7 @@ class ProfileController extends Controller
         $user->update(['avatar' => $path]);
 
         return response()->json([
-            'data' => $user->fresh()->load('roles', 'permissions', 'branch'),
+            'data' => $user->fresh()->forAuthResponse(),
         ]);
     }
 
@@ -55,7 +55,7 @@ class ProfileController extends Controller
         }
 
         return response()->json([
-            'data' => $user->fresh()->load('roles', 'permissions', 'branch'),
+            'data' => $user->fresh()->forAuthResponse(),
         ]);
     }
 }

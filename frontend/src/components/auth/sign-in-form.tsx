@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { apiClient, getUserPermissions, getUserRoles, hasAdminAccess } from "@/lib/api";
+import { apiClient, getUserPermissions, getUserRoles, getDefaultAdminPath, hasAdminAccess } from "@/lib/api";
 import { useNotifications } from "@/lib/notifications";
 import { useClientMounted } from "@/hooks/use-client-mounted";
 import { AuthFormSkeleton } from "@/components/auth/auth-form-skeleton";
@@ -53,7 +53,7 @@ export function SignInForm() {
         const { data: context } = await apiClient.getAdminContext(auth.token);
         setContext(context);
         notifySuccess("Signed in. Redirecting to admin...");
-        router.push(searchParams.get("redirect") ?? "/admin");
+        router.push(searchParams.get("redirect") ?? getDefaultAdminPath(context.navigation));
         return;
       }
 

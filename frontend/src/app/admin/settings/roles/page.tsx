@@ -28,11 +28,22 @@ function formatSectionLabel(section: string): string {
 
 type RoleDraft = {
   id?: number;
+  draftId?: string;
   name: string;
   permissions: string[];
   users_count?: number;
   isNew?: boolean;
 };
+
+function roleKey(role: RoleDraft): string {
+  return role.isNew ? (role.draftId ?? role.name) : String(role.id);
+}
+
+function isSameRole(a: RoleDraft, b: RoleDraft): boolean {
+  if (a.isNew && b.isNew) return a.draftId === b.draftId;
+  if (!a.isNew && !b.isNew) return a.id === b.id;
+  return false;
+}
 
 export default function RolesSettingsPage() {
   const token = useAuthStore((s) => s.token);
@@ -44,7 +55,7 @@ export default function RolesSettingsPage() {
   const [deleting, setDeleting] = useState(false);
 
   const activeRole = useMemo(
-    () => roles.find((role) => (role.isNew ? role.name === activeRoleId : role.id === activeRoleId)) ?? null,
+    () => roles.find((role) => roleKey(role) === String(activeRoleId)) ?? null,
     [roles, activeRoleId],
   );
 
@@ -75,10 +86,7 @@ export default function RolesSettingsPage() {
   const updateActiveRole = (patch: Partial<RoleDraft>) => {
     if (!activeRole) return;
     setRoles((prev) =>
-      prev.map((role) => {
-        const same = role.isNew ? role.name === activeRole.name : role.id === activeRole.id;
-        return same ? { ...role, ...patch } : role;
-      }),
+      prev.map((role) => (isSameRole(role, activeRole) ? { ...role, ...patch } : role)),
     );
   };
 
@@ -91,10 +99,10 @@ export default function RolesSettingsPage() {
   };
 
   const addRole = () => {
-    const name = `custom-role-${roles.filter((role) => role.isNew).length + 1}`;
-    const draft: RoleDraft = { name, permissions: [], isNew: true };
+    const draftId = crypto.randomUUID();
+    const draft: RoleDraft = { draftId, name: "", permissions: [], isNew: true };
     setRoles((prev) => [...prev, draft]);
-    setActiveRoleId(name);
+    setActiveRoleId(draftId);
   };
 
   const saveRole = async () => {
@@ -111,6 +119,7 @@ export default function RolesSettingsPage() {
           permissions: activeRole.permissions,
         });
         success(`Role "${data.name}" created.`);
+        setActiveRoleId(data.id);
       } else if (activeRole.id != null) {
         const { data } = await apiClient.updateManagedRole(token, activeRole.id, {
           name: activeRole.name.trim(),
@@ -170,13 +179,14 @@ export default function RolesSettingsPage() {
                 <p className="text-sm text-app-muted">No roles yet.</p>
               ) : (
                 roles.map((role) => {
-                  const key = role.isNew ? role.name : role.id!;
-                  const selected = role.isNew ? activeRoleId === role.name : activeRoleId === role.id;
+                  const key = roleKey(role);
+                  const selected = activeRoleId === key;
+                  const label = role.isNew && !role.name.trim() ? "New role" : role.name;
                   return (
                     <button
                       key={key}
                       type="button"
-                      onClick={() => setActiveRoleId(role.isNew ? role.name : role.id!)}
+                      onClick={() => setActiveRoleId(key)}
                       className={cn(
                         "flex w-full items-center justify-between rounded-lg border px-3 py-2 text-left text-sm transition-colors",
                         selected
@@ -184,7 +194,10 @@ export default function RolesSettingsPage() {
                           : "border-app-border bg-app-surface hover:bg-app-surface-muted",
                       )}
                     >
-                      <span className="font-medium">{role.name}</span>
+                      <span className={cn("font-medium", role.isNew && !role.name.trim() && "text-app-muted")}>
+                        {label}
+                        {role.isNew ? " (draft)" : ""}
+                      </span>
                       {role.users_count != null && <span className="text-xs text-app-muted">{role.users_count}</span>}
                     </button>
                   );
@@ -196,7 +209,7 @@ export default function RolesSettingsPage() {
           <Card>
             <CardHeader className="flex flex-row items-start justify-between gap-4">
               <div>
-                <CardTitle>{activeRole?.name ?? "Select a role"}</CardTitle>
+                <CardTitle>{activeRole?.name.trim() || (activeRole?.isNew ? "New role" : "Select a role")}</CardTitle>
                 <CardDescription>
                   {activeRole?.name === "super-admin"
                     ? "Super admin always has full access and cannot be edited here."
@@ -218,6 +231,7 @@ export default function RolesSettingsPage() {
                       id="role-name"
                       value={activeRole.name}
                       disabled={activeRole.name === "super-admin"}
+                      placeholder="e.g. content-editor"
                       onChange={(e) => updateActiveRole({ name: e.target.value })}
                     />
                   </div>

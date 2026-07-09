@@ -1608,6 +1608,16 @@ export function hasAdminAccess(roles: string[], permissions: string[]): boolean 
   return adminPerms.length > 0;
 }
 
+/** First navigable admin path for users without dashboard access. */
+export function getDefaultAdminPath(navigation: NavItem[]): string {
+  for (const item of navigation) {
+    if (item.href) return item.href;
+    const childHref = item.children?.find((child) => child.href)?.href;
+    if (childHref) return childHref;
+  }
+  return "/admin";
+}
+
 export function getUserRoles(user: User): string[] {
   return user.roles?.map((r) => r.name) ?? [];
 }

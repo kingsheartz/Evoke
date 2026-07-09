@@ -48,7 +48,7 @@ class AuthController extends Controller
 
         return response()->json([
             'data' => [
-                'user' => $user->load('roles', 'permissions'),
+                'user' => $user->forAuthResponse(),
                 'token' => $token,
             ],
         ]);
@@ -64,7 +64,7 @@ class AuthController extends Controller
     public function me(Request $request): JsonResponse
     {
         return response()->json([
-            'data' => $request->user()->load('roles', 'permissions', 'branch'),
+            'data' => $request->user()->forAuthResponse(),
         ]);
     }
 

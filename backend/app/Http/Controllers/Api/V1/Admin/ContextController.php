@@ -15,7 +15,7 @@ class ContextController extends Controller
 
     public function __invoke(Request $request): JsonResponse
     {
-        $user = $request->user()->load('roles', 'permissions', 'branch');
+        $user = $request->user()->forAuthResponse();
 
         $permissions = $user->getAllPermissions()->pluck('name')->values();
         $roles = $user->roles->pluck('name')->values();

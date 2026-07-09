@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowRight,
   BookOpen,
@@ -14,7 +15,8 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
-import { StatusBadge } from "@/components/ui/status-badge";import { apiClient, type DashboardData } from "@/lib/api";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { apiClient, getDefaultAdminPath, hasPermission, type DashboardData } from "@/lib/api";
 import { useNotifications } from "@/lib/notifications";
 import { useAuthStore } from "@/stores/app";
 import { cn } from "@/lib/utils";
@@ -36,19 +38,29 @@ const statCards: {
 ];
 
 export default function AdminDashboardPage() {
+  const router = useRouter();
   const token = useAuthStore((s) => s.token);
+  const permissions = useAuthStore((s) => s.permissions);
+  const navigation = useAuthStore((s) => s.navigation);
   const { error: notifyError } = useNotifications();
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!hasPermission(permissions, ["analytics.view", "platform.manage"])) {
+      router.replace(getDefaultAdminPath(navigation));
+    }
+  }, [permissions, navigation, router]);
+
+  useEffect(() => {
     if (!token) return;
+    if (!hasPermission(permissions, "analytics.view")) return;
     apiClient
       .getDashboard(token)
       .then((res) => setDashboard(res.data))
       .catch(() => notifyError("Unable to load dashboard stats."))
       .finally(() => setLoading(false));
-  }, [token, notifyError]);
+  }, [token, permissions, notifyError]);
 
   return (
     <div className="app-page">

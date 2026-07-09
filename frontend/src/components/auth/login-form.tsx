@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { apiClient, hasAdminAccess } from "@/lib/api";
+import { apiClient, getDefaultAdminPath, hasAdminAccess } from "@/lib/api";
 import { useNotifications } from "@/lib/notifications";
 import { useClientMounted } from "@/hooks/use-client-mounted";
 import { AuthFormSkeleton } from "@/components/auth/auth-form-skeleton";
@@ -60,7 +60,7 @@ export function LoginForm() {
       const { data: context } = await apiClient.getAdminContext(auth.token);
       setContext(context);
 
-      const redirect = searchParams.get("redirect") ?? "/admin";
+      const redirect = searchParams.get("redirect") ?? getDefaultAdminPath(context.navigation);
       router.push(redirect);
     } catch (e) {
       const message = e instanceof Error ? e.message : "Login failed";

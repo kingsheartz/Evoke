@@ -103,6 +103,15 @@ class User extends Authenticatable
         return $this->belongsTo(Branch::class);
     }
 
+    /** Include role-derived permissions in API auth/profile payloads. */
+    public function forAuthResponse(): self
+    {
+        $this->loadMissing('roles', 'branch');
+        $this->setRelation('permissions', $this->getAllPermissions());
+
+        return $this;
+    }
+
     protected function avatarUrl(): Attribute
     {
         return Attribute::get(fn () => $this->avatar
