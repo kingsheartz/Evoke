@@ -105,7 +105,7 @@ Comfortable budget for managed hosting: Vercel Pro, Laravel Forge + VPS, managed
 |--------|--------------|------------|----------|
 | **A. Single VPS + Docker** | ₹450–750 | Medium | Full control, one bill, ₹800 budget |
 | **B. Vercel + VPS (API only)** | ₹400–700 | Medium | Best Next.js performance, split ops |
-| **C. Free-tier split** | ₹0–200 | Medium | Demos, internal testing |
+| **C. Free testing** | ₹0 | Low–medium | Demos, UAT — [OPTION-C-FREE.md](deploy/OPTION-C-FREE.md) |
 | **D. PaaS (Railway / Render)** | ₹500–2000+ | Low–medium | Less SSH, pay per service |
 | **E. Laravel Forge + Vercel** | ₹1500+ | Low | Easiest ops, over ₹800 |
 | **F. XAMPP / shared PHP only** | — | — | **Not suitable** (no Next.js, no Redis) |
@@ -216,16 +216,17 @@ Configure CORS so the Vercel origin can call the API with Sanctum cookies if you
 
 ---
 
-## Option C — Free-tier split (demo only)
+## Option C — Free testing (₹0/month)
 
-| Service | Role |
-|---------|------|
-| Vercel | Next.js frontend |
-| Render free web service | Laravel (`php artisan serve` or Docker) |
-| Neon free Postgres | Database |
-| Upstash free Redis | Cache / queues |
+**→ Full runbook: [docs/deploy/OPTION-C-FREE.md](deploy/OPTION-C-FREE.md)**
 
-Set the same env vars as Option B. Expect cold starts and usage caps.
+| Path | Stack | Tradeoff |
+|------|-------|----------|
+| **C1 Oracle Always Free** | Full Docker on Ampere VM | Best free full-platform test; needs Oracle account |
+| **C2 Vercel + Render + Neon** | Split PaaS | Easiest dashboards; API cold starts, ephemeral uploads |
+| **C3 AWS free tier** | Same as Option G | 12-month EC2 free; more setup |
+
+Repo assets: `render.yaml`, `frontend/vercel.json`, `infra/free/`.
 
 ---
 

@@ -1,0 +1,34 @@
+# Free-tier / lean testing overlay — use with prod + mysql profile.
+# Skips Redis, workers, and AI to save RAM on small VMs.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml -f infra/free/docker-compose.free.yml \
+#     --profile mysql --profile proxy up -d --build
+
+services:
+  redis:
+    profiles: ["redis-disabled"]
+
+  backend:
+    environment:
+      - CACHE_STORE=file
+      - SESSION_DRIVER=file
+      - QUEUE_CONNECTION=sync
+    depends_on:
+      redis:
+        condition: service_started
+        required: false
+
+  queue-worker:
+    profiles: ["workers-disabled"]
+
+  scheduler:
+    profiles: ["workers-disabled"]
+
+  ai-service:
+    profiles: ["ai-disabled"]
+
+  ollama:
+    profiles: ["ai-disabled"]
+
+  postgres:
+    profiles: ["pgsql-disabled"]

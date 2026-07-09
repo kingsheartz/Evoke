@@ -13,7 +13,8 @@ Start and test Evoke **without configuring everything upfront**. Pick a **stack*
 All three support the **same commands, stacks, and flags**. Use the row that matches your terminal.
 
 For day-to-day UI work (stale cache, verify admin): [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)  
-For VPS / hosting options: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
+For VPS / hosting options: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)  
+For **free testing** deploy (₹0): [docs/deploy/OPTION-C-FREE.md](docs/deploy/OPTION-C-FREE.md)
 
 ---
 
@@ -213,7 +214,8 @@ For server deployment: [docs/deploy/README.md](docs/deploy/README.md) (Option A 
 | **4. MySQL path** | `up mysql --migrate` | Postgres, AI |
 | **5. AI features** | `up ai` + ollama model pulls | — |
 | **6. Pre-deploy** | `prod up core --migrate`, `prod health` | Live domain SSL |
-| **7. Go live** | VPS → [OPTION-A-VPS.md](docs/deploy/OPTION-A-VPS.md) · AWS → [OPTION-G-AWS.md](docs/deploy/OPTION-G-AWS.md) | — |
+| **7. Free test deploy** | [OPTION-C-FREE.md](docs/deploy/OPTION-C-FREE.md) — Oracle or Vercel+Render | — |
+| **8. Go live** | VPS → [OPTION-A-VPS.md](docs/deploy/OPTION-A-VPS.md) · AWS → [OPTION-G-AWS.md](docs/deploy/OPTION-G-AWS.md) | — |
 
 ### Optional env (add when needed)
 

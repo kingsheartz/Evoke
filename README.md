@@ -96,7 +96,8 @@ WSL:
 
 **Development guide (commands, Docker UI fixes, troubleshooting):** [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)
 
-**Deployment (hosting options, ₹800 budget, production checklist):** see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
+**Deployment (hosting options, ₹800 budget, production checklist):** see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)  
+**Free testing deploy (₹0):** see [docs/deploy/OPTION-C-FREE.md](docs/deploy/OPTION-C-FREE.md)
 
 **Windows quick helpers:**
 

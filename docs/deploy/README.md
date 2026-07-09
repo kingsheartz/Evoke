@@ -4,6 +4,7 @@ Step-by-step guides to go live with Evoke.
 
 | Path | Guide | Best for |
 |------|-------|----------|
+| **Option C** | [OPTION-C-FREE.md](OPTION-C-FREE.md) | **Free testing** — Oracle Cloud, Vercel + Render |
 | **Option A** | [OPTION-A-VPS.md](OPTION-A-VPS.md) | Single VPS (~₹450–750/mo), Hostinger / Hetzner |
 | **Option G** | [OPTION-G-AWS.md](OPTION-G-AWS.md) | AWS free tier, ECR + GitHub Actions |
 
@@ -29,11 +30,11 @@ Overview of all hosting options: [DEPLOYMENT.md](../DEPLOYMENT.md).
 
 ## Which path should I choose?
 
-| Choose **Option A (VPS)** if… | Choose **Option G (AWS)** if… |
-|-------------------------------|-------------------------------|
-| You want one simple monthly bill | You already use AWS or want free-tier EC2 |
-| You prefer SSH + Docker on one box | You want automated CI/CD on every push |
-| Indian/EU VPS providers are fine | You're OK with AWS console + IAM setup |
+| Choose **Option C (free)** if… | Choose **Option A (VPS)** if… | Choose **Option G (AWS)** if… |
+|-------------------------------|-------------------------------|-------------------------------|
+| You want ₹0 for demos / stakeholder testing | You want one simple monthly bill | You already use AWS or want free-tier EC2 |
+| Oracle Always Free or Vercel+Render is OK | You prefer SSH + Docker on one box | You want automated CI/CD on every push |
+| Cold starts and upload limits are acceptable | Indian/EU VPS providers are fine | You're OK with AWS console + IAM setup |
 
 ---
 

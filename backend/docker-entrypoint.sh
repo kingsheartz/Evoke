@@ -27,4 +27,9 @@ fi
 php artisan package:discover --ansi 2>/dev/null || true
 php artisan storage:link --force 2>/dev/null || true
 
+if [ "${RUN_MIGRATIONS:-false}" = "true" ]; then
+  echo "Running migrations..."
+  php artisan migrate --force --no-interaction
+fi
+
 exec "$@"
