@@ -3,7 +3,7 @@
 Premium multi-business platform with three independent verticals managed from a single administration system:
 
 - **Evoke Academy** — Courses, trainers, enrollments, attendance, certificates
-- **Evoke Sports Shop** — E-commerce for sports equipment and apparel
+- **Eoke Sports Shop** — E-commerce for sports equipment and apparel
 - **Evoke Tours & Travels** — Travel packages, bookings, and lead management
 
 Built as a **modular monolith** using Domain-Driven Design (DDD), with all functionality exposed through versioned REST APIs (`/api/v1`).
@@ -96,7 +96,7 @@ WSL:
 
 **Development guide (commands, Docker UI fixes, troubleshooting):** [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)
 
-**Deployment (hosting options, ₹800 budget, production checklist):** see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)  
+**Deployment (hosting options, ₹800 budget, production checklist):** see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
 **Free testing deploy (₹0):** see [docs/deploy/OPTION-C-FREE.md](docs/deploy/OPTION-C-FREE.md)
 
 **Windows quick helpers:**

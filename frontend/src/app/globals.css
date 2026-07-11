@@ -1247,9 +1247,11 @@ select:-webkit-autofill {
 
 /* Data tables */
 .table-wrap {
-  overflow-x: clip;
+  overflow-x: auto;
   overflow-y: visible;
+  max-width: 100%;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
 }
 
 .table-wrap--scrollable {
@@ -1257,7 +1259,8 @@ select:-webkit-autofill {
 }
 
 .data-table {
-  width: 100%;
+  width: max(100%, max-content);
+  min-width: 100%;
   border-collapse: collapse;
   table-layout: auto;
 }
@@ -1438,8 +1441,7 @@ select:-webkit-autofill {
 
 .data-table td,
 .data-table th {
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .data-table th.data-table-th--managed {
@@ -1453,7 +1455,6 @@ select:-webkit-autofill {
 
 .data-table td:has(.table-actions) {
   overflow: visible;
-  text-overflow: clip;
   white-space: normal;
 }
 

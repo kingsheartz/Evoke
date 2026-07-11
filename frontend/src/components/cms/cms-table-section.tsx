@@ -22,7 +22,7 @@ export function CmsTableSection({ content }: { content: TableContent }) {
         className="font-display text-2xl font-semibold tracking-tight text-app-text md:text-3xl"
       />
       <FormattedBody text={body} format={content.body_format} className="text-app-muted" />
-      <div className={cn("table-wrap overflow-x-auto", (heading || body) && "mt-6")}>
+      <div className={cn("table-wrap", (heading || body) && "mt-6")}>
         <table className="w-full min-w-[480px] border-collapse text-left text-sm">
           {columns.length > 0 ? (
             <thead>

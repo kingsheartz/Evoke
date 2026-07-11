@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
+import { HorizontalScroll } from "@/components/ui/horizontal-scroll";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -229,7 +230,8 @@ function BatchRow({
 
   return (
     <div className="rounded-lg border border-app-border bg-app-surface/80 p-4 ring-1 ring-app-border">
-      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-[1.2fr_10rem_10rem_8rem_10rem_10rem_auto] lg:items-end">
+      <HorizontalScroll>
+        <div className="grid min-w-[52rem] grid-cols-[minmax(12rem,1.2fr)_10rem_10rem_8rem_10rem_10rem_auto] items-end gap-3">
         <div className="space-y-2">
           <Label>Name</Label>
           <Input value={name} onChange={(e) => setName(e.target.value)} />
@@ -291,7 +293,8 @@ function BatchRow({
             <Trash2 className="h-4 w-4 text-status-error" />
           </Button>
         </div>
-      </div>
+        </div>
+      </HorizontalScroll>
     </div>
   );
 }

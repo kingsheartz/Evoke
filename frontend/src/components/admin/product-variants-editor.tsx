@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
+import { HorizontalScroll } from "@/components/ui/horizontal-scroll";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -173,7 +174,8 @@ function VariantRow({
 
   return (
     <div className="rounded-lg border border-app-border bg-app-surface/80 p-4 ring-1 ring-app-border">
-      <div className="grid gap-3 md:grid-cols-[1fr_1fr_8rem_8rem_auto] md:items-end">
+      <HorizontalScroll>
+        <div className="grid min-w-[40rem] grid-cols-[minmax(10rem,1fr)_minmax(10rem,1fr)_8rem_8rem_auto] items-end gap-3">
         <div className="space-y-2">
           <Label>Name</Label>
           <Input value={name} onChange={(e) => setName(e.target.value)} />
@@ -198,7 +200,8 @@ function VariantRow({
             <Trash2 className="h-4 w-4 text-status-error" />
           </Button>
         </div>
-      </div>
+        </div>
+      </HorizontalScroll>
     </div>
   );
 }

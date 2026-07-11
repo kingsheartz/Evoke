@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { type CSSProperties, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { Columns3 } from "lucide-react";
 import { ColumnHeaderMenu, type SortDir } from "@/components/ui/column-header-menu";
@@ -164,7 +164,6 @@ function ConfigurableDataTableBody<T extends object>({
     () => Boolean(initialPrefs.widths && Object.keys(initialPrefs.widths).length > 0),
   );
   const [isResizing, setIsResizing] = useState(false);
-  const [scrollableX, setScrollableX] = useState(false);
   const [manageOpen, setManageOpen] = useState(false);
   const [columnPrefs, setColumnPrefs] = useState<TableColumnPrefs>(() => initialPrefs);
 
@@ -388,36 +387,33 @@ function ConfigurableDataTableBody<T extends object>({
     }
   };
 
-  const tableStyle = layoutLocked ? { width: "100%", tableLayout: "fixed" as const } : undefined;
+  const tableMinWidth = useMemo(
+    () =>
+      visibleColumns.reduce(
+        (sum, col) => sum + (resolvedColumnWidths[col.key] ?? col.width ?? DEFAULT_COL_WIDTH),
+        0,
+      ),
+    [visibleColumns, resolvedColumnWidths],
+  );
 
-  const lockedColumnPercents = useMemo(() => {
-    if (!layoutLocked) return null;
-    const total = visibleColumns.reduce(
-      (sum, col) => sum + (resolvedColumnWidths[col.key] ?? DEFAULT_COL_WIDTH),
-      0,
-    );
-    if (total <= 0) return null;
-
-    const percents: Record<string, string> = {};
-    for (const col of visibleColumns) {
-      const width = resolvedColumnWidths[col.key] ?? DEFAULT_COL_WIDTH;
-      percents[col.key] = `${(width / total) * 100}%`;
+  const tableStyle = useMemo((): CSSProperties => {
+    const base: CSSProperties = {
+      minWidth: tableMinWidth,
+      width: `max(100%, ${tableMinWidth}px)`,
+    };
+    if (layoutLocked) {
+      return { ...base, tableLayout: "fixed" };
     }
-    return percents;
-  }, [layoutLocked, visibleColumns, resolvedColumnWidths]);
+    return base;
+  }, [tableMinWidth, layoutLocked]);
 
-  useLayoutEffect(() => {
-    const wrap = tableWrapRef.current;
-    const table = tableRef.current;
-    if (!wrap || !table || pageData.length === 0) return;
-
-    const observer = new ResizeObserver(() => {
-      setScrollableX(table.scrollWidth > wrap.clientWidth + 1);
-    });
-    observer.observe(wrap);
-    observer.observe(table);
-    return () => observer.disconnect();
-  }, [pageData.length, visibleColumns, resolvedColumnWidths, layoutLocked, lockedColumnPercents, isResizing]);
+  const columnStyle = useCallback(
+    (col: TableColumn<T>): CSSProperties => ({
+      width: resolvedColumnWidths[col.key] ?? DEFAULT_COL_WIDTH,
+      minWidth: col.minWidth ?? DEFAULT_MIN_WIDTH,
+    }),
+    [resolvedColumnWidths],
+  );
 
   const leftPinnedKeys = visibleColumns
     .filter((c) => resolvePin(c, columnPrefs.pinned) === "left")
@@ -465,7 +461,6 @@ function ConfigurableDataTableBody<T extends object>({
             inset
               ? "rounded-none border-0 border-t border-app-border bg-transparent"
               : "rounded-xl border border-app-border bg-app-surface/40",
-            (scrollableX || isResizing) && "table-wrap--scrollable",
             isResizing && "table-wrap--resizing",
           )}
         >
@@ -481,17 +476,7 @@ function ConfigurableDataTableBody<T extends object>({
           >
             <colgroup>
               {visibleColumns.map((col) => (
-                <col
-                  key={col.key}
-                  style={
-                    lockedColumnPercents
-                      ? { width: lockedColumnPercents[col.key] }
-                      : {
-                          width: resolvedColumnWidths[col.key] ?? DEFAULT_COL_WIDTH,
-                          minWidth: col.minWidth ?? DEFAULT_MIN_WIDTH,
-                        }
-                  }
-                />
+                <col key={col.key} style={columnStyle(col)} />
               ))}
             </colgroup>
             <thead>
@@ -512,16 +497,7 @@ function ConfigurableDataTableBody<T extends object>({
                   return (
                     <th
                       key={col.key}
-                      style={
-                        lockedColumnPercents
-                          ? { width: lockedColumnPercents[col.key] }
-                          : layoutLocked
-                            ? {
-                                width: resolvedColumnWidths[col.key] ?? DEFAULT_COL_WIDTH,
-                                minWidth: col.minWidth ?? DEFAULT_MIN_WIDTH,
-                              }
-                            : undefined
-                      }
+                      style={layoutLocked ? columnStyle(col) : undefined}
                       className={cn(
                         resizable && "data-table-th--resizable",
                         manageColumns && "data-table-th--managed",

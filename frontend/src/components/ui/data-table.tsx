@@ -29,7 +29,7 @@ export function DataTable({
     >
       <table
         className={cn(
-          "data-table w-full text-left text-sm",
+          "data-table min-w-full text-left text-sm",
           inset && "table-inset",
         )}
       >

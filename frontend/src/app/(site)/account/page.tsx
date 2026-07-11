@@ -102,7 +102,7 @@ export default function AccountOverviewPage() {
       <div className="mt-10 grid gap-4 sm:grid-cols-3">
         {[
           { href: "/academy", label: "EVOKE Academy", description: "Courses & certificates" },
-          { href: "/shop", label: "EVOKE Sports", description: "Gear & equipment" },
+          { href: "/shop", label: "EOKE Sports", description: "Gear & equipment" },
           { href: "/tours", label: "EVOKE Tours", description: "Travel packages" },
         ].map((link) => (
           <Link
