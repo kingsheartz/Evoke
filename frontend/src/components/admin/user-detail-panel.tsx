@@ -22,6 +22,7 @@ import { Select } from "@/components/ui/select";
 import { useImageCropFlow } from "@/hooks/use-image-crop-flow";
 import { apiClient, type AdminBranch, type AdminUser, type UserPayload } from "@/lib/api";
 import { UPLOADABLE_IMAGE_ACCEPT } from "@/lib/media";
+import { formatDateOfBirth } from "@/lib/profile";
 import { formatRole } from "@/lib/status-labels";
 import { useNotifications } from "@/lib/notifications";
 import { cn } from "@/lib/utils";
@@ -33,6 +34,7 @@ type UserForm = {
   password: string;
   role: string;
   branch_id: string;
+  date_of_birth: string;
   address_line1: string;
   address_line2: string;
   city: string;
@@ -48,6 +50,7 @@ const emptyForm = (): UserForm => ({
   password: "",
   role: "customer",
   branch_id: "",
+  date_of_birth: "",
   address_line1: "",
   address_line2: "",
   city: "",
@@ -64,6 +67,7 @@ function formFromUser(user: AdminUser): UserForm {
     password: "",
     role: user.roles?.[0]?.name ?? "customer",
     branch_id: user.branch_id ? String(user.branch_id) : user.branch?.id ? String(user.branch.id) : "",
+    date_of_birth: user.date_of_birth?.slice(0, 10) ?? "",
     address_line1: user.address_line1 ?? "",
     address_line2: user.address_line2 ?? "",
     city: user.city ?? "",
@@ -198,6 +202,7 @@ export function UserDetailPanel({ userId, mode, open, onClose, onSaved, token, r
     phone: form.phone || undefined,
     role: form.role,
     branch_id: form.branch_id ? Number(form.branch_id) : undefined,
+    date_of_birth: form.date_of_birth || undefined,
     address_line1: form.address_line1 || undefined,
     address_line2: form.address_line2 || undefined,
     city: form.city || undefined,
@@ -399,6 +404,16 @@ export function UserDetailPanel({ userId, mode, open, onClose, onSaved, token, r
                   </Section>
                   <Section title="Contact" icon={Phone}>
                     <Field label="Phone" value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} />
+                    <div className="space-y-2">
+                      <Label htmlFor="user-dob">Date of birth</Label>
+                      <Input
+                        id="user-dob"
+                        type="date"
+                        value={form.date_of_birth}
+                        max={new Date().toISOString().slice(0, 10)}
+                        onChange={(e) => setForm({ ...form, date_of_birth: e.target.value })}
+                      />
+                    </div>
                   </Section>
                   <Section title="Address" icon={MapPin}>
                     <Field label="Address line 1" value={form.address_line1} onChange={(v) => setForm({ ...form, address_line1: v })} />
@@ -425,6 +440,7 @@ export function UserDetailPanel({ userId, mode, open, onClose, onSaved, token, r
                   <Section title="Contact" icon={Phone}>
                     <dl className="space-y-3">
                       <DetailRow label="Phone" value={user.phone} />
+                      <DetailRow label="Date of birth" value={formatDateOfBirth(user.date_of_birth)} />
                       <DetailRow label="Email verified" value={formatDateTime(user.email_verified_at)} />
                       <DetailRow label="Phone verified" value={formatDateTime(user.phone_verified_at)} />
                     </dl>

@@ -130,7 +130,7 @@ export function AdminTaskCalendar({
               type="button"
               onClick={() => onSelectDate(isSelected ? null : key)}
               className={cn(
-                "min-h-[4.5rem] rounded-xl border p-2 text-left transition-colors",
+                "flex min-h-[4.5rem] flex-col items-center rounded-xl border p-2 text-center transition-colors",
                 isSelected
                   ? "border-accent/50 bg-accent/10 ring-1 ring-accent/30"
                   : "border-transparent hover:border-app-border hover:bg-white/[0.03]",
@@ -145,7 +145,7 @@ export function AdminTaskCalendar({
               >
                 {date.getDate()}
               </span>
-              <div className="mt-1 space-y-0.5">
+              <div className="mt-1 w-full space-y-0.5 text-left">
                 {dayTasks.slice(0, 2).map((task) => (
                   <div
                     key={task.id}

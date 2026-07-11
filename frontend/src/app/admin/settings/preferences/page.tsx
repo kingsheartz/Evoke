@@ -30,6 +30,9 @@ const POSITIONS: { value: NotificationPosition; label: string }[] = [
   { value: "top-center", label: "Top center" },
   { value: "top-right", label: "Top right" },
   { value: "top-left", label: "Top left" },
+  { value: "bottom-center", label: "Bottom center" },
+  { value: "bottom-right", label: "Bottom right" },
+  { value: "bottom-left", label: "Bottom left" },
 ];
 
 type PreferencesDraft = {
@@ -46,13 +49,10 @@ function buildDraft(server?: {
   const validPositions: NotificationPosition[] = [
     "top-right", "top-left", "bottom-right", "bottom-left", "top-center", "bottom-center",
   ];
-  const positionRaw =
+  const position =
     server?.notifications?.position && validPositions.includes(server.notifications.position as NotificationPosition)
       ? (server.notifications.position as NotificationPosition)
       : DEFAULT_ADMIN_PREFERENCES.notifications.position;
-  const position = positionRaw.startsWith("bottom")
-    ? (positionRaw.replace("bottom", "top") as NotificationPosition)
-    : positionRaw;
 
   const themeFromServer = server?.theme;
   const fallbackTheme = getThemePreferences();

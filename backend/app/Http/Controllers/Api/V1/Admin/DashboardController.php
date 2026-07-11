@@ -9,6 +9,7 @@ use App\Models\Shop\Order;
 use App\Models\Tours\Booking;
 use App\Models\Tours\Enquiry;
 use App\Models\User;
+use App\Support\DashboardCelebrations;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
@@ -19,6 +20,8 @@ class DashboardController extends Controller
         $revenue = (float) Order::where('payment_status', 'paid')->sum('total')
             + (float) Enrollment::where('payment_status', 'paid')->sum('amount_paid')
             + (float) Booking::where('payment_status', 'paid')->sum('total_amount');
+
+        $celebrations = DashboardCelebrations::today();
 
         return response()->json([
             'data' => [
@@ -36,6 +39,7 @@ class DashboardController extends Controller
                     'bookings' => Booking::with(['user', 'package'])->latest()->limit(5)->get(['id', 'booking_number', 'user_id', 'package_id', 'status', 'total_amount', 'created_at']),
                 ],
                 'modules' => DB::table('business_modules')->orderBy('sort_order')->get(['slug', 'name', 'is_enabled']),
+                'celebrations' => $celebrations,
             ],
         ]);
     }

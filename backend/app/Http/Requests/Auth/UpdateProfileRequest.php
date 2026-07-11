@@ -33,6 +33,7 @@ class UpdateProfileRequest extends FormRequest
             'postal_code' => ['nullable', 'string', 'max:20'],
             'country' => ['nullable', 'string', 'max:64'],
             'gender' => ['nullable', 'string', 'in:male,female,other,prefer_not_to_say'],
+            'date_of_birth' => ['nullable', 'date', 'before:today'],
             'age' => ['nullable', 'integer', 'min:1', 'max:120'],
             'blood_group' => ['nullable', 'string', 'in:A+,A-,B+,B-,AB+,AB-,O+,O-'],
             'learning_mode' => ['nullable', 'string', 'in:offline,online'],

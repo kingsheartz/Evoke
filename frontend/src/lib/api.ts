@@ -968,6 +968,7 @@ export interface User {
   email: string;
   phone?: string | null;
   gender?: string | null;
+  date_of_birth?: string | null;
   age?: number | null;
   blood_group?: string | null;
   learning_mode?: "offline" | "online" | null;
@@ -986,6 +987,7 @@ export interface ProfilePayload {
   name?: string;
   phone?: string;
   gender?: string;
+  date_of_birth?: string;
   age?: number;
   blood_group?: string;
   learning_mode?: "offline" | "online";
@@ -1026,6 +1028,16 @@ export interface AdminContext {
   navigation: NavItem[];
 }
 
+export interface DashboardCelebration {
+  id: number;
+  name: string;
+  type: "birthday" | "anniversary";
+  date: string;
+  age?: number;
+  years?: number;
+  avatar_url?: string | null;
+}
+
 export interface DashboardData {
   stats: {
     users: number;
@@ -1041,6 +1053,10 @@ export interface DashboardData {
     bookings: { id: number; booking_number: string; status: string; total_amount: string; created_at: string }[];
   };
   modules: { slug: string; name: string; is_enabled: boolean }[];
+  celebrations?: {
+    birthdays: DashboardCelebration[];
+    anniversaries: DashboardCelebration[];
+  };
 }
 
 export interface AcademyCategory {
@@ -1388,6 +1404,10 @@ export interface AdminUser {
   postal_code?: string | null;
   country?: string | null;
   branch_id?: number | null;
+  gender?: string | null;
+  date_of_birth?: string | null;
+  blood_group?: string | null;
+  learning_mode?: "offline" | "online" | null;
   email_verified_at?: string | null;
   phone_verified_at?: string | null;
   two_factor_enabled?: boolean;
@@ -1507,6 +1527,10 @@ export interface UserPayload {
   password?: string;
   role: string;
   branch_id?: number;
+  gender?: string;
+  date_of_birth?: string;
+  blood_group?: string;
+  learning_mode?: "offline" | "online";
   address_line1?: string;
   address_line2?: string;
   city?: string;

@@ -36,7 +36,7 @@ export function ProfileEditor({ user, token }: ProfileEditorProps) {
     name: user.name,
     phone: user.phone ?? "",
     gender: user.gender ?? "",
-    age: user.age ?? undefined,
+    date_of_birth: user.date_of_birth?.slice(0, 10) ?? "",
     blood_group: user.blood_group ?? "",
     learning_mode: user.learning_mode ?? undefined,
     address_line1: user.address_line1 ?? "",
@@ -65,7 +65,7 @@ export function ProfileEditor({ user, token }: ProfileEditorProps) {
         name: form.name,
         phone: form.phone || undefined,
         gender: form.gender || undefined,
-        age: form.age ? Number(form.age) : undefined,
+        date_of_birth: form.date_of_birth || undefined,
         blood_group: form.blood_group || undefined,
         learning_mode: form.learning_mode || undefined,
         address_line1: form.address_line1 || undefined,
@@ -230,14 +230,13 @@ export function ProfileEditor({ user, token }: ProfileEditorProps) {
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="profile-age">Age</Label>
+            <Label htmlFor="profile-dob">Date of birth</Label>
             <Input
-              id="profile-age"
-              type="number"
-              min={1}
-              max={120}
-              value={form.age ?? ""}
-              onChange={(e) => updateField("age", e.target.value ? Number(e.target.value) : undefined)}
+              id="profile-dob"
+              type="date"
+              value={form.date_of_birth ?? ""}
+              max={new Date().toISOString().slice(0, 10)}
+              onChange={(e) => updateField("date_of_birth", e.target.value || undefined)}
             />
           </div>
           <div className="space-y-2">

@@ -13,6 +13,7 @@ import {
   Type,
   AlignLeft,
 } from "lucide-react";
+import { FileUploadZone } from "@/components/ui/file-upload-zone";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -249,7 +250,7 @@ export function FormFieldPreview({ field, name }: { field: FormField; name: stri
       return (
         <div className="space-y-2">
           <label className="block">{label}</label>
-          <input type="file" name={name} required={field.required} className="text-sm text-app-muted" />
+          <FormFileUpload name={name} required={field.required} placeholder={placeholder} />
         </div>
       );
     default:
@@ -266,4 +267,28 @@ export function FormFieldPreview({ field, name }: { field: FormField; name: stri
         </div>
       );
   }
+}
+
+function FormFileUpload({
+  name,
+  required,
+  placeholder,
+}: {
+  name: string;
+  required?: boolean;
+  placeholder?: string;
+}) {
+  const [selectedName, setSelectedName] = useState<string | null>(null);
+
+  return (
+    <FileUploadZone
+      name={name}
+      required={required}
+      selectedFileName={selectedName}
+      emptyTitle="Choose a file"
+      emptyDescription={placeholder ?? "Click to browse or drag a file here."}
+      changeTitle="Choose a different file"
+      onFileSelect={(file) => setSelectedName(file.name)}
+    />
+  );
 }

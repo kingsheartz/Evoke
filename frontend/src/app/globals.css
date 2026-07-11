@@ -22,6 +22,7 @@
   --app-topbar-height: 3.5rem;
   /* Login, register, and other standalone pages — no site header. */
   --notification-top: 1rem;
+  --notification-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
   --page-loading-top: 0;
   --app-gutter: 1.25rem;
   --app-gutter-md: 2rem;
@@ -211,6 +212,7 @@ html.site-chrome,
 html.site-chrome body {
   --site-chrome-height: 4.5rem;
   --notification-top: calc(var(--site-chrome-height) + 0.5rem);
+  --notification-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
   --page-loading-top: var(--site-chrome-height);
 }
 
@@ -224,17 +226,23 @@ html.admin-route body {
   height: 100%;
   overscroll-behavior: none;
   --notification-top: calc(var(--app-topbar-height) + 0.75rem);
+  --notification-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
   --page-loading-top: var(--app-topbar-height);
 }
 
-/* Toasts sit in the main column — not under the sidebar or behind the top bar */
+/* Admin: keep toasts in the main column without overriding chosen position */
 html.admin-route [data-notification-stack] {
-  top: var(--notification-top);
-  right: max(1rem, env(safe-area-inset-right, 0px));
-  left: auto;
-  transform: none;
-  align-items: flex-end;
   max-width: min(22rem, calc(100vw - var(--admin-sidebar-width, 16rem) - 2rem));
+}
+
+html.admin-route [data-notification-stack][data-position="top-left"],
+html.admin-route [data-notification-stack][data-position="bottom-left"] {
+  left: calc(var(--admin-sidebar-width, 16rem) + 1rem);
+}
+
+html.admin-route [data-notification-stack][data-position="top-center"],
+html.admin-route [data-notification-stack][data-position="bottom-center"] {
+  left: calc(var(--admin-sidebar-width, 16rem) + (100vw - var(--admin-sidebar-width, 16rem)) / 2);
 }
 
 @media (max-width: 1023px) {

@@ -2,7 +2,6 @@ import dynamic from "next/dynamic";
 import { HeroSection } from "@/components/home/hero-section";
 import { HomepageExtraSections } from "@/components/home/homepage-extra-sections";
 import { SiteAdBanner } from "@/components/site/site-ad-banner";
-import { PageLoading } from "@/components/ui/page-loading";
 import { apiClient } from "@/lib/api";
 import { defaultHomepageFallback } from "@/lib/homepage-defaults";
 import { parseHomepageMeta } from "@/lib/homepage-meta";
@@ -24,13 +23,9 @@ export default async function HomePage() {
 
   try {
     const response = await apiClient.getHomepage();
-    homepage = response.data;
+    homepage = response.data ?? defaultHomepageFallback;
   } catch {
     homepage = defaultHomepageFallback;
-  }
-
-  if (!homepage) {
-    return <PageLoading label="Loading platform content..." />;
   }
 
   const meta = parseHomepageMeta(homepage.meta);

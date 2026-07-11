@@ -14,8 +14,8 @@ class ProfileRequirements
         if (! filled($user->gender)) {
             $missing[] = 'gender';
         }
-        if ($user->age === null || $user->age < 1) {
-            $missing[] = 'age';
+        if (! filled($user->date_of_birth)) {
+            $missing[] = 'date_of_birth';
         }
         if (! filled($user->blood_group)) {
             $missing[] = 'blood_group';
@@ -41,7 +41,7 @@ class ProfileRequirements
 
         $labels = [
             'gender' => 'gender',
-            'age' => 'age',
+            'date_of_birth' => 'date of birth',
             'blood_group' => 'blood group',
             'learning_mode' => 'offline/online mode',
         ];

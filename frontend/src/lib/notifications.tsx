@@ -58,18 +58,10 @@ const POSITION_CLASSES: Record<NotificationPosition, string> = {
   "top-right": "right-4 top-[var(--notification-top)] items-end",
   "top-left": "left-4 top-[var(--notification-top)] items-start",
   "top-center": "left-1/2 top-[var(--notification-top)] -translate-x-1/2 items-center",
-  /* Legacy bottom values — rendered at top (same horizontal alignment). */
-  "bottom-right": "right-4 top-[var(--notification-top)] items-end",
-  "bottom-left": "left-4 top-[var(--notification-top)] items-start",
-  "bottom-center": "left-1/2 top-[var(--notification-top)] -translate-x-1/2 items-center",
+  "bottom-right": "right-4 bottom-[var(--notification-bottom)] items-end",
+  "bottom-left": "left-4 bottom-[var(--notification-bottom)] items-start",
+  "bottom-center": "left-1/2 bottom-[var(--notification-bottom)] -translate-x-1/2 items-center",
 };
-
-function normalizePosition(position: NotificationPosition): NotificationPosition {
-  if (position.startsWith("bottom")) {
-    return position.replace("bottom", "top") as NotificationPosition;
-  }
-  return position;
-}
 
 function ToastItem({
   item,
@@ -176,7 +168,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     [notify],
   );
 
-  const position = normalizePosition(notifications.position ?? "top-center");
+  const position = notifications.position ?? "top-center";
 
   return (
     <NotificationContext.Provider value={value}>
@@ -185,6 +177,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         createPortal(
           <div
             data-notification-stack
+            data-position={position}
             className={cn(
               "pointer-events-none fixed z-[var(--z-notification)] flex w-full max-w-[22rem] flex-col gap-2",
               POSITION_CLASSES[position],

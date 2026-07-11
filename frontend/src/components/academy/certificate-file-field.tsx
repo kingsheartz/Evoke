@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { Upload } from "lucide-react";
+import { Link2 } from "lucide-react";
 import { CertificatePreview } from "@/components/academy/certificate-preview";
-import { Button } from "@/components/ui/button";
+import { FileUploadZone } from "@/components/ui/file-upload-zone";
 import { Input } from "@/components/ui/input";
 import { usePasteMediaFile } from "@/hooks/use-paste-media-file";
 import { clipboardPasteHint } from "@/lib/clipboard-image";
@@ -27,8 +27,8 @@ export function CertificateFileField({
   const token = useAuthStore((s) => s.token);
   const { success, error: notifyError } = useNotifications();
   const containerRef = useRef<HTMLDivElement>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [showUrlField, setShowUrlField] = useState(Boolean(value.trim()));
 
   const uploadFile = useCallback(
     async (file: File) => {
@@ -38,12 +38,12 @@ export function CertificateFileField({
       try {
         const { data } = await apiClient.uploadCertificateFile(token, file);
         onChange(data.url);
+        setShowUrlField(true);
         success("Certificate file uploaded");
       } catch (err) {
         notifyError(err instanceof Error ? err.message : "Upload failed");
       } finally {
         setUploading(false);
-        if (fileRef.current) fileRef.current.value = "";
       }
     },
     [token, onChange, success, notifyError],
@@ -54,42 +54,44 @@ export function CertificateFileField({
     kind: "certificate",
   });
 
-  const handleUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    void uploadFile(file);
-  };
-
   const trimmed = value.trim();
 
   return (
-    <div ref={containerRef} className={cn("space-y-2", className)}>
-      <p className="text-xs text-app-muted">{clipboardPasteHint("certificate")} (PDF, JPEG, PNG, WebP).</p>
-      <Input
-        id={id}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        placeholder="https://... or upload certificate file"
-        className="w-full"
-      />
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        className="w-full sm:w-auto"
-        disabled={uploading || !token}
-        onClick={() => fileRef.current?.click()}
-      >
-        <Upload className="h-4 w-4" />
-        {uploading ? "Uploading…" : "Upload certificate"}
-      </Button>
-      <input
-        ref={fileRef}
-        type="file"
+    <div ref={containerRef} className={cn("space-y-3", className)}>
+      <FileUploadZone
         accept={CERTIFICATE_FILE_ACCEPT}
-        className="hidden"
-        onChange={handleUpload}
+        disabled={!token}
+        uploading={uploading}
+        hint={clipboardPasteHint("certificate")}
+        emptyTitle="Upload certificate"
+        emptyDescription="PDF, JPEG, PNG, or WebP."
+        changeTitle="Replace certificate"
+        previewKind="file"
+        selectedFileName={trimmed ? trimmed.split("/").pop() ?? "Certificate file" : null}
+        onFileSelect={uploadFile}
+        onClear={trimmed ? () => onChange("") : undefined}
       />
+
+      <div className="space-y-2">
+        <button
+          type="button"
+          onClick={() => setShowUrlField((open) => !open)}
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-app-muted transition-colors hover:text-accent-soft"
+        >
+          <Link2 className="h-3.5 w-3.5" />
+          {showUrlField ? "Hide URL field" : "Paste URL instead"}
+        </button>
+        {showUrlField && (
+          <Input
+            id={id}
+            value={value}
+            onChange={(event) => onChange(event.target.value)}
+            placeholder="https://... or upload certificate file"
+            className="w-full"
+          />
+        )}
+      </div>
+
       {trimmed ? (
         <div className="space-y-2">
           <p className="text-xs font-medium uppercase tracking-wider text-app-muted">Preview</p>

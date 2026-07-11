@@ -25,6 +25,7 @@ class User extends Authenticatable
         'avatar',
         'evoke_id',
         'gender',
+        'date_of_birth',
         'age',
         'blood_group',
         'learning_mode',
@@ -54,6 +55,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'phone_verified_at' => 'datetime',
+            'date_of_birth' => 'date',
             'password' => 'hashed',
             'two_factor_enabled' => 'boolean',
         ];

@@ -6,8 +6,10 @@ import { useRouter } from "next/navigation";
 import {
   ArrowRight,
   BookOpen,
+  Cake,
   IndianRupee,
   Package,
+  PartyPopper,
   ShoppingCart,
   TrendingUp,
   Users,
@@ -42,9 +44,10 @@ export default function AdminDashboardPage() {
   const token = useAuthStore((s) => s.token);
   const permissions = useAuthStore((s) => s.permissions);
   const navigation = useAuthStore((s) => s.navigation);
-  const { error: notifyError } = useNotifications();
+  const { error: notifyError, info: notifyInfo } = useNotifications();
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [celebrationsNotified, setCelebrationsNotified] = useState(false);
 
   useEffect(() => {
     if (!hasPermission(permissions, ["analytics.view", "platform.manage"])) {
@@ -61,6 +64,23 @@ export default function AdminDashboardPage() {
       .catch(() => notifyError("Unable to load dashboard stats."))
       .finally(() => setLoading(false));
   }, [token, permissions, notifyError]);
+
+  useEffect(() => {
+    if (!dashboard?.celebrations || celebrationsNotified) return;
+    const { birthdays, anniversaries } = dashboard.celebrations;
+    const total = birthdays.length + anniversaries.length;
+    if (total === 0) return;
+
+    const parts: string[] = [];
+    if (birthdays.length > 0) {
+      parts.push(`${birthdays.length} birthday${birthdays.length === 1 ? "" : "s"}`);
+    }
+    if (anniversaries.length > 0) {
+      parts.push(`${anniversaries.length} anniversary${anniversaries.length === 1 ? "" : "ies"}`);
+    }
+    notifyInfo(`Today: ${parts.join(" and ")}`);
+    setCelebrationsNotified(true);
+  }, [dashboard, celebrationsNotified, notifyInfo]);
 
   return (
     <div className="app-page">
@@ -95,6 +115,52 @@ export default function AdminDashboardPage() {
           </Card>
         ))}
       </div>
+
+      {dashboard?.celebrations &&
+        (dashboard.celebrations.birthdays.length > 0 || dashboard.celebrations.anniversaries.length > 0) && (
+          <Card variant="glass" className="mb-6 border-accent/20">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <PartyPopper className="h-5 w-5 text-accent-soft" />
+                Today&apos;s celebrations
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-4 sm:grid-cols-2">
+              {dashboard.celebrations.birthdays.length > 0 && (
+                <div className="rounded-xl border border-app-border bg-white/[0.02] p-4 ring-1 ring-app-border">
+                  <p className="mb-3 flex items-center gap-2 text-sm font-medium text-app-text">
+                    <Cake className="h-4 w-4 text-rose-300" />
+                    Birthdays
+                  </p>
+                  <ul className="space-y-2">
+                    {dashboard.celebrations.birthdays.map((person) => (
+                      <li key={`birthday-${person.id}`} className="text-sm text-app-muted">
+                        <span className="font-medium text-app-text">{person.name}</span>
+                        {person.age != null ? ` · turning ${person.age}` : ""}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {dashboard.celebrations.anniversaries.length > 0 && (
+                <div className="rounded-xl border border-app-border bg-white/[0.02] p-4 ring-1 ring-app-border">
+                  <p className="mb-3 flex items-center gap-2 text-sm font-medium text-app-text">
+                    <Users className="h-4 w-4 text-accent-soft" />
+                    Member anniversaries
+                  </p>
+                  <ul className="space-y-2">
+                    {dashboard.celebrations.anniversaries.map((person) => (
+                      <li key={`anniversary-${person.id}`} className="text-sm text-app-muted">
+                        <span className="font-medium text-app-text">{person.name}</span>
+                        {person.years != null ? ` · ${person.years} year${person.years === 1 ? "" : "s"} with Evoke` : ""}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
       {dashboard && (
         <div className="dashboard-split">          <Card variant="glass" className="dashboard-card">
