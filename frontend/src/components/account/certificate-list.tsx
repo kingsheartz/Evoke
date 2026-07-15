@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Download, Eye } from "lucide-react";
 import { CertificatePreviewModal } from "@/components/academy/certificate-preview-modal";
+import { AccountListFilters, matchesAccountSearch } from "@/components/account/account-list-filters";
 import { AccountRecordCard, AccountRecordRow } from "@/components/account/account-record-card";
 import { apiClient, type AcademyCertificate } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ export function CertificateList({
 }) {
   const [certificates, setCertificates] = useState<AcademyCertificate[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
   const [preview, setPreview] = useState<{ url: string; title: string } | null>(null);
 
   useEffect(() => {
@@ -27,7 +29,16 @@ export function CertificateList({
       .finally(() => setLoading(false));
   }, [token]);
 
-  const rows = compact ? certificates.slice(0, 5) : certificates;
+  const filtered = useMemo(() => {
+    return certificates.filter((certificate) =>
+      matchesAccountSearch(
+        [certificate.certificate_number, certificate.enrollment?.batch?.course?.title],
+        search,
+      ),
+    );
+  }, [certificates, search]);
+
+  const rows = compact ? certificates.slice(0, 5) : filtered;
 
   if (loading) {
     return compact ? (
@@ -46,8 +57,22 @@ export function CertificateList({
           </CardHeader>
         )}
         <CardContent flush={!compact} className={compact ? "p-0" : undefined}>
+          {!compact && certificates.length > 0 && (
+            <AccountListFilters
+              search={search}
+              onSearchChange={setSearch}
+              searchPlaceholder="Search certificate or course…"
+            />
+          )}
           {rows.length === 0 ? (
-            <TableEmpty inset={!compact} message="No certificates issued yet." />
+            <TableEmpty
+              inset={!compact}
+              message={
+                certificates.length === 0
+                  ? "No certificates issued yet."
+                  : "No certificates match your search."
+              }
+            />
           ) : (
             <>
               <ul className="space-y-3 p-4 md:hidden">

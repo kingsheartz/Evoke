@@ -9,9 +9,13 @@ services:
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000/api/v1}
         NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-Evoke}
+        NEXT_PUBLIC_HOME_VARIANT: ${NEXT_PUBLIC_HOME_VARIANT:-default}
+        NEXT_PUBLIC_HOME_VARIANT_SWITCH: ${NEXT_PUBLIC_HOME_VARIANT_SWITCH:-true}
     environment:
       - NODE_ENV=production
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000/api/v1}
+      - NEXT_PUBLIC_HOME_VARIANT=${NEXT_PUBLIC_HOME_VARIANT:-default}
+      - NEXT_PUBLIC_HOME_VARIANT_SWITCH=${NEXT_PUBLIC_HOME_VARIANT_SWITCH:-true}
       - INTERNAL_API_URL=http://backend:8000/api/v1
       - NEXT_TELEMETRY_DISABLED=1
     volumes: !reset []

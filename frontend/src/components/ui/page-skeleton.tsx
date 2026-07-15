@@ -6,7 +6,7 @@ function Bone({ className }: { className?: string }) {
 
 export function SitePageSkeleton() {
   return (
-    <div className="app-shell-x animate-pulse space-y-8 pb-16 pt-[5.5rem]" aria-busy="true" aria-label="Loading page">
+    <div className="app-shell-x animate-pulse space-y-8 py-10" aria-busy="true" aria-label="Loading page">
       <div className="space-y-4">
         <Bone className="h-4 w-32 rounded-full" />
         <Bone className="h-12 w-full max-w-2xl" />
@@ -22,11 +22,6 @@ export function SitePageSkeleton() {
         <Bone className="h-40 rounded-2xl" />
         <Bone className="h-40 rounded-2xl" />
         <Bone className="h-40 rounded-2xl" />
-      </div>
-      <div className="grid gap-4 md:grid-cols-3">
-        <Bone className="h-32 rounded-2xl" />
-        <Bone className="h-32 rounded-2xl" />
-        <Bone className="h-32 rounded-2xl" />
       </div>
     </div>
   );

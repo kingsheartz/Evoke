@@ -1,60 +1,72 @@
-import dynamic from "next/dynamic";
-import { HeroSection } from "@/components/home/hero-section";
-import { HomepageExtraSections } from "@/components/home/homepage-extra-sections";
-import { SiteAdBanner } from "@/components/site/site-ad-banner";
+import { Suspense } from "react";
+import { cookies } from "next/headers";
+import { DefaultHome } from "@/components/home/default-home";
+import { ImmersiveHome } from "@/components/home/immersive/immersive-home";
+import { MotionHome } from "@/components/home/motion/motion-home";
+import { HomeVariantSwitcher } from "@/components/home/home-variant-switcher";
 import { apiClient } from "@/lib/api";
 import { defaultHomepageFallback } from "@/lib/homepage-defaults";
 import { parseHomepageMeta } from "@/lib/homepage-meta";
+import {
+  HOME_VARIANT_COOKIE,
+  homeVariantSwitchEnabled,
+  resolveHomeVariant,
+  type HomeVariant,
+} from "@/lib/home-variant";
+import type { HomepageData } from "@/lib/api";
 
-const StatsBar = dynamic(() =>
-  import("@/components/home/stats-bar").then((m) => ({ default: m.StatsBar })),
-);
+/** Keep CMS waits short — never block the home shell on a slow / dead API. */
+const HOMEPAGE_FETCH_MS = 2500;
 
-const EntryCards = dynamic(() =>
-  import("@/components/home/entry-cards").then((m) => ({ default: m.EntryCards })),
-);
+async function loadHomepage(): Promise<HomepageData> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), HOMEPAGE_FETCH_MS);
+  try {
+    const response = await Promise.race([
+      apiClient.getHomepage({ signal: controller.signal }),
+      new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error("Homepage request timed out")), HOMEPAGE_FETCH_MS);
+      }),
+    ]);
+    return response.data ?? defaultHomepageFallback;
+  } catch {
+    return defaultHomepageFallback;
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
-const FeaturesSection = dynamic(() =>
-  import("@/components/home/features-section").then((m) => ({ default: m.FeaturesSection })),
-);
+function HomeView({
+  variant,
+  homepage,
+}: {
+  variant: HomeVariant;
+  homepage: HomepageData;
+}) {
+  const meta = parseHomepageMeta(homepage.meta);
+  if (variant === "motion") return <MotionHome homepage={homepage} meta={meta} />;
+  if (variant === "immersive") return <ImmersiveHome homepage={homepage} meta={meta} />;
+  return <DefaultHome homepage={homepage} meta={meta} />;
+}
+
+async function HomeWithCms({ variant }: { variant: HomeVariant }) {
+  const homepage = await loadHomepage();
+  return <HomeView variant={variant} homepage={homepage} />;
+}
 
 export default async function HomePage() {
-  let homepage = null;
+  const cookieStore = await cookies();
+  const variant = resolveHomeVariant(cookieStore.get(HOME_VARIANT_COOKIE)?.value);
+  const showSwitcher = homeVariantSwitchEnabled();
 
-  try {
-    const response = await apiClient.getHomepage();
-    homepage = response.data ?? defaultHomepageFallback;
-  } catch {
-    homepage = defaultHomepageFallback;
-  }
-
-  const meta = parseHomepageMeta(homepage.meta);
-
+  // Return immediately so `(site)/loading.tsx` does not sit on "Loading page…"
+  // while `/homepage` waits. CMS is streamed behind the fallback shell.
   return (
     <>
-      <HeroSection hero={homepage.hero} />
-      <div className="app-shell-x deferred-section py-6">
-        <SiteAdBanner placement="homepage" />
-      </div>
-      <div className="deferred-section">
-        <StatsBar items={meta.stats?.items} enabled={meta.stats?.enabled} />
-      </div>
-      <div className="deferred-section">
-        <EntryCards cards={homepage.entry_cards} />
-      </div>
-      <div className="deferred-section">
-        <FeaturesSection
-          eyebrow={meta.features?.eyebrow}
-          heading={meta.features?.heading}
-          items={meta.features?.items}
-          enabled={meta.features?.enabled}
-        />
-      </div>
-      {meta.sections && meta.sections.length > 0 && (
-        <div className="deferred-section">
-          <HomepageExtraSections sections={meta.sections} />
-        </div>
-      )}
+      <Suspense fallback={<HomeView variant={variant} homepage={defaultHomepageFallback} />}>
+        <HomeWithCms variant={variant} />
+      </Suspense>
+      <HomeVariantSwitcher current={variant} enabled={showSwitcher} />
     </>
   );
 }

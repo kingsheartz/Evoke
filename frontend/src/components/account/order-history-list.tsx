@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { apiClient, type ShopOrder } from "@/lib/api";
 import { formatOfferingPrice } from "@/lib/offerings";
+import { AccountListFilters, matchesAccountSearch } from "@/components/account/account-list-filters";
 import { AccountRecordCard, AccountRecordRow } from "@/components/account/account-record-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, TableEmpty, TableLoading } from "@/components/ui/data-table";
@@ -13,6 +14,16 @@ import { StatusBadge } from "@/components/ui/status-badge";
 function orderTotal(order: ShopOrder): string {
   return order.total ?? order.total_amount ?? "0";
 }
+
+const ORDER_STATUS_OPTIONS = [
+  { value: "", label: "All statuses" },
+  { value: "pending", label: "Pending" },
+  { value: "confirmed", label: "Confirmed" },
+  { value: "processing", label: "Processing" },
+  { value: "shipped", label: "Shipped" },
+  { value: "delivered", label: "Delivered" },
+  { value: "cancelled", label: "Cancelled" },
+];
 
 export function OrderHistoryList({
   token,
@@ -23,6 +34,8 @@ export function OrderHistoryList({
 }) {
   const [orders, setOrders] = useState<ShopOrder[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("");
 
   useEffect(() => {
     apiClient
@@ -31,7 +44,17 @@ export function OrderHistoryList({
       .finally(() => setLoading(false));
   }, [token]);
 
-  const rows = compact ? orders.slice(0, 5) : orders;
+  const filtered = useMemo(() => {
+    return orders.filter((order) => {
+      if (status && order.status !== status) return false;
+      return matchesAccountSearch(
+        [order.order_number, order.status, order.payment_status, orderTotal(order)],
+        search,
+      );
+    });
+  }, [orders, search, status]);
+
+  const rows = compact ? orders.slice(0, 5) : filtered;
 
   if (loading) {
     return compact ? (
@@ -52,14 +75,26 @@ export function OrderHistoryList({
         </CardHeader>
       )}
       <CardContent flush={!compact} className={compact ? "p-0" : undefined}>
+        {!compact && orders.length > 0 && (
+          <AccountListFilters
+            search={search}
+            onSearchChange={setSearch}
+            searchPlaceholder="Search order number, status…"
+            status={status}
+            onStatusChange={setStatus}
+            statusOptions={ORDER_STATUS_OPTIONS}
+          />
+        )}
         {rows.length === 0 ? (
           <TableEmpty
             inset={!compact}
-            message="No orders yet."
+            message={orders.length === 0 ? "No orders yet." : "No orders match your search."}
             action={
-              <Link href="/shop/products" className="text-accent-soft hover:text-accent">
-                Browse products
-              </Link>
+              orders.length === 0 ? (
+                <Link href="/shop/products" className="text-accent-soft hover:text-accent">
+                  Browse products
+                </Link>
+              ) : undefined
             }
           />
         ) : (

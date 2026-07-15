@@ -31,14 +31,34 @@ class PackageController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        $sort = $request->input('sort', 'newest');
+        $search = $request->input('q', $request->input('search'));
+
         $packages = Package::query()
             ->where('is_active', true)
             ->with('itineraryDays')
             ->when($request->type, fn ($q, $type) => $q->where('type', $type))
-            ->when($request->featured, fn ($q) => $q->where('is_featured', true))
-            ->paginate($request->integer('per_page', 15));
+            ->when($request->boolean('featured'), fn ($q) => $q->where('is_featured', true))
+            ->when(filled($search), function ($q) use ($search) {
+                $q->where(function ($inner) use ($search) {
+                    $inner->whereLikeInsensitive('title', "%{$search}%")
+                        ->orWhereLikeInsensitive('destination', "%{$search}%")
+                        ->orWhereLikeInsensitive('description', "%{$search}%");
+                });
+            })
+            ->when($request->filled('min_price'), fn ($q) => $q->where('price', '>=', $request->input('min_price')))
+            ->when($request->filled('max_price'), fn ($q) => $q->where('price', '<=', $request->input('max_price')));
 
-        return response()->json($packages);
+        match ($sort) {
+            'price_asc' => $packages->orderBy('price')->orderBy('title'),
+            'price_desc' => $packages->orderByDesc('price')->orderBy('title'),
+            'name_asc' => $packages->orderBy('title'),
+            'name_desc' => $packages->orderByDesc('title'),
+            'featured' => $packages->orderByDesc('is_featured')->orderByDesc('created_at'),
+            default => $packages->latest(),
+        };
+
+        return response()->json($packages->paginate($request->integer('per_page', 24)));
     }
 
     public function show(string $slug): JsonResponse

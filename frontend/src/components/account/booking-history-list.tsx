@@ -1,13 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { apiClient, type TourBooking } from "@/lib/api";
 import { formatOfferingPrice } from "@/lib/offerings";
+import { AccountListFilters, matchesAccountSearch } from "@/components/account/account-list-filters";
 import { AccountRecordCard, AccountRecordRow } from "@/components/account/account-record-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, TableEmpty, TableLoading } from "@/components/ui/data-table";
 import { StatusBadge } from "@/components/ui/status-badge";
+
+const BOOKING_STATUS_OPTIONS = [
+  { value: "", label: "All statuses" },
+  { value: "pending", label: "Pending" },
+  { value: "confirmed", label: "Confirmed" },
+  { value: "cancelled", label: "Cancelled" },
+  { value: "completed", label: "Completed" },
+];
 
 export function BookingHistoryList({
   token,
@@ -18,6 +27,8 @@ export function BookingHistoryList({
 }) {
   const [bookings, setBookings] = useState<TourBooking[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("");
 
   useEffect(() => {
     apiClient
@@ -26,7 +37,17 @@ export function BookingHistoryList({
       .finally(() => setLoading(false));
   }, [token]);
 
-  const rows = compact ? bookings.slice(0, 5) : bookings;
+  const filtered = useMemo(() => {
+    return bookings.filter((booking) => {
+      if (status && booking.status !== status) return false;
+      return matchesAccountSearch(
+        [booking.booking_number, booking.package?.title, booking.status, booking.travel_date],
+        search,
+      );
+    });
+  }, [bookings, search, status]);
+
+  const rows = compact ? bookings.slice(0, 5) : filtered;
 
   if (loading) {
     return compact ? (
@@ -47,14 +68,26 @@ export function BookingHistoryList({
         </CardHeader>
       )}
       <CardContent flush={!compact} className={compact ? "p-0" : undefined}>
+        {!compact && bookings.length > 0 && (
+          <AccountListFilters
+            search={search}
+            onSearchChange={setSearch}
+            searchPlaceholder="Search booking, package…"
+            status={status}
+            onStatusChange={setStatus}
+            statusOptions={BOOKING_STATUS_OPTIONS}
+          />
+        )}
         {rows.length === 0 ? (
           <TableEmpty
             inset={!compact}
-            message="No bookings yet."
+            message={bookings.length === 0 ? "No bookings yet." : "No bookings match your search."}
             action={
-              <Link href="/tours/packages" className="text-accent-soft hover:text-accent">
-                Browse tours
-              </Link>
+              bookings.length === 0 ? (
+                <Link href="/tours/packages" className="text-accent-soft hover:text-accent">
+                  Browse tours
+                </Link>
+              ) : undefined
             }
           />
         ) : (

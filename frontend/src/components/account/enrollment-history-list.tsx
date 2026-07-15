@@ -1,12 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { apiClient, type Enrollment } from "@/lib/api";
+import { AccountListFilters, matchesAccountSearch } from "@/components/account/account-list-filters";
 import { AccountRecordCard, AccountRecordRow } from "@/components/account/account-record-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, TableEmpty, TableLoading } from "@/components/ui/data-table";
 import { StatusBadge } from "@/components/ui/status-badge";
+
+const ENROLLMENT_STATUS_OPTIONS = [
+  { value: "", label: "All statuses" },
+  { value: "pending", label: "Pending" },
+  { value: "active", label: "Active" },
+  { value: "completed", label: "Completed" },
+  { value: "cancelled", label: "Cancelled" },
+];
 
 function unwrapEnrollments(response: Awaited<ReturnType<typeof apiClient.getEnrollments>>): Enrollment[] {
   if ("data" in response && Array.isArray(response.data)) return response.data;
@@ -22,6 +31,8 @@ export function EnrollmentHistoryList({
 }) {
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("");
 
   useEffect(() => {
     apiClient
@@ -30,7 +41,22 @@ export function EnrollmentHistoryList({
       .finally(() => setLoading(false));
   }, [token]);
 
-  const rows = compact ? enrollments.slice(0, 5) : enrollments;
+  const filtered = useMemo(() => {
+    return enrollments.filter((enrollment) => {
+      if (status && enrollment.status !== status) return false;
+      return matchesAccountSearch(
+        [
+          enrollment.batch?.course?.title,
+          enrollment.batch?.name,
+          enrollment.status,
+          enrollment.payment_status,
+        ],
+        search,
+      );
+    });
+  }, [enrollments, search, status]);
+
+  const rows = compact ? enrollments.slice(0, 5) : filtered;
 
   if (loading) {
     return compact ? (
@@ -51,14 +77,26 @@ export function EnrollmentHistoryList({
         </CardHeader>
       )}
       <CardContent flush={!compact} className={compact ? "p-0" : undefined}>
+        {!compact && enrollments.length > 0 && (
+          <AccountListFilters
+            search={search}
+            onSearchChange={setSearch}
+            searchPlaceholder="Search course, batch…"
+            status={status}
+            onStatusChange={setStatus}
+            statusOptions={ENROLLMENT_STATUS_OPTIONS}
+          />
+        )}
         {rows.length === 0 ? (
           <TableEmpty
             inset={!compact}
-            message="No enrollments yet."
+            message={enrollments.length === 0 ? "No enrollments yet." : "No enrollments match your search."}
             action={
-              <Link href="/academy/courses" className="text-accent-soft hover:text-accent">
-                Browse courses
-              </Link>
+              enrollments.length === 0 ? (
+                <Link href="/academy/courses" className="text-accent-soft hover:text-accent">
+                  Browse courses
+                </Link>
+              ) : undefined
             }
           />
         ) : (

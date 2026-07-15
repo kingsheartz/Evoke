@@ -69,7 +69,8 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
 
   if (!hydrated || !token || !ready || !user) {
     const label = !hydrated || token ? "Loading admin panel..." : "Redirecting to sign in...";
-    return <PageLoading label={label} layout="admin-main" />;
+    // Full viewport — avoids the right-pane-only loader looking "stuck" on sign-out.
+    return <PageLoading label={label} layout="viewport" />;
   }
 
   return <>{children}</>;

@@ -79,9 +79,10 @@ function formatApiErrorMessage(error: {
 }
 
 export const apiClient = {
-  getHomepage: () =>
+  getHomepage: (init?: { signal?: AbortSignal }) =>
     api<{ data: HomepageData | null }>("/homepage", {
       next: { revalidate: 60, tags: [CMS_CACHE_TAGS.homepage] },
+      signal: init?.signal,
     }),
   getModules: () => api<{ data: BusinessModule[] }>("/modules"),
   search: (q: string, module?: string) =>
@@ -1217,17 +1218,19 @@ export interface Paginated<T> {
 }
 
 export interface CatalogListParams {
+  q?: string;
   featured?: boolean;
   category?: string;
+  /** Tour package type (domestic, international, …). */
+  type?: string;
+  sort?: string;
+  min_price?: number;
+  max_price?: number;
   page?: number;
   per_page?: number;
 }
 
 export interface ShopCatalogListParams extends CatalogListParams {
-  q?: string;
-  sort?: string;
-  min_price?: number;
-  max_price?: number;
   in_stock?: boolean;
   on_sale?: boolean;
 }
@@ -1235,8 +1238,17 @@ export interface ShopCatalogListParams extends CatalogListParams {
 function catalogQuery(params?: CatalogListParams): string {
   if (!params) return "";
   const query = new URLSearchParams();
+  if (params.q?.trim()) query.set("q", params.q.trim());
   if (params.featured) query.set("featured", "1");
   if (params.category) query.set("category", params.category);
+  if (params.type) query.set("type", params.type);
+  if (params.sort) query.set("sort", params.sort);
+  if (params.min_price != null && params.min_price > 0) {
+    query.set("min_price", String(params.min_price));
+  }
+  if (params.max_price != null && params.max_price > 0) {
+    query.set("max_price", String(params.max_price));
+  }
   if (params.page) query.set("page", String(params.page));
   if (params.per_page) query.set("per_page", String(params.per_page));
   const value = query.toString();

@@ -28,6 +28,7 @@ const divisionPills = [
 
 interface HeroSectionProps {
   hero: HomepageData["hero"];
+  scrollTarget?: string;
 }
 
 function accentHeading(heading: string) {
@@ -44,7 +45,7 @@ function accentHeading(heading: string) {
   );
 }
 
-export function HeroSection({ hero }: HeroSectionProps) {
+export function HeroSection({ hero, scrollTarget = "#divisions" }: HeroSectionProps) {
   const brand = useBrand();
   const sectionRef = useRef<HTMLElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -227,9 +228,9 @@ export function HeroSection({ hero }: HeroSectionProps) {
       )}
 
       <a
-        href="#divisions"
+        href={scrollTarget}
         className="hero-scroll-hint absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-1 transition-colors hover:text-accent-soft"
-        aria-label="Scroll to divisions"
+        aria-label="Scroll to next section"
       >
         <span className="text-[10px] font-medium uppercase tracking-[0.2em]">Scroll</span>
         <ChevronDown className={`h-5 w-5 ${reducedMotion ? "" : "animate-float"}`} />

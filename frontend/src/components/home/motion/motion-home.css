@@ -1,0 +1,867 @@
+/* Motion homepage — cinematic division chapters */
+
+.motion-home {
+  position: relative;
+  background: var(--app-bg, #07080c);
+}
+
+/* ── Scroll journey ───────────────────────────────────────── */
+
+.motion-journey {
+  position: relative;
+  height: 280vh;
+  margin-top: -1px;
+}
+
+.motion-journey__pin {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+}
+
+.motion-journey__panel {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  will-change: opacity;
+}
+
+.motion-journey__panel--academy {
+  background:
+    radial-gradient(ellipse 90% 70% at 80% 20%, rgba(251, 146, 60, 0.18), transparent 55%),
+    linear-gradient(160deg, #120a24 0%, #1e1240 35%, #0a0f1a 100%);
+}
+
+.motion-journey__panel--sports {
+  background:
+    radial-gradient(ellipse 80% 60% at 15% 75%, rgba(74, 222, 128, 0.16), transparent 50%),
+    linear-gradient(160deg, #031a0c 0%, #0d3d22 38%, #080d14 100%);
+}
+
+.motion-journey__panel--tours {
+  background:
+    radial-gradient(ellipse 85% 55% at 70% 15%, rgba(56, 189, 248, 0.2), transparent 52%),
+    linear-gradient(160deg, #061a2e 0%, #0c3555 40%, #080d14 100%);
+}
+
+.motion-journey__index {
+  position: absolute;
+  top: 50%;
+  right: -4%;
+  z-index: 0;
+  font-family: var(--font-display, inherit);
+  font-size: clamp(8rem, 22vw, 18rem);
+  font-weight: 800;
+  line-height: 0.85;
+  letter-spacing: -0.06em;
+  pointer-events: none;
+  user-select: none;
+  will-change: transform, opacity;
+}
+
+.motion-journey__accent--academy {
+  color: rgba(251, 146, 60, 0.12);
+}
+
+.motion-journey__accent--sports {
+  color: rgba(74, 222, 128, 0.1);
+}
+
+.motion-journey__accent--tours {
+  color: rgba(56, 189, 248, 0.12);
+}
+
+.motion-journey__layout {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  height: 100%;
+  width: 100%;
+  max-width: 76rem;
+  margin: 0 auto;
+  align-items: center;
+  gap: 2.5rem;
+  padding: 5.5rem 1.5rem 5rem;
+}
+
+@media (min-width: 1024px) {
+  .motion-journey__layout {
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+    gap: 4rem;
+    padding: 0 2.5rem;
+  }
+}
+
+.motion-journey__copy {
+  max-width: 34rem;
+  will-change: transform, opacity;
+}
+
+.motion-journey__eyebrow {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.motion-journey__title {
+  margin-top: 0.875rem;
+  font-family: var(--font-display, inherit);
+  font-size: clamp(2.25rem, 5vw, 3.75rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+  color: #fff;
+}
+
+.motion-journey__desc {
+  margin-top: 1rem;
+  max-width: 28rem;
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.motion-journey__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+  padding: 0;
+  list-style: none;
+}
+
+.motion-journey__tag {
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 0.35rem 0.85rem;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(8px);
+}
+
+.motion-journey__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.25rem;
+  margin-top: 2rem;
+}
+
+.motion-journey__ghost-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.55);
+  transition: color 0.2s ease;
+}
+
+.motion-journey__ghost-link:hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.motion-journey__art {
+  min-height: clamp(260px, 42vh, 460px);
+  border-radius: 1.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.22);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 24px 80px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(12px);
+  overflow: hidden;
+}
+
+/* Bottom chapter nav */
+.motion-journey__nav {
+  position: absolute;
+  bottom: 1.75rem;
+  left: 50%;
+  z-index: 10;
+  display: flex;
+  transform: translateX(-50%);
+  gap: 1.5rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(16px);
+}
+
+.motion-journey__nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 4.25rem;
+}
+
+.motion-journey__nav-index {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.motion-journey__nav-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.motion-journey__nav-track {
+  display: block;
+  height: 2px;
+  width: 3rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.15);
+  overflow: hidden;
+}
+
+.motion-journey__nav-fill {
+  display: block;
+  height: 100%;
+  width: 0%;
+  border-radius: inherit;
+  background: #fff;
+}
+
+.motion-journey__accent--academy .motion-journey__nav-fill {
+  background: #fb923c;
+}
+
+.motion-journey__accent--sports .motion-journey__nav-fill {
+  background: #4ade80;
+}
+
+.motion-journey__accent--tours .motion-journey__nav-fill {
+  background: #38bdf8;
+}
+
+/* ── Chapter art canvas ───────────────────────────────────── */
+
+.motion-art {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: inherit;
+  --chapter: 0;
+  --pulse: 0;
+}
+
+.motion-art__mesh {
+  position: absolute;
+  inset: 0;
+  opacity: 0.5;
+  background:
+    radial-gradient(circle at 30% 40%, rgba(255, 255, 255, 0.06), transparent 45%),
+    radial-gradient(circle at 70% 60%, rgba(255, 255, 255, 0.04), transparent 40%);
+}
+
+.motion-art__grid-lines {
+  position: absolute;
+  inset: 0;
+  opacity: 0.07;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.5) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.5) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 80% 70% at 50% 50%, black, transparent);
+}
+
+.motion-art__scan {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.03) 50%,
+    transparent 100%
+  );
+  background-size: 100% 200%;
+  background-position: 0 calc(var(--chapter, 0) * 100%);
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.motion-art__orbit {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transform: translate(-50%, -50%);
+}
+
+.motion-art__orbit--outer {
+  width: min(72%, 320px);
+  height: min(72%, 320px);
+  animation: motion-orbit-spin 24s linear infinite;
+}
+
+.motion-art__orbit--inner {
+  width: min(48%, 210px);
+  height: min(48%, 210px);
+  border-color: rgba(251, 146, 60, 0.25);
+  animation: motion-orbit-spin 16s linear infinite reverse;
+}
+
+.motion-art__ripple {
+  position: absolute;
+  top: 58%;
+  left: 68%;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  border: 2px solid rgba(251, 146, 60, 0.5);
+  transform: translate(-50%, -50%) scale(calc(0.4 + var(--pulse, 0) * 2.2));
+  opacity: calc((1 - var(--pulse, 0)) * 0.7);
+}
+
+.motion-art__speed-lines {
+  position: absolute;
+  inset: 15% 10%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1.1rem;
+}
+
+.motion-art__speed-line {
+  display: block;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(251, 146, 60, 0.7), transparent);
+  transform: translateX(calc((1 - var(--pulse, 0)) * -40px + var(--i, 0) * 8px));
+  opacity: calc(0.2 + var(--pulse, 0) * 0.6);
+  width: calc(35% + var(--i, 0) * 6%);
+}
+
+.motion-art__icon-badge {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 5.5rem;
+  height: 5.5rem;
+  border-radius: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(12px);
+  transform: translate(-50%, -50%) scale(calc(0.92 + var(--pulse, 0) * 0.12));
+  box-shadow: 0 0 40px rgba(255, 255, 255, 0.08);
+}
+
+.motion-art__icon-badge--academy {
+  box-shadow: 0 0 48px rgba(251, 146, 60, 0.25);
+}
+
+.motion-art__icon-badge--sports {
+  box-shadow: 0 0 40px rgba(74, 222, 128, 0.2);
+}
+
+.motion-art__path-marker--shop {
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 0.85rem;
+  transform: translate(-50%, -50%) scale(calc(0.94 + var(--pulse, 0) * 0.1));
+  box-shadow: 0 0 28px rgba(74, 222, 128, 0.22);
+}
+
+.motion-art__path-marker-icon--shop {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
+.motion-art__icon-badge--tours {
+  bottom: 18%;
+  right: 14%;
+  top: auto;
+  left: auto;
+  transform: none;
+  width: 4rem;
+  height: 4rem;
+  box-shadow: 0 0 36px rgba(56, 189, 248, 0.22);
+}
+
+.motion-art__icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.motion-art__arc {
+  position: absolute;
+  right: 8%;
+  bottom: 22%;
+  width: 45%;
+  opacity: calc(0.35 + var(--pulse, 0) * 0.65);
+}
+
+.motion-art__impact {
+  position: absolute;
+  top: 52%;
+  left: 64%;
+  width: 5rem;
+  height: 5rem;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(251, 146, 60, 0.55), transparent 68%);
+  transform: translate(-50%, -50%) scale(calc(var(--pulse, 0) * 1.8));
+  opacity: calc(var(--pulse, 0) * 0.85);
+  filter: blur(2px);
+}
+
+/* Sports */
+.motion-art__pitch {
+  position: absolute;
+  bottom: 12%;
+  left: 8%;
+  right: 8%;
+  height: 42%;
+  border: 2px solid rgba(255, 255, 255, 0.14);
+  border-radius: 2px;
+  transform: perspective(400px) rotateX(52deg);
+  transform-origin: bottom center;
+  opacity: 0.75;
+}
+
+.motion-art__pitch-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 22%;
+  height: 22%;
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.motion-art__pitch-football {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  width: 2.5rem;
+  height: 2.5rem;
+  transform: translate(-50%, -50%) scale(calc(0.88 + var(--pulse, 0) * 0.14));
+  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.45));
+}
+
+.motion-art__football-surface {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 30% 26%, #fff, #e5e7eb 38%, #9ca3af 72%, #4b5563 100%);
+  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.12);
+}
+
+.motion-art__pitch-box {
+  position: absolute;
+  top: 0;
+  width: 18%;
+  height: 55%;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.motion-art__pitch-box--left {
+  left: 0;
+  border-left: none;
+}
+
+.motion-art__pitch-box--right {
+  right: 0;
+  border-right: none;
+}
+
+.motion-art__trajectory-wrap {
+  position: absolute;
+  inset: 8% 5% auto;
+  width: 90%;
+  aspect-ratio: 320 / 200;
+  pointer-events: none;
+}
+
+.motion-art__trajectory-wrap--tours {
+  inset: 20% 4% auto;
+  width: 92%;
+  aspect-ratio: 400 / 160;
+}
+
+.motion-art__trajectory,
+.motion-art__flight-path {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.motion-art__trajectory {
+  position: relative;
+}
+
+.motion-art__flight-path {
+  position: relative;
+}
+
+.motion-art__path-dot {
+  opacity: calc(0.55 + var(--pulse, 0) * 0.45);
+}
+
+.motion-art__path-dot--sports {
+  fill: #4ade80;
+}
+
+.motion-art__path-dot--tours {
+  fill: #38bdf8;
+}
+
+.motion-art__path-dot--end {
+  opacity: calc(0.7 + var(--pulse, 0) * 0.3);
+}
+
+.motion-art__path-marker {
+  position: absolute;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.55rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.25);
+}
+
+.motion-art__path-marker--sports {
+  border-color: rgba(74, 222, 128, 0.35);
+  box-shadow: 0 0 18px rgba(74, 222, 128, 0.15);
+}
+
+.motion-art__path-marker--tours {
+  border-color: rgba(56, 189, 248, 0.35);
+  box-shadow: 0 0 18px rgba(56, 189, 248, 0.15);
+}
+
+.motion-art__path-marker-icon {
+  width: 1rem;
+  height: 1rem;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.motion-art__path-marker--sports .motion-art__path-marker-icon {
+  color: #86efac;
+}
+
+.motion-art__path-marker--tours .motion-art__path-marker-icon {
+  color: #7dd3fc;
+}
+
+.motion-art__trajectory-glow {
+  stroke-dasharray: 400;
+  stroke-dashoffset: calc(400 - var(--chapter, 0) * 400);
+}
+
+.motion-art__ball {
+  position: absolute;
+  width: 2.75rem;
+  height: 2.75rem;
+  offset-path: path("M 8% 72%, Q 42% 18%, 88% 38%");
+  offset-distance: calc(var(--chapter, 0) * 100%);
+  offset-rotate: 0deg;
+  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.4));
+}
+
+.motion-art__ball-surface {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 32% 28%, #fff, #e5e7eb 45%, #9ca3af 100%);
+  transform: rotate(calc(var(--chapter, 0) * 540deg));
+}
+
+.motion-art__goal-glow {
+  position: absolute;
+  top: 22%;
+  right: 10%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(74, 222, 128, 0.45), transparent 70%);
+  opacity: calc(var(--pulse, 0) * 0.9);
+}
+
+.motion-art__goal-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Tours */
+.motion-art__cloud {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  filter: blur(20px);
+}
+
+.motion-art__cloud--1 {
+  top: 18%;
+  left: 12%;
+  width: 28%;
+  height: 12%;
+  transform: translateX(calc(var(--chapter, 0) * -30px));
+}
+
+.motion-art__cloud--2 {
+  top: 32%;
+  right: 18%;
+  width: 22%;
+  height: 10%;
+  transform: translateX(calc(var(--chapter, 0) * 40px));
+}
+
+.motion-art__cloud--3 {
+  bottom: 35%;
+  left: 35%;
+  width: 35%;
+  height: 14%;
+  opacity: 0.6;
+}
+
+.motion-art__flight-path {
+  position: absolute;
+  inset: 20% 4% auto;
+  width: 92%;
+}
+
+.motion-art__trajectory-wrap--tours .motion-art__flight-path {
+  position: relative;
+  inset: auto;
+  width: 100%;
+}
+
+.motion-art__flight-glow {
+  stroke-dasharray: 500;
+  stroke-dashoffset: calc(500 - var(--chapter, 0) * 500);
+}
+
+.motion-art__plane-wrap {
+  position: absolute;
+  width: 3.5rem;
+  height: 3.5rem;
+  offset-path: path("M 2% 72%, C 22% 28%, 42% 58%, 62% 35%, 82% 18%, 96% 28%");
+  offset-distance: calc(var(--chapter, 0) * 100%);
+  offset-rotate: auto;
+}
+
+.motion-art__plane-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  color: #e0f2fe;
+  filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.6));
+}
+
+.motion-art__contrail {
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  width: 5rem;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(186, 230, 253, 0.6));
+  transform: translateY(-50%);
+  opacity: calc(0.3 + var(--pulse, 0) * 0.7);
+}
+
+.motion-art__horizon {
+  position: absolute;
+  bottom: 22%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(125, 211, 252, 0.4), transparent);
+}
+
+@keyframes motion-orbit-spin {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+/* Reveal blocks below journey */
+.motion-reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.motion-reveal--visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (max-width: 1023px) {
+  .motion-home {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .motion-journey {
+    height: 220vh;
+  }
+
+  .motion-journey__layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
+    align-content: start;
+    gap: 1rem;
+    padding: 4.25rem 1.25rem calc(6.75rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .motion-journey__copy {
+    text-align: center;
+    margin-inline: auto;
+    max-width: 100%;
+  }
+
+  .motion-journey__title {
+    font-size: clamp(1.85rem, 8vw, 2.5rem);
+  }
+
+  .motion-journey__desc {
+    margin-inline: auto;
+    font-size: 0.95rem;
+  }
+
+  .motion-journey__tags {
+    justify-content: center;
+    margin-top: 1rem;
+  }
+
+  .motion-journey__actions {
+    justify-content: center;
+    margin-top: 1.25rem;
+    gap: 0.75rem;
+  }
+
+  .motion-journey__index {
+    top: 6%;
+    right: 50%;
+    transform: translateX(50%) !important;
+    font-size: clamp(4.5rem, 26vw, 7rem);
+    opacity: 0.12 !important;
+  }
+
+  .motion-journey__art {
+    min-height: clamp(160px, 28vh, 240px);
+    max-height: 32vh;
+  }
+
+  .motion-journey__nav {
+    bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px));
+    gap: 0.65rem;
+    padding: 0.5rem 0.85rem;
+    max-width: calc(100% - 2rem);
+  }
+
+  .motion-journey__nav-item {
+    min-width: 2.75rem;
+  }
+
+  .motion-journey__nav-label {
+    font-size: 0.58rem;
+  }
+
+  .motion-art__ball {
+    width: 2.25rem;
+    height: 2.25rem;
+    offset-path: path("M 10% 78%, Q 50% 22%, 90% 42%");
+  }
+
+  .motion-art__plane-wrap {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  .motion-art__plane-icon {
+    width: 2rem;
+    height: 2rem;
+  }
+}
+
+@supports not (offset-path: path("M 0 0")) {
+  @media (max-width: 1023px) {
+    .motion-art__ball {
+      offset-path: none;
+      left: calc(10% + var(--chapter, 0) * 72%);
+      top: calc(78% - var(--chapter, 0) * 36%);
+    }
+
+    .motion-art__plane-wrap {
+      offset-path: none;
+      left: calc(6% + var(--chapter, 0) * 82%);
+      top: calc(68% - var(--chapter, 0) * 42%);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-journey {
+    height: auto;
+  }
+
+  .motion-journey__pin {
+    position: relative;
+    height: auto;
+  }
+
+  .motion-journey__panel {
+    position: relative;
+    min-height: 85vh;
+    opacity: 1 !important;
+    pointer-events: auto;
+  }
+
+  .motion-journey__copy {
+    transform: none !important;
+    opacity: 1 !important;
+  }
+
+  .motion-art__orbit,
+  .motion-art__ball,
+  .motion-art__plane-wrap {
+    offset-distance: 50% !important;
+    animation: none !important;
+  }
+
+  .motion-reveal {
+    opacity: 1;
+    transform: none;
+  }
+}

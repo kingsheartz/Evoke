@@ -8,13 +8,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { WhatsAppButton } from "@/components/site/whatsapp-button";
 import { apiClient } from "@/lib/api";
 import { DEFAULT_WHATSAPP_E164, tourWhatsAppMessage } from "@/lib/contact";
+import { cn } from "@/lib/utils";
 
 export function TourEnquiryAction({
   packageId,
   packageTitle,
+  variant = "stack",
 }: {
   packageId?: number;
   packageTitle?: string;
+  /** `bar` = compact inline CTA used in TourPackageActions */
+  variant?: "stack" | "bar";
 }) {
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -28,7 +32,9 @@ export function TourEnquiryAction({
     message: "",
   });
 
-  const whatsappMessage = packageTitle ? tourWhatsAppMessage(packageTitle) : "Hi Evoke Groups, I have a question about your tour packages.";
+  const whatsappMessage = packageTitle
+    ? tourWhatsAppMessage(packageTitle)
+    : "Hi Evoke Groups, I have a question about your tour packages.";
 
   const submit = async () => {
     if (!form.name.trim() || !form.email.trim()) {
@@ -55,9 +61,27 @@ export function TourEnquiryAction({
   };
 
   if (!open) {
+    if (variant === "bar") {
+      return (
+        <Button
+          type="button"
+          variant="outline"
+          className="h-12 w-full rounded-xl px-6 sm:w-auto sm:min-w-[9rem]"
+          onClick={() => setOpen(true)}
+        >
+          Ask a question
+        </Button>
+      );
+    }
+
     return (
-      <div className="flex w-full flex-col gap-2 sm:w-auto">
-        <Button type="button" variant="outline" className="h-12 w-full rounded-xl px-6 sm:w-auto" onClick={() => setOpen(true)}>
+      <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
+        <Button
+          type="button"
+          variant="outline"
+          className="h-12 w-full rounded-xl px-6 sm:w-auto"
+          onClick={() => setOpen(true)}
+        >
           Ask a question
         </Button>
         <WhatsAppButton
@@ -71,39 +95,54 @@ export function TourEnquiryAction({
   }
 
   return (
-    <div className="w-full max-w-md rounded-xl border border-app-border bg-app-surface p-4">
-      <p className="mb-3 text-sm font-medium text-app-text">Tour enquiry{packageTitle ? `: ${packageTitle}` : ""}</p>
-      <div className="grid gap-3">
-        <div className="space-y-2">
-          <Label>Name</Label>
-          <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+    <div className={cn("w-full", variant === "bar" ? "basis-full" : "max-w-md")}>
+      <div className="rounded-xl border border-app-border bg-app-surface p-4 ring-1 ring-app-border">
+        <p className="mb-3 text-sm font-medium text-app-text">
+          Tour enquiry{packageTitle ? `: ${packageTitle}` : ""}
+        </p>
+        <div className="grid gap-3">
+          <div className="space-y-2">
+            <Label>Name</Label>
+            <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+          </div>
+          <div className="space-y-2">
+            <Label>Email</Label>
+            <Input
+              type="email"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Phone</Label>
+            <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+          </div>
+          <div className="space-y-2">
+            <Label>Preferred date</Label>
+            <Input
+              type="date"
+              value={form.preferred_date}
+              onChange={(e) => setForm({ ...form, preferred_date: e.target.value })}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Message</Label>
+            <Textarea
+              rows={3}
+              value={form.message}
+              onChange={(e) => setForm({ ...form, message: e.target.value })}
+            />
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+            <Button type="button" className="w-full sm:w-auto" onClick={submit} disabled={submitting}>
+              {submitting ? "Sending…" : "Send enquiry"}
+            </Button>
+            <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+          </div>
+          {message && <p className="text-sm text-status-error">{message}</p>}
         </div>
-        <div className="space-y-2">
-          <Label>Email</Label>
-          <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-        </div>
-        <div className="space-y-2">
-          <Label>Phone</Label>
-          <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-        </div>
-        <div className="space-y-2">
-          <Label>Preferred date</Label>
-          <Input type="date" value={form.preferred_date} onChange={(e) => setForm({ ...form, preferred_date: e.target.value })} />
-        </div>
-        <div className="space-y-2">
-          <Label>Message</Label>
-          <Textarea rows={3} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} />
-        </div>
-        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-          <Button type="button" className="w-full sm:w-auto" onClick={submit} disabled={submitting}>
-            {submitting ? "Sending…" : "Send enquiry"}
-          </Button>
-          <WhatsAppButton phone={DEFAULT_WHATSAPP_E164} message={whatsappMessage} label="WhatsApp" className="w-full sm:w-auto" />
-          <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => setOpen(false)}>
-            Cancel
-          </Button>
-        </div>
-        {message && <p className="text-sm text-status-error">{message}</p>}
       </div>
     </div>
   );

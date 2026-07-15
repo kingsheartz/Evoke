@@ -20,14 +20,33 @@ class CourseController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        $sort = $request->input('sort', 'newest');
+        $search = $request->input('q', $request->input('search'));
+
         $courses = Course::query()
             ->where('status', 'published')
             ->with(['category', 'batches.trainer'])
             ->when($request->category, fn ($q, $cat) => $q->whereHas('category', fn ($c) => $c->where('slug', $cat)))
             ->when($request->boolean('featured'), fn ($q) => $q->where('is_featured', true))
-            ->paginate($request->integer('per_page', 15));
+            ->when(filled($search), function ($q) use ($search) {
+                $q->where(function ($inner) use ($search) {
+                    $inner->whereLikeInsensitive('title', "%{$search}%")
+                        ->orWhereLikeInsensitive('description', "%{$search}%");
+                });
+            })
+            ->when($request->filled('min_price'), fn ($q) => $q->where('fees', '>=', $request->input('min_price')))
+            ->when($request->filled('max_price'), fn ($q) => $q->where('fees', '<=', $request->input('max_price')));
 
-        return response()->json($courses);
+        match ($sort) {
+            'price_asc' => $courses->orderBy('fees')->orderBy('title'),
+            'price_desc' => $courses->orderByDesc('fees')->orderBy('title'),
+            'name_asc' => $courses->orderBy('title'),
+            'name_desc' => $courses->orderByDesc('title'),
+            'featured' => $courses->orderByDesc('is_featured')->orderByDesc('created_at'),
+            default => $courses->latest(),
+        };
+
+        return response()->json($courses->paginate($request->integer('per_page', 24)));
     }
 
     public function adminIndex(Request $request): JsonResponse

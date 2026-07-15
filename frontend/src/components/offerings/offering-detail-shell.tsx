@@ -78,14 +78,14 @@ export function OfferingDetailShell({
           {backLabel}
         </Link>
 
-        <div className="mt-6 flex flex-col gap-6 border-b border-app-border pb-6 md:mt-8 md:pb-8 lg:flex-row lg:items-end lg:justify-between">
+        <div className="mt-6 flex flex-col gap-6 border-b border-app-border pb-6 md:mt-8 md:pb-8 lg:flex-row lg:items-center lg:justify-between">
           <div className="max-w-3xl">
             <p className="text-sm font-semibold uppercase tracking-[0.15em] text-accent-soft">{priceLabel}</p>
             <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight text-app-text sm:text-4xl md:text-5xl">
               {title}
             </h1>
           </div>
-          <div className="w-full shrink-0 lg:w-auto">{ctaAction ?? (
+          <div className="w-full shrink-0 lg:max-w-xl lg:w-auto">{ctaAction ?? (
             ctaHref ? (
               <Link
                 href={ctaHref}
