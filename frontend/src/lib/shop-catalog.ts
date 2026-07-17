@@ -65,7 +65,7 @@ export function parseShopCatalogParams(
     on_sale: readBool(params, "on_sale"),
     featured: readBool(params, "featured"),
     page: readNumber(params, "page") ?? 1,
-    per_page: 24,
+    per_page: 12,
   };
 }
 

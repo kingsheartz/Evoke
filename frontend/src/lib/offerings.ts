@@ -2,6 +2,7 @@ import type { DivisionFeaturedCatalogConfig } from "@/lib/division-page";
 import { apiClient, isNextProductionBuild, type Course, type Product, type TourPackage } from "@/lib/api";
 import type { StatItem } from "@/lib/cms-sections";
 import type { GalleryImage } from "@/lib/cms-sections";
+import { resolvePublicMediaUrl } from "@/lib/media";
 import type { TextFormat } from "@/lib/text-format";
 
 export type OfferingVertical = "tours" | "shop" | "academy";
@@ -58,12 +59,14 @@ export function formatOfferingPrice(
 
 export function resolveMediaUrl(value: unknown): string | null {
   if (!value) return null;
-  if (typeof value === "string" && value.trim()) return value.trim();
-  if (typeof value === "object" && value !== null && "url" in value) {
-    const url = (value as { url?: string }).url;
-    return url?.trim() || null;
+  let raw: string | null = null;
+  if (typeof value === "string" && value.trim()) raw = value.trim();
+  else if (typeof value === "object" && value !== null && "url" in value) {
+    raw = (value as { url?: string }).url?.trim() || null;
   }
-  return null;
+  if (!raw) return null;
+  const resolved = resolvePublicMediaUrl(raw);
+  return resolved || null;
 }
 
 export function toGalleryImages(values: unknown[] | null | undefined): GalleryImage[] {

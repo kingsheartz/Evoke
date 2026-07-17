@@ -46,6 +46,11 @@ if [[ "${RUN_MIGRATIONS:-true}" == "true" ]]; then
     php artisan route:cache
   docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" exec -T backend \
     php artisan storage:link --force || true
+  if [[ "${SEED_DEMO:-true}" == "true" ]]; then
+    echo "Seeding demo catalog (SEED_DEMO=true)..."
+    docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" exec -T backend \
+      php artisan db:seed --class=DemoWebsiteSeeder --force
+  fi
 fi
 
 echo "Deploy complete. Health check:"

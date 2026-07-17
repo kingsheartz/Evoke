@@ -73,13 +73,14 @@ class ImageNormalizer
         return str_contains($mime, 'heic') || str_contains($mime, 'heif');
     }
 
-    public static function store(UploadedFile $file, string $directory, string $disk = 'public'): string
+    public static function store(UploadedFile $file, string $directory, ?string $disk = null): string
     {
+        $disk ??= MediaStorage::uploadDisk();
         $normalized = self::normalize($file);
         $filename = Str::uuid()->toString().'.'.$normalized['extension'];
         $path = trim($directory, '/').'/'.$filename;
 
-        Storage::disk($disk)->put($path, $normalized['contents']);
+        Storage::disk($disk)->put($path, $normalized['contents'], ['visibility' => 'public']);
 
         return $path;
     }

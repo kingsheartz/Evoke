@@ -3,10 +3,11 @@
 import { useState, useTransition, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight, Search, SlidersHorizontal, X } from "lucide-react";
+import { Search, SlidersHorizontal, X } from "lucide-react";
 import { PageContainer } from "@/components/layout/app-shell";
 import { OfferingCard, OfferingCardGrid } from "@/components/offerings/offering-card";
 import { Button } from "@/components/ui/button";
+import { CatalogPagination } from "@/components/ui/catalog-pagination";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
@@ -34,8 +35,8 @@ function FilterCheckbox({
   onCheckedChange: (checked: boolean) => void;
 }) {
   return (
-    <label htmlFor={id} className="flex cursor-pointer items-center justify-between gap-3 rounded-lg px-2 py-2 hover:bg-app-surface-muted/50">
-      <span className="text-sm text-app-text">{label}</span>
+    <label htmlFor={id} className="flex cursor-pointer items-center justify-between gap-2 rounded-md px-1.5 py-1.5 hover:bg-app-surface-muted/50">
+      <span className="text-xs text-app-text">{label}</span>
       <Switch id={id} checked={checked} onCheckedChange={onCheckedChange} />
     </label>
   );
@@ -57,28 +58,28 @@ function CatalogFilters({
   const activeCount = activeShopFilterCount(filters);
 
   return (
-    <aside className={cn("space-y-6", className)}>
+    <aside className={cn("space-y-3", className)}>
       <div className="flex items-center justify-between gap-2">
-        <h2 className="font-display text-lg font-semibold text-app-text">Filters</h2>
+        <h2 className="text-sm font-semibold text-app-text">Filters</h2>
         {activeCount > 0 && (
           <button
             type="button"
             onClick={onClear}
-            className="text-xs font-medium text-accent-soft hover:text-accent"
+            className="text-[10px] font-medium text-accent-soft hover:text-accent"
           >
-            Clear all
+            Clear
           </button>
         )}
       </div>
 
       <div>
-        <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-app-muted">Category</h3>
-        <div className="space-y-1">
+        <h3 className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-app-muted">Category</h3>
+        <div className="max-h-40 space-y-0.5 overflow-y-auto pr-0.5 lg:max-h-none lg:overflow-visible">
           <button
             type="button"
             onClick={() => onChange({ category: undefined })}
             className={cn(
-              "block w-full rounded-lg px-3 py-2 text-left text-sm transition-colors",
+              "block w-full rounded-md px-2 py-1.5 text-left text-xs transition-colors",
               !filters.category
                 ? "bg-accent/10 font-medium text-accent-soft"
                 : "text-app-muted hover:bg-app-surface-muted/50 hover:text-app-text",
@@ -92,7 +93,7 @@ function CatalogFilters({
               type="button"
               onClick={() => onChange({ category: category.slug })}
               className={cn(
-                "block w-full rounded-lg px-3 py-2 text-left text-sm transition-colors",
+                "block w-full rounded-md px-2 py-1.5 text-left text-xs transition-colors",
                 filters.category === category.slug
                   ? "bg-accent/10 font-medium text-accent-soft"
                   : "text-app-muted hover:bg-app-surface-muted/50 hover:text-app-text",
@@ -105,50 +106,44 @@ function CatalogFilters({
       </div>
 
       <div>
-        <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-app-muted">Price (₹)</h3>
-        <div className="grid grid-cols-2 gap-2">
-          <div className="space-y-1">
-            <Label htmlFor="min-price" className="text-xs text-app-muted">
-              Min
-            </Label>
-            <Input
-              id="min-price"
-              type="number"
-              min={0}
-              inputMode="numeric"
-              placeholder="0"
-              defaultValue={filters.min_price ?? ""}
-              key={`min-${filters.min_price ?? ""}`}
-              onBlur={(e) => {
-                const value = e.target.value.trim();
-                onChange({ min_price: value ? Number.parseFloat(value) : undefined });
-              }}
-            />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="max-price" className="text-xs text-app-muted">
-              Max
-            </Label>
-            <Input
-              id="max-price"
-              type="number"
-              min={0}
-              inputMode="numeric"
-              placeholder="Any"
-              defaultValue={filters.max_price ?? ""}
-              key={`max-${filters.max_price ?? ""}`}
-              onBlur={(e) => {
-                const value = e.target.value.trim();
-                onChange({ max_price: value ? Number.parseFloat(value) : undefined });
-              }}
-            />
-          </div>
+        <h3 className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-app-muted">Price (₹)</h3>
+        <div className="grid grid-cols-2 gap-1.5">
+          <Input
+            id="min-price"
+            type="number"
+            min={0}
+            inputMode="numeric"
+            placeholder="Min"
+            aria-label="Minimum price"
+            className="h-8 text-xs"
+            defaultValue={filters.min_price ?? ""}
+            key={`min-${filters.min_price ?? ""}`}
+            onBlur={(e) => {
+              const value = e.target.value.trim();
+              onChange({ min_price: value ? Number.parseFloat(value) : undefined });
+            }}
+          />
+          <Input
+            id="max-price"
+            type="number"
+            min={0}
+            inputMode="numeric"
+            placeholder="Max"
+            aria-label="Maximum price"
+            className="h-8 text-xs"
+            defaultValue={filters.max_price ?? ""}
+            key={`max-${filters.max_price ?? ""}`}
+            onBlur={(e) => {
+              const value = e.target.value.trim();
+              onChange({ max_price: value ? Number.parseFloat(value) : undefined });
+            }}
+          />
         </div>
       </div>
 
       <div>
-        <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-app-muted">Availability</h3>
-        <div className="space-y-1">
+        <h3 className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-app-muted">Availability</h3>
+        <div className="space-y-0.5">
           <FilterCheckbox
             id="filter-in-stock"
             label="In stock only"
@@ -246,6 +241,11 @@ export function ShopProductsCatalog({
     });
   }
 
+  function goToPage(page: number) {
+    navigate({ ...filters, page });
+    document.getElementById("catalog-results")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   function applyFilters(patch: Partial<ShopCatalogFilters>) {
     navigate({ ...filters, ...patch, page: 1 });
     setMobileFiltersOpen(false);
@@ -267,79 +267,98 @@ export function ShopProductsCatalog({
   }
 
   return (
-    <PageContainer className="py-8 md:py-12">
-      <div className="max-w-3xl">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent-soft">EOKE Sports</p>
-        <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight text-app-text sm:text-4xl md:text-5xl">
+    <PageContainer className="py-5 md:py-7">
+      <div>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-accent-soft">EOKE Sports</p>
+        <h1 className="mt-0.5 font-display text-2xl font-semibold tracking-tight text-app-text sm:text-3xl">
           Shop products
         </h1>
-        <p className="mt-3 text-base text-app-muted sm:text-lg">
-          Browse equipment, apparel, and accessories. Compare names, prices, categories, and availability before you
-          buy.
+        <p className="mt-1 max-w-2xl text-sm text-app-muted">
+          Browse equipment, apparel, and accessories. Search and filter by category, price, and availability.
         </p>
       </div>
 
-      <form onSubmit={handleSearchSubmit} className="mt-8 flex flex-col gap-3 sm:flex-row">
-        <div className="relative flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-app-muted" />
-          <Input
-            value={searchDraft}
-            onChange={(e) => setSearchDraft(e.target.value)}
-            placeholder="Search by name, description, or SKU…"
-            className="pl-10"
-            aria-label="Search products"
-          />
-        </div>
-        <div className="flex gap-2">
-          <Button type="submit" disabled={pending}>
+      <div className="mt-4 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+        <form onSubmit={handleSearchSubmit} className="flex min-w-0 flex-1 items-center gap-2">
+          <div className="relative min-w-0 flex-1 sm:max-w-md">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-app-muted" />
+            <Input
+              value={searchDraft}
+              onChange={(e) => setSearchDraft(e.target.value)}
+              placeholder="Search by name, description, or SKU…"
+              className="h-9 pl-8 text-sm"
+              aria-label="Search products"
+            />
+          </div>
+          <Button type="submit" size="sm" disabled={pending}>
             Search
           </Button>
           <Button
             type="button"
             variant="outline"
+            size="sm"
             className="lg:hidden"
             onClick={() => setMobileFiltersOpen((open) => !open)}
           >
-            <SlidersHorizontal className="h-4 w-4" />
-            Filters
+            <SlidersHorizontal className="h-3.5 w-3.5" />
+            <span className="sr-only sm:not-sr-only">Filters</span>
             {activeShopFilterCount(filters) > 0 && (
-              <span className="ml-1 rounded-full bg-accent/20 px-1.5 text-xs text-accent-soft">
+              <span className="rounded-full bg-accent/20 px-1.5 text-[10px] text-accent-soft">
                 {activeShopFilterCount(filters)}
               </span>
             )}
           </Button>
+        </form>
+
+        <div className="hidden shrink-0 items-center gap-2 lg:flex">
+          <Label htmlFor="sort-products" className="text-xs text-app-muted">
+            Sort
+          </Label>
+          <Select
+            id="sort-products"
+            value={filters.sort ?? "newest"}
+            onChange={(e) => applyFilters({ sort: e.target.value as ShopCatalogFilters["sort"] })}
+            className="h-9 min-w-[9.5rem] text-sm"
+          >
+            {SHOP_CATALOG_SORT_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </Select>
         </div>
-      </form>
+      </div>
 
       <ActiveFilterChips filters={filters} categories={categories} onChange={applyFilters} />
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-[240px_minmax(0,1fr)]">
+      <div className="mt-3 flex flex-col gap-3 lg:flex-row lg:items-start">
         <CatalogFilters
           filters={filters}
           categories={categories}
           onChange={applyFilters}
           onClear={clearFilters}
           className={cn(
-            "rounded-2xl border border-app-border bg-app-surface/60 p-5 ring-1 ring-app-border",
+            "w-full shrink-0 rounded-xl border border-app-border bg-app-surface/60 p-3 ring-1 ring-app-border",
+            "lg:sticky lg:top-20 lg:w-52 lg:self-start lg:max-h-[calc(100dvh-5.5rem)] lg:overflow-y-auto",
             mobileFiltersOpen ? "block" : "hidden lg:block",
           )}
         />
 
-        <div className={cn("min-w-0 space-y-6", pending && "opacity-60")}>
-          <div className="flex flex-col gap-4 rounded-2xl border border-app-border bg-app-surface/40 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-app-muted">
+        <div id="catalog-results" className={cn("min-w-0 flex-1 scroll-mt-24 space-y-3", pending && "opacity-60")}>
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-app-border bg-app-surface/40 px-3 py-2">
+            <p className="text-xs text-app-muted">
               <span className="font-medium text-app-text">{resultLabel}</span>
-              {filters.q && <span className="hidden sm:inline"> matching your search</span>}
+              {filters.q && <span className="hidden sm:inline"> · matching search</span>}
             </p>
-            <div className="flex items-center gap-2">
-              <Label htmlFor="sort-products" className="shrink-0 text-xs text-app-muted">
-                Sort by
+            <div className="flex items-center gap-2 lg:hidden">
+              <Label htmlFor="sort-products-mobile" className="text-[10px] text-app-muted">
+                Sort
               </Label>
               <Select
-                id="sort-products"
+                id="sort-products-mobile"
                 value={filters.sort ?? "newest"}
                 onChange={(e) => applyFilters({ sort: e.target.value as ShopCatalogFilters["sort"] })}
-                className="min-w-44"
+                className="h-8 min-w-[8.5rem] text-xs"
               >
                 {SHOP_CATALOG_SORT_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -366,42 +385,18 @@ export function ShopProductsCatalog({
             </div>
           )}
 
-          {products.last_page > 1 && (
-            <nav
-              className="flex flex-col items-center justify-between gap-4 border-t border-app-border pt-6 sm:flex-row"
-              aria-label="Product pagination"
-            >
-              <p className="text-sm text-app-muted">
-                Page {products.current_page} of {products.last_page}
-              </p>
-              <div className="flex items-center gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={products.current_page <= 1 || pending}
-                  onClick={() => navigate({ ...filters, page: products.current_page - 1 })}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                  Previous
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={products.current_page >= products.last_page || pending}
-                  onClick={() => navigate({ ...filters, page: products.current_page + 1 })}
-                >
-                  Next
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </nav>
-          )}
+          <CatalogPagination
+            currentPage={products.current_page}
+            lastPage={products.last_page}
+            total={products.total}
+            perPage={filters.per_page ?? 12}
+            disabled={pending}
+            onPageChange={goToPage}
+          />
         </div>
       </div>
 
-      <p className="mt-10 text-center text-sm text-app-muted">
+      <p className="mt-6 text-center text-xs text-app-muted">
         Need help choosing?{" "}
         <Link href="/shop" className="font-medium text-accent-soft hover:text-accent">
           Explore EOKE Sports

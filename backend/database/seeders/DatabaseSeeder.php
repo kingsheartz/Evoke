@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
             NotificationTemplateSeeder::class,
             AcademyCategorySeeder::class,
             ShopCategorySeeder::class,
+            DemoWebsiteSeeder::class,
         ]);
 
         $branch = Branch::firstOrCreate(

@@ -165,6 +165,33 @@ Then redeploy so the frontend image is rebuilt with the new API URL.
 
 ---
 
+## 6. S3 media storage (optional)
+
+For production, store CMS uploads, avatars, and certificates on **Amazon S3** instead of the EC2 disk:
+
+1. Create a bucket (e.g. `evoke-media-prod`) in the same region as EC2.
+2. Enable **Block Public Access** off only if using direct bucket URLs, or front the bucket with **CloudFront**.
+3. Bucket policy — allow public `GetObject` on `cms/*`, `avatars/*`, `academy/*` (or use CloudFront OAC).
+4. IAM user or instance role with `s3:PutObject`, `s3:GetObject`, `s3:DeleteObject` on the bucket.
+5. Set in `deploy.env`:
+
+```bash
+FILESYSTEM_DISK=s3
+AWS_ACCESS_KEY_ID=...
+AWS_SECRET_ACCESS_KEY=...
+AWS_DEFAULT_REGION=ap-south-1
+AWS_BUCKET=evoke-media-prod
+AWS_URL=https://evoke-media-prod.s3.ap-south-1.amazonaws.com
+NEXT_PUBLIC_MEDIA_BASE_URL=https://evoke-media-prod.s3.ap-south-1.amazonaws.com
+```
+
+6. Set GitHub variable `NEXT_PUBLIC_MEDIA_BASE_URL` (same value) and **rebuild the frontend**.
+7. Run `./infra/aws/scripts/render-env.sh` and redeploy.
+
+Demo seed data uses external Unsplash URLs; admin uploads after go-live go to S3 automatically when `FILESYSTEM_DISK=s3`.
+
+---
+
 ## Files
 
 | Path | Purpose |

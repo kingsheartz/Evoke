@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowUpRight, Images } from "lucide-react";
+import { OfferingCardImage } from "@/components/offerings/offering-card-image";
 import type { OfferingCardData } from "@/lib/offerings";
 import { joinMetaParts } from "@/lib/offerings";
 import { cn } from "@/lib/utils";
@@ -40,20 +41,7 @@ export function OfferingCard({
       )}
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-app-surface-muted/40">
-        {imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={imageUrl}
-            alt={imageAlt?.trim() || title}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center bg-gradient-to-br from-accent/10 via-app-surface-muted/30 to-app-surface-muted/60">
-            <span className="font-display text-sm font-semibold uppercase tracking-[0.2em] text-app-muted/70">
-              {vertical}
-            </span>
-          </div>
-        )}
+        <OfferingCardImage src={imageUrl} alt={imageAlt} title={title} vertical={vertical} />
 
         {badge?.trim() && (
           <span className="absolute left-3 top-3 rounded-full bg-app-bg/85 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-accent-soft ring-1 ring-app-border backdrop-blur-sm">

@@ -6,11 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Models\User;
 use App\Support\ImageNormalizer;
+use App\Support\MediaStorage;
 use App\Support\UserValidation;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
@@ -71,7 +71,7 @@ class UserController extends Controller
         ]);
 
         if ($user->avatar) {
-            Storage::disk('public')->delete($user->avatar);
+            MediaStorage::delete($user->avatar);
         }
 
         try {
@@ -87,7 +87,7 @@ class UserController extends Controller
     public function removeAvatar(User $user): JsonResponse
     {
         if ($user->avatar) {
-            Storage::disk('public')->delete($user->avatar);
+            MediaStorage::delete($user->avatar);
             $user->update(['avatar' => null]);
         }
 

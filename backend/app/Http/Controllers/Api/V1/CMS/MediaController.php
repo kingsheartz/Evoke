@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1\CMS;
 
 use App\Http\Controllers\Controller;
 use App\Support\ImageNormalizer;
+use App\Support\MediaStorage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -47,17 +48,19 @@ class MediaController extends Controller
 
         $folder = $type === 'video' ? 'cms/videos' : 'cms/images';
 
+        $disk = MediaStorage::uploadDisk();
+
         try {
             $path = $type === 'video'
-                ? $file->store($folder, 'public')
-                : ImageNormalizer::store($file, $folder);
+                ? $file->store($folder, $disk)
+                : ImageNormalizer::store($file, $folder, $disk);
         } catch (\RuntimeException $e) {
             abort(422, $e->getMessage());
         }
 
         return response()->json([
             'data' => [
-                'url' => asset('storage/'.$path),
+                'url' => MediaStorage::url($path),
                 'path' => $path,
                 'type' => $type,
             ],

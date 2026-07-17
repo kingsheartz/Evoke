@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1\Academy;
 
 use App\Http\Controllers\Controller;
 use App\Models\Academy\Certificate;
+use App\Support\MediaStorage;
 use App\Models\Academy\Enrollment;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -53,11 +54,11 @@ class CertificateController extends Controller
         ]);
 
         $file = $request->file('file');
-        $path = $file->store('academy/certificates', 'public');
+        $path = $file->store('academy/certificates', MediaStorage::uploadDisk());
 
         return response()->json([
             'data' => [
-                'url' => asset('storage/'.$path),
+                'url' => MediaStorage::url($path),
                 'path' => $path,
             ],
         ]);

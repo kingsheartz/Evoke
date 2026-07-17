@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Support\EvokeIdGenerator;
+use App\Support\MediaStorage;
 use App\Support\UserValidation;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -116,8 +117,6 @@ class User extends Authenticatable
 
     protected function avatarUrl(): Attribute
     {
-        return Attribute::get(fn () => $this->avatar
-            ? asset('storage/'.$this->avatar)
-            : null);
+        return Attribute::get(fn () => MediaStorage::url($this->avatar));
     }
 }

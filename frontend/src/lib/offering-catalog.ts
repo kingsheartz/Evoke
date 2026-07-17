@@ -73,7 +73,7 @@ export function parseOfferingCatalogParams(
     max_price: readNumber(params, "max_price"),
     featured: readBool(params, "featured"),
     page: readNumber(params, "page") ?? 1,
-    per_page: 24,
+    per_page: 12,
   };
 }
 
