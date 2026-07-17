@@ -5,6 +5,7 @@ import { useForm, useFieldArray, useWatch, Controller } from "react-hook-form";
 import Link from "next/link";
 import { ExternalLink, Plus, Save, Trash2 } from "lucide-react";
 import { HomepageSectionsEditor } from "@/components/cms/homepage-sections-editor";
+import { MotionChaptersEditor } from "@/components/cms/motion-chapters-editor";
 import { MediaUrlField } from "@/components/cms/media-url-field";
 import { GradientPicker } from "@/components/admin/gradient-picker";
 import { ActionButton } from "@/components/ui/action-button";
@@ -27,6 +28,7 @@ import {
   defaultHomepageMeta,
   parseHomepageMeta,
   type HomepageFeature,
+  type MotionChapter,
   type HomepageSection,
   type HomepageStat,
 } from "@/lib/homepage-meta";
@@ -49,6 +51,7 @@ interface HomepageForm {
   features_eyebrow: string;
   features_heading: string;
   features: HomepageFeature[];
+  motion_chapters: MotionChapter[];
   sections: HomepageSection[];
 }
 
@@ -69,6 +72,7 @@ function toForm(data: HomepageData): HomepageForm {
     features_eyebrow: meta.features?.eyebrow ?? "Why EOKE",
     features_heading: meta.features?.heading ?? "Built for excellence",
     features: meta.features?.items ?? defaultHomepageMeta().features!.items!,
+    motion_chapters: meta.motion?.chapters ?? defaultHomepageMeta().motion!.chapters!,
     sections: meta.sections ?? [],
   };
 }
@@ -91,6 +95,9 @@ function toPayload(data: HomepageForm) {
         heading: data.features_heading,
         items: data.features,
       },
+      motion: {
+        chapters: data.motion_chapters.map((chapter, index) => ({ ...chapter, sort_order: index })),
+      },
       sections: data.sections,
     },
   };
@@ -109,6 +116,7 @@ export default function HomepageEditorPage() {
       features_enabled: true,
       stats: defaultHomepageMeta().stats!.items!,
       features: defaultHomepageMeta().features!.items!,
+      motion_chapters: defaultHomepageMeta().motion!.chapters!,
       sections: [],
     },
   });
@@ -122,6 +130,7 @@ export default function HomepageEditorPage() {
   const statsEnabled = watch("stats_enabled");
   const featuresEnabled = watch("features_enabled");
   const sections = watch("sections");
+  const motionChapters = watch("motion_chapters");
 
   useEffect(() => {
     apiClient.getHomepage().then((res) => {
@@ -356,6 +365,21 @@ export default function HomepageEditorPage() {
                   </div>
                 </div>
               ))}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Motion journey chapters</CardTitle>
+              <CardDescription>
+                Scroll-driven chapters for the Motion homepage. Drag to reorder, customize arc icons, and add more chapters.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <MotionChaptersEditor
+                chapters={motionChapters ?? []}
+                onChange={(next) => setValue("motion_chapters", next, { shouldDirty: true })}
+              />
             </CardContent>
           </Card>
 

@@ -9,7 +9,7 @@
 
 .motion-journey {
   position: relative;
-  height: 280vh;
+  height: calc(var(--motion-chapter-count, 3) * 93.33vh);
   margin-top: -1px;
 }
 
@@ -733,7 +733,7 @@
   }
 
   .motion-journey {
-    height: 220vh;
+    height: calc(var(--motion-chapter-count, 3) * 73.33vh);
   }
 
   .motion-journey__layout {

@@ -26,7 +26,7 @@ services:
       - INTERNAL_API_URL=http://backend:8000/api/v1
       - NEXT_TELEMETRY_DISABLED=1
       # Homepage: immersive | motion — live switcher bottom-left while developing
-      - NEXT_PUBLIC_HOME_VARIANT=default
+      - NEXT_PUBLIC_HOME_VARIANT=motion
       - NEXT_PUBLIC_HOME_VARIANT_SWITCH=true
       # Webpack avoids Turbopack missing App Router pages on Windows Docker bind mounts.
       - WATCHPACK_POLLING=true

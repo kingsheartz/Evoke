@@ -22,7 +22,7 @@ export function MotionHome({
     <div className="motion-home">
       <HeroSection hero={homepage.hero} scrollTarget="#motion-journey" />
 
-      <MotionScrollJourney />
+      <MotionScrollJourney chapters={meta.motion?.chapters} />
 
       <div className="app-shell-x py-6">
         <SiteAdBanner placement="homepage" />

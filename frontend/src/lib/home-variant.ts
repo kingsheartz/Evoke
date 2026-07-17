@@ -26,12 +26,12 @@ export function isHomeVariant(value: string | null | undefined): value is HomeVa
   return Boolean(value && VALID_VARIANTS.has(value as HomeVariant));
 }
 
-/** Resolved from cookie → env → fallback (default). */
+/** Resolved from cookie → env → fallback (motion). */
 export function resolveHomeVariant(cookieValue?: string | null): HomeVariant {
   if (isHomeVariant(cookieValue)) return cookieValue;
   const env = process.env.NEXT_PUBLIC_HOME_VARIANT;
   if (isHomeVariant(env)) return env;
-  return "default";
+  return "motion";
 }
 
 /** Show the live switcher while building / previewing. */

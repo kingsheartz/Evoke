@@ -14,7 +14,7 @@ export function CmsButtonsSection({ content }: { content: ButtonsContent }) {
   return (
     <section
       className={cn(
-        "rounded-2xl border border-app-border bg-app-surface/80 p-8 ring-1 ring-app-border md:p-10",
+        "mx-auto w-full max-w-3xl rounded-2xl border border-app-border bg-app-surface/80 p-8 ring-1 ring-app-border md:p-10 lg:max-w-4xl",
         align === "center" && "text-center",
       )}
     >

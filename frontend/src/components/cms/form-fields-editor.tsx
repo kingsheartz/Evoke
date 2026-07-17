@@ -1,5 +1,22 @@
 "use client";
 
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { useState } from "react";
 import {
   Calendar,
@@ -7,6 +24,7 @@ import {
   ChevronDown,
   CircleDot,
   CloudUpload,
+  GripVertical,
   Hash,
   Plus,
   Trash2,
@@ -23,6 +41,7 @@ import {
   defaultFormField,
   fieldTypeNeedsOptions,
   formFieldTypeLabel,
+  normalizeFormFields,
 } from "@/lib/form-field-types";
 import { cn } from "@/lib/utils";
 
@@ -112,6 +131,77 @@ function OptionsEditor({
   );
 }
 
+function SortableFormField({
+  field,
+  index,
+  onChange,
+  onDelete,
+}: {
+  field: FormField;
+  index: number;
+  onChange: (index: number, patch: Partial<FormField>) => void;
+  onDelete: (index: number) => void;
+}) {
+  const fieldId = field.id ?? `field-${index}`;
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: fieldId });
+  const style = { transform: CSS.Transform.toString(transform), transition };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        "space-y-3 rounded-lg border border-app-border bg-app-surface-muted/40 p-4",
+        isDragging && "z-10 opacity-90",
+      )}
+    >
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            className="cursor-grab shrink-0 text-app-muted hover:text-accent-soft"
+            aria-label={`Reorder field ${index + 1}`}
+            {...attributes}
+            {...listeners}
+          >
+            <GripVertical className="h-5 w-5" />
+          </button>
+          <span className="text-xs font-medium uppercase tracking-wider text-app-muted">
+            {formFieldTypeLabel(field.type)}
+          </span>
+        </div>
+        <Button type="button" variant="ghost" size="sm" onClick={() => onDelete(index)}>
+          <Trash2 className="h-4 w-4 text-status-error" />
+        </Button>
+      </div>
+      <Input
+        placeholder="Field label"
+        value={field.label}
+        onChange={(e) => onChange(index, { label: e.target.value })}
+      />
+      <Input
+        placeholder="Placeholder (optional)"
+        value={field.placeholder ?? ""}
+        onChange={(e) => onChange(index, { placeholder: e.target.value })}
+      />
+      {fieldTypeNeedsOptions(field.type) && (
+        <OptionsEditor
+          options={field.options ?? []}
+          onChange={(options) => onChange(index, { options })}
+        />
+      )}
+      <label className="flex items-center gap-2 text-sm text-app-muted">
+        <input
+          type="checkbox"
+          checked={field.required ?? false}
+          onChange={(e) => onChange(index, { required: e.target.checked })}
+        />
+        Required
+      </label>
+    </div>
+  );
+}
+
 export function FormFieldsEditor({
   fields,
   onChange,
@@ -120,58 +210,52 @@ export function FormFieldsEditor({
   onChange: (fields: FormField[]) => void;
 }) {
   const [pickingType, setPickingType] = useState(false);
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  const normalizedFields = normalizeFormFields(fields);
 
   const addField = (type: FormFieldType) => {
-    onChange([...fields, defaultFormField(type)]);
+    onChange([...normalizedFields, defaultFormField(type)]);
     setPickingType(false);
+  };
+
+  const updateField = (index: number, patch: Partial<FormField>) => {
+    onChange(updateList(normalizedFields, index, patch));
+  };
+
+  const deleteField = (index: number) => {
+    onChange(normalizedFields.filter((_, i) => i !== index));
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = normalizedFields.findIndex((field) => field.id === active.id);
+    const newIndex = normalizedFields.findIndex((field) => field.id === over.id);
+    if (oldIndex < 0 || newIndex < 0) return;
+    onChange(arrayMove(normalizedFields, oldIndex, newIndex));
   };
 
   return (
     <div className="space-y-3">
-      {fields.map((field, index) => (
-        <div
-          key={index}
-          className="space-y-3 rounded-lg border border-app-border bg-app-surface-muted/40 p-4"
-        >
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="text-xs font-medium uppercase tracking-wider text-app-muted">
-              {formFieldTypeLabel(field.type)}
-            </span>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => onChange(fields.filter((_, i) => i !== index))}
-            >
-              <Trash2 className="h-4 w-4 text-status-error" />
-            </Button>
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={normalizedFields.map((field) => field.id!)} strategy={verticalListSortingStrategy}>
+          <div className={cn("space-y-3", normalizedFields.length === 0 && "hidden")}>
+            {normalizedFields.map((field, index) => (
+              <SortableFormField
+                key={field.id}
+                field={field}
+                index={index}
+                onChange={updateField}
+                onDelete={deleteField}
+              />
+            ))}
           </div>
-          <Input
-            placeholder="Field label"
-            value={field.label}
-            onChange={(e) => onChange(updateList(fields, index, { label: e.target.value }))}
-          />
-          <Input
-            placeholder="Placeholder (optional)"
-            value={field.placeholder ?? ""}
-            onChange={(e) => onChange(updateList(fields, index, { placeholder: e.target.value }))}
-          />
-          {fieldTypeNeedsOptions(field.type) && (
-            <OptionsEditor
-              options={field.options ?? []}
-              onChange={(options) => onChange(updateList(fields, index, { options }))}
-            />
-          )}
-          <label className="flex items-center gap-2 text-sm text-app-muted">
-            <input
-              type="checkbox"
-              checked={field.required ?? false}
-              onChange={(e) => onChange(updateList(fields, index, { required: e.target.checked }))}
-            />
-            Required
-          </label>
-        </div>
-      ))}
+        </SortableContext>
+      </DndContext>
 
       {pickingType ? (
         <FieldTypePicker onPick={addField} onCancel={() => setPickingType(false)} />
@@ -185,7 +269,7 @@ export function FormFieldsEditor({
   );
 }
 
-export function FormFieldPreview({ field, name }: { field: FormField; name: string }) {
+export function FormFieldPreview({ field, name, className }: { field: FormField; name: string; className?: string }) {
   const label = (
     <span className="text-sm font-medium text-app-text">
       {field.label}
@@ -196,16 +280,18 @@ export function FormFieldPreview({ field, name }: { field: FormField; name: stri
     "w-full rounded-lg border border-app-border bg-app-surface-muted/60 px-3 py-2 text-sm text-app-text";
   const placeholder = field.placeholder?.trim() || undefined;
 
+  const wrap = (node: React.ReactNode) => <div className={className}>{node}</div>;
+
   switch (field.type) {
     case "textarea":
-      return (
+      return wrap(
         <div className="space-y-2">
           <label className="block">{label}</label>
           <textarea name={name} required={field.required} rows={4} placeholder={placeholder} className={inputClass} />
-        </div>
+        </div>,
       );
     case "radio":
-      return (
+      return wrap(
         <fieldset className="space-y-2">
           <legend>{label}</legend>
           <div className="space-y-2">
@@ -216,10 +302,10 @@ export function FormFieldPreview({ field, name }: { field: FormField; name: stri
               </label>
             ))}
           </div>
-        </fieldset>
+        </fieldset>,
       );
     case "checkbox":
-      return (
+      return wrap(
         <fieldset className="space-y-2">
           <legend>{label}</legend>
           <div className="space-y-2">
@@ -230,10 +316,10 @@ export function FormFieldPreview({ field, name }: { field: FormField; name: stri
               </label>
             ))}
           </div>
-        </fieldset>
+        </fieldset>,
       );
     case "select":
-      return (
+      return wrap(
         <div className="space-y-2">
           <label className="block">{label}</label>
           <select name={name} required={field.required} className={cn(inputClass, "h-10")}>
@@ -244,17 +330,17 @@ export function FormFieldPreview({ field, name }: { field: FormField; name: stri
               </option>
             ))}
           </select>
-        </div>
+        </div>,
       );
     case "file":
-      return (
+      return wrap(
         <div className="space-y-2">
           <label className="block">{label}</label>
           <FormFileUpload name={name} required={field.required} placeholder={placeholder} />
-        </div>
+        </div>,
       );
     default:
-      return (
+      return wrap(
         <div className="space-y-2">
           <label className="block">{label}</label>
           <input
@@ -264,7 +350,7 @@ export function FormFieldPreview({ field, name }: { field: FormField; name: stri
             placeholder={placeholder}
             className={cn(inputClass, "h-10")}
           />
-        </div>
+        </div>,
       );
   }
 }
@@ -282,6 +368,7 @@ function FormFileUpload({
 
   return (
     <FileUploadZone
+      compact
       name={name}
       required={required}
       selectedFileName={selectedName}

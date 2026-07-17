@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback, useRef } from "react";
+import { useCallback, useMemo, useRef, type CSSProperties } from "react";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { MotionChapterArt, type ChapterId } from "@/components/home/motion/motion-chapter-art";
+import { MotionChapterArt } from "@/components/home/motion/motion-chapter-art";
 import {
   chapterOpacity,
   chapterProgress,
@@ -12,111 +12,87 @@ import {
   useScrollProgress,
 } from "@/hooks/use-scroll-progress";
 import { usePrefersReducedMotion } from "@/hooks/use-media-preferences";
+import {
+  motionChapterAccentClass,
+  motionChapterIndexLabel,
+  motionChapterPanelClass,
+  normalizeMotionChapters,
+  type MotionChapter,
+} from "@/lib/homepage-meta";
 import { cn } from "@/lib/utils";
 
-const chapters = [
-  {
-    id: "academy" as const,
-    index: "01",
-    label: "Academy",
-    eyebrow: "EVOKE Academy",
-    title: "Train with purpose",
-    desc: "Martial arts, yoga, swimming — structured programs led by coaches who care about progress.",
-    href: "/academy",
-    cta: "Browse courses",
-    tags: ["Karate", "Yoga", "Swimming"],
-    panelClass: "motion-journey__panel--academy",
-    accentClass: "motion-journey__accent--academy",
-  },
-  {
-    id: "sports" as const,
-    index: "02",
-    label: "Sports",
-    eyebrow: "EOKE Sports",
-    title: "Play at your peak",
-    desc: "Gear, apparel, and equipment for athletes who show up — from training days to match day.",
-    href: "/shop",
-    cta: "Shop now",
-    tags: ["Equipment", "Apparel", "Accessories"],
-    panelClass: "motion-journey__panel--sports",
-    accentClass: "motion-journey__accent--sports",
-  },
-  {
-    id: "tours" as const,
-    index: "03",
-    label: "Tours",
-    eyebrow: "EVOKE Tours",
-    title: "Travel that moves you",
-    desc: "Handpicked domestic and international journeys — adventure, culture, and memories in motion.",
-    href: "/tours",
-    cta: "View packages",
-    tags: ["Domestic", "International", "Adventure"],
-    panelClass: "motion-journey__panel--tours",
-    accentClass: "motion-journey__accent--tours",
-  },
-] as const;
-
-export function MotionScrollJourney() {
+export function MotionScrollJourney({ chapters: chaptersInput }: { chapters?: MotionChapter[] }) {
+  const chapters = useMemo(() => normalizeMotionChapters(chaptersInput), [chaptersInput]);
+  const chapterCount = Math.max(1, chapters.length);
   const sectionRef = useRef<HTMLElement>(null);
   const panelRefs = useRef<(HTMLElement | null)[]>([]);
   const artRefs = useRef<(HTMLDivElement | null)[]>([]);
   const dotFillRefs = useRef<(HTMLSpanElement | null)[]>([]);
   const reducedMotion = usePrefersReducedMotion();
 
-  const applyMotion = useCallback((progress: number) => {
-    let topPanel = 0;
-    let topOpacity = 0;
+  const applyMotion = useCallback(
+    (progress: number) => {
+      let topPanel = 0;
+      let topOpacity = 0;
 
-    panelRefs.current.forEach((panel, i) => {
-      if (!panel) return;
-      const opacity = chapterOpacity(progress, i, 3, 0.2);
-      const local = chapterProgress(progress, i);
-      panel.style.opacity = String(opacity);
-      panel.style.pointerEvents = opacity > 0.55 ? "auto" : "none";
+      panelRefs.current.forEach((panel, i) => {
+        if (!panel) return;
+        const opacity = chapterOpacity(progress, i, chapterCount, 0.2);
+        const local = chapterProgress(progress, i, chapterCount);
+        panel.style.opacity = String(opacity);
+        panel.style.pointerEvents = opacity > 0.55 ? "auto" : "none";
 
-      const copy = panel.querySelector<HTMLElement>(".motion-journey__copy");
-      const index = panel.querySelector<HTMLElement>(".motion-journey__index");
-      if (copy) {
-        const enter = easeInOutCubic(Math.min(1, local * 2.2));
-        copy.style.transform = `translate3d(0, ${(1 - enter) * 28}px, 0)`;
-        copy.style.opacity = String(0.35 + enter * 0.65);
-      }
-      if (index) {
-        const drift = easeInOutCubic(local);
-        index.style.transform = `translate3d(${drift * -6}%, 0, 0)`;
-        index.style.opacity = String(0.08 + local * 0.14);
-      }
+        const copy = panel.querySelector<HTMLElement>(".motion-journey__copy");
+        const index = panel.querySelector<HTMLElement>(".motion-journey__index");
+        if (copy) {
+          const enter = easeInOutCubic(Math.min(1, local * 2.2));
+          copy.style.transform = `translate3d(0, ${(1 - enter) * 28}px, 0)`;
+          copy.style.opacity = String(0.35 + enter * 0.65);
+        }
+        if (index) {
+          const drift = easeInOutCubic(local);
+          index.style.transform = `translate3d(${drift * -6}%, 0, 0)`;
+          index.style.opacity = String(0.08 + local * 0.14);
+        }
 
-      if (opacity > topOpacity) {
-        topOpacity = opacity;
-        topPanel = i;
-      }
-    });
+        if (opacity > topOpacity) {
+          topOpacity = opacity;
+          topPanel = i;
+        }
+      });
 
-    panelRefs.current.forEach((panel, i) => {
-      if (!panel) return;
-      panel.style.zIndex = String(i === topPanel ? 3 : 1);
-    });
+      panelRefs.current.forEach((panel, i) => {
+        if (!panel) return;
+        panel.style.zIndex = String(i === topPanel ? 3 : 1);
+      });
 
-    artRefs.current.forEach((art, i) => {
-      if (!art) return;
-      const local = chapterProgress(progress, i);
-      const pulse = easeInOutCubic(local);
-      art.style.setProperty("--chapter", String(local));
-      art.style.setProperty("--pulse", String(pulse));
-      art.style.opacity = String(chapterOpacity(progress, i, 3, 0.22));
-    });
+      artRefs.current.forEach((art, i) => {
+        if (!art) return;
+        const local = chapterProgress(progress, i, chapterCount);
+        const pulse = easeInOutCubic(local);
+        art.style.setProperty("--chapter", String(local));
+        art.style.setProperty("--pulse", String(pulse));
+        art.style.opacity = String(chapterOpacity(progress, i, chapterCount, 0.22));
+      });
 
-    dotFillRefs.current.forEach((fill, i) => {
-      if (!fill) return;
-      fill.style.width = `${chapterProgress(progress, i) * 100}%`;
-    });
-  }, []);
+      dotFillRefs.current.forEach((fill, i) => {
+        if (!fill) return;
+        fill.style.width = `${chapterProgress(progress, i, chapterCount) * 100}%`;
+      });
+    },
+    [chapterCount],
+  );
 
   useScrollProgress(sectionRef, applyMotion, !reducedMotion, 0.32);
 
   return (
-    <section id="motion-journey" ref={sectionRef} className="motion-journey" aria-label="Our divisions">
+    <section
+      id="motion-journey"
+      ref={sectionRef}
+      className="motion-journey"
+      aria-label="Our divisions"
+      style={{ "--motion-chapter-count": chapterCount } as CSSProperties}
+    >
       <div className="motion-journey__pin">
         {chapters.map((chapter, i) => (
           <article
@@ -124,26 +100,28 @@ export function MotionScrollJourney() {
             ref={(el) => {
               panelRefs.current[i] = el;
             }}
-            className={cn("motion-journey__panel", chapter.panelClass)}
+            className={cn("motion-journey__panel", motionChapterPanelClass(chapter.art_theme))}
             style={{ opacity: i === 0 ? 1 : 0 }}
           >
-            <span className={cn("motion-journey__index", chapter.accentClass)} aria-hidden>
-              {chapter.index}
+            <span className={cn("motion-journey__index", motionChapterAccentClass(chapter.art_theme))} aria-hidden>
+              {motionChapterIndexLabel(i)}
             </span>
 
             <div className="motion-journey__layout">
               <div className="motion-journey__copy">
                 <p className="motion-journey__eyebrow">{chapter.eyebrow}</p>
                 <h2 className="motion-journey__title">{chapter.title}</h2>
-                <p className="motion-journey__desc">{chapter.desc}</p>
+                <p className="motion-journey__desc">{chapter.description}</p>
 
-                <ul className="motion-journey__tags">
-                  {chapter.tags.map((tag) => (
-                    <li key={tag} className="motion-journey__tag">
-                      {tag}
-                    </li>
-                  ))}
-                </ul>
+                {chapter.tags.length > 0 && (
+                  <ul className="motion-journey__tags">
+                    {chapter.tags.map((tag) => (
+                      <li key={tag} className="motion-journey__tag">
+                        {tag}
+                      </li>
+                    ))}
+                  </ul>
+                )}
 
                 <div className="motion-journey__actions">
                   <Button asChild variant="glow" size="lg">
@@ -160,7 +138,10 @@ export function MotionScrollJourney() {
               </div>
 
               <MotionChapterArt
-                chapter={chapter.id as ChapterId}
+                theme={chapter.art_theme}
+                startIcon={chapter.start_icon}
+                endIcon={chapter.end_icon}
+                instanceKey={chapter.id}
                 ref={(el) => {
                   artRefs.current[i] = el;
                 }}
@@ -172,8 +153,8 @@ export function MotionScrollJourney() {
 
         <nav className="motion-journey__nav" aria-label="Chapter progress">
           {chapters.map((chapter, i) => (
-            <div key={chapter.id} className={cn("motion-journey__nav-item", chapter.accentClass)}>
-              <span className="motion-journey__nav-index">{chapter.index}</span>
+            <div key={chapter.id} className={cn("motion-journey__nav-item", motionChapterAccentClass(chapter.art_theme))}>
+              <span className="motion-journey__nav-index">{motionChapterIndexLabel(i)}</span>
               <span className="motion-journey__nav-label">{chapter.label}</span>
               <span className="motion-journey__nav-track">
                 <span

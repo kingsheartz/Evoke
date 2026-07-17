@@ -1,10 +1,12 @@
 "use client";
 
 import { forwardRef } from "react";
-import { GraduationCap, MapPin, Plane, ShoppingBag } from "lucide-react";
+import { GraduationCap, Plane } from "lucide-react";
+import type { MotionArtTheme } from "@/lib/homepage-meta";
+import { resolveMotionIcon } from "@/lib/motion-icons";
 import { cn } from "@/lib/utils";
 
-export type ChapterId = "academy" | "sports" | "tours";
+export type ChapterId = MotionArtTheme;
 
 function viewBoxPointStyle(x: number, y: number, vbW: number, vbH: number): React.CSSProperties {
   return {
@@ -19,18 +21,25 @@ function PathLocationMarker({
   vbW,
   vbH,
   className,
-  children,
+  iconName,
+  emphasize = false,
 }: {
   x: number;
   y: number;
   vbW: number;
   vbH: number;
   className?: string;
-  children?: React.ReactNode;
+  iconName: string;
+  emphasize?: boolean;
 }) {
+  const Icon = resolveMotionIcon(iconName);
+
   return (
-    <div className={cn("motion-art__path-marker", className)} style={viewBoxPointStyle(x, y, vbW, vbH)}>
-      {children ?? <MapPin className="motion-art__path-marker-icon" strokeWidth={1.75} />}
+    <div
+      className={cn("motion-art__path-marker", emphasize && "motion-art__path-marker--shop", className)}
+      style={viewBoxPointStyle(x, y, vbW, vbH)}
+    >
+      <Icon className={cn("motion-art__path-marker-icon", emphasize && "motion-art__path-marker-icon--shop")} strokeWidth={1.75} />
     </div>
   );
 }
@@ -38,31 +47,36 @@ function PathLocationMarker({
 export const MotionChapterArt = forwardRef<
   HTMLDivElement,
   {
-    chapter: ChapterId;
+    theme: MotionArtTheme;
+    startIcon?: string;
+    endIcon?: string;
+    instanceKey?: string;
     className?: string;
     style?: React.CSSProperties;
   }
->(function MotionChapterArt({ chapter, className, style }, ref) {
+>(function MotionChapterArt({ theme, startIcon = "map-pin", endIcon = "map-pin", instanceKey = "chapter", className, style }, ref) {
+  const key = instanceKey.replace(/[^a-zA-Z0-9_-]/g, "");
+
   return (
     <div
       ref={ref}
-      className={cn("motion-art", `motion-art--${chapter}`, className)}
+      className={cn("motion-art", `motion-art--${theme}`, className)}
       style={style}
       aria-hidden
     >
       <div className="motion-art__mesh" />
       <div className="motion-art__grid-lines" />
 
-      {chapter === "academy" && <AcademyArt />}
-      {chapter === "sports" && <SportsArt />}
-      {chapter === "tours" && <ToursArt />}
+      {theme === "academy" && <AcademyArt gradientId={`academy-arc-${key}`} />}
+      {theme === "sports" && <SportsArt startIcon={startIcon} endIcon={endIcon} gradientId={`sports-trail-${key}`} />}
+      {theme === "tours" && <ToursArt startIcon={startIcon} endIcon={endIcon} gradientId={`flight-trail-${key}`} />}
 
       <div className="motion-art__scan" />
     </div>
   );
 });
 
-function AcademyArt() {
+function AcademyArt({ gradientId }: { gradientId: string }) {
   const path = "M20 95 Q90 20 180 55";
   return (
     <>
@@ -83,14 +97,14 @@ function AcademyArt() {
         <path d={path} stroke="rgba(255,255,255,0.1)" strokeWidth="2" strokeDasharray="4 8" />
         <path
           d={path}
-          stroke="url(#academy-arc)"
+          stroke={`url(#${gradientId})`}
           strokeWidth="3"
           strokeLinecap="round"
           strokeDasharray="8 14"
           className="motion-art__trajectory-glow"
         />
         <defs>
-          <linearGradient id="academy-arc" x1="0" y1="0" x2="200" y2="0">
+          <linearGradient id={gradientId} x1="0" y1="0" x2="200" y2="0">
             <stop stopColor="rgba(251,146,60,0)" />
             <stop offset="0.4" stopColor="rgba(251,146,60,0.9)" />
             <stop offset="1" stopColor="rgba(253,186,116,0.2)" />
@@ -102,7 +116,7 @@ function AcademyArt() {
   );
 }
 
-function SportsArt() {
+function SportsArt({ startIcon, endIcon, gradientId }: { startIcon: string; endIcon: string; gradientId: string }) {
   const path = "M40 150 Q120 30 280 80";
   const vbW = 320;
   const vbH = 200;
@@ -125,7 +139,7 @@ function SportsArt() {
           <path d={path} stroke="rgba(255,255,255,0.12)" strokeWidth="2" strokeDasharray="6 10" />
           <path
             d={path}
-            stroke="url(#sports-trail)"
+            stroke={`url(#${gradientId})`}
             strokeWidth="4"
             strokeLinecap="round"
             className="motion-art__trajectory-glow"
@@ -133,7 +147,7 @@ function SportsArt() {
           <circle cx={arcStart.x} cy={arcStart.y} r="5" className="motion-art__path-dot motion-art__path-dot--sports" />
           <circle cx={arcEnd.x} cy={arcEnd.y} r="5" className="motion-art__path-dot motion-art__path-dot--sports motion-art__path-dot--end" />
           <defs>
-            <linearGradient id="sports-trail" x1="0" y1="0" x2="320" y2="0">
+            <linearGradient id={gradientId} x1="0" y1="0" x2="320" y2="0">
               <stop stopColor="rgba(74,222,128,0.15)" />
               <stop offset="0.5" stopColor="rgba(74,222,128,0.85)" />
               <stop offset="1" stopColor="rgba(255,255,255,0.35)" />
@@ -146,15 +160,16 @@ function SportsArt() {
           y={arcStart.y}
           vbW={vbW}
           vbH={vbH}
-          className="motion-art__path-marker--sports motion-art__path-marker--start motion-art__path-marker--shop"
-        >
-          <ShoppingBag className="motion-art__path-marker-icon motion-art__path-marker-icon--shop" strokeWidth={1.75} />
-        </PathLocationMarker>
+          iconName={startIcon}
+          emphasize
+          className="motion-art__path-marker--sports motion-art__path-marker--start"
+        />
         <PathLocationMarker
           x={arcEnd.x}
           y={arcEnd.y}
           vbW={vbW}
           vbH={vbH}
+          iconName={endIcon}
           className="motion-art__path-marker--sports motion-art__path-marker--end"
         />
       </div>
@@ -162,7 +177,7 @@ function SportsArt() {
   );
 }
 
-function ToursArt() {
+function ToursArt({ startIcon, endIcon, gradientId }: { startIcon: string; endIcon: string; gradientId: string }) {
   const path = "M0 120 C80 40 160 100 240 60 S360 20 400 50";
   const vbW = 400;
   const vbH = 160;
@@ -180,7 +195,7 @@ function ToursArt() {
           <path d={path} stroke="rgba(255,255,255,0.08)" strokeWidth="2" strokeDasharray="5 9" />
           <path
             d={path}
-            stroke="url(#flight-trail)"
+            stroke={`url(#${gradientId})`}
             strokeWidth="3"
             strokeLinecap="round"
             className="motion-art__flight-glow"
@@ -188,7 +203,7 @@ function ToursArt() {
           <circle cx={arcStart.x} cy={arcStart.y} r="5" className="motion-art__path-dot motion-art__path-dot--tours" />
           <circle cx={arcEnd.x} cy={arcEnd.y} r="5" className="motion-art__path-dot motion-art__path-dot--tours motion-art__path-dot--end" />
           <defs>
-            <linearGradient id="flight-trail" x1="0" y1="0" x2="400" y2="0">
+            <linearGradient id={gradientId} x1="0" y1="0" x2="400" y2="0">
               <stop stopColor="rgba(56,189,248,0.1)" />
               <stop offset="0.45" stopColor="rgba(125,211,252,0.9)" />
               <stop offset="1" stopColor="rgba(255,255,255,0.4)" />
@@ -201,6 +216,7 @@ function ToursArt() {
           y={arcStart.y}
           vbW={vbW}
           vbH={vbH}
+          iconName={startIcon}
           className="motion-art__path-marker--tours motion-art__path-marker--start"
         />
         <PathLocationMarker
@@ -208,6 +224,7 @@ function ToursArt() {
           y={arcEnd.y}
           vbW={vbW}
           vbH={vbH}
+          iconName={endIcon}
           className="motion-art__path-marker--tours motion-art__path-marker--end"
         />
       </div>

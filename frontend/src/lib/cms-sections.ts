@@ -52,6 +52,7 @@ export interface TestimonialItem {
 }
 
 export interface FormField {
+  id?: string;
   label: string;
   type: FormFieldType;
   required?: boolean;

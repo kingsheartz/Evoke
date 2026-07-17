@@ -21,12 +21,28 @@ export function fieldTypeNeedsOptions(type: FormFieldType): boolean {
   return type === "radio" || type === "checkbox" || type === "select";
 }
 
+export function fieldSpansFullWidth(type: FormFieldType): boolean {
+  return type === "textarea" || type === "radio" || type === "checkbox" || type === "select" || type === "file";
+}
+
 export function defaultFormField(type: FormFieldType): FormField {
-  const base: FormField = { label: "New field", type, required: false };
+  const base: FormField = {
+    id: `field-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    label: "New field",
+    type,
+    required: false,
+  };
   if (fieldTypeNeedsOptions(type)) {
     base.options = ["Option 1", "Option 2"];
   }
   return base;
+}
+
+export function normalizeFormFields(fields: FormField[]): FormField[] {
+  return fields.map((field, index) => ({
+    ...field,
+    id: field.id?.trim() || `field-${index}-${field.label.trim().toLowerCase().replace(/\s+/g, "-") || "untitled"}`,
+  }));
 }
 
 export function formFieldTypeLabel(type: FormFieldType): string {

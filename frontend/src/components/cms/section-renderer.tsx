@@ -5,6 +5,7 @@ import { CmsButtonsSection } from "@/components/cms/cms-buttons-section";
 import { CmsTableSection } from "@/components/cms/cms-table-section";
 import { CmsTabsSection } from "@/components/cms/cms-tabs-section";
 import { FormFieldPreview } from "@/components/cms/form-fields-editor";
+import { fieldSpansFullWidth } from "@/lib/form-field-types";
 import { GalleryView } from "@/components/cms/gallery-view";
 import { ItinerarySection } from "@/components/cms/itinerary-section";
 import { CatalogCmsSection } from "@/components/cms/catalog-section";
@@ -44,10 +45,12 @@ import { cn } from "@/lib/utils";
 function SectionShell({
   children,
   wide = false,
+  compact = false,
   className,
 }: {
   children: React.ReactNode;
   wide?: boolean;
+  compact?: boolean;
   className?: string;
 }) {
   return (
@@ -55,6 +58,7 @@ function SectionShell({
       className={cn(
         "rounded-2xl border border-app-border bg-app-surface/80 ring-1 ring-app-border",
         wide ? "p-6 md:p-8" : "p-8",
+        compact && "mx-auto w-full max-w-3xl",
         className,
       )}
     >
@@ -156,7 +160,7 @@ function TextSection({ content }: { content: TextContent }) {
   if (!heading && !body) return null;
 
   return (
-    <SectionShell>
+    <SectionShell compact>
       <SectionHeading text={heading} format={content.heading_format} />
       <SectionBody text={body} format={content.body_format} className={heading ? "mt-4" : undefined} />
     </SectionShell>
@@ -193,7 +197,7 @@ function FaqSection({ content }: { content: FaqContent }) {
   const style = content.style === "list" ? "list" : "details";
 
   return (
-    <SectionShell>
+    <SectionShell compact>
       <SectionHeading text={content.heading} format={content.heading_format} />
       {style === "list" ? (
         <ul className={cn("list-disc space-y-6 pl-5 marker:text-accent-soft", content.heading?.trim() ? "mt-6" : undefined)}>
@@ -415,11 +419,16 @@ function MapSection({ content }: { content: MapContent }) {
   if (!embedUrl && !address && !heading && !body) return null;
 
   return (
-    <SectionShell wide>
+    <SectionShell compact className="lg:max-w-5xl">
       <SectionHeading text={heading} format={content.heading_format} />
       <SectionBody text={body} format={content.body_format} className={heading ? "mt-3" : undefined} />
       {embedUrl && (
-        <div className={cn("overflow-hidden rounded-xl border border-app-border", heading || body ? "mt-6" : undefined)}>
+        <div
+          className={cn(
+            "mx-auto w-full max-w-4xl overflow-hidden rounded-xl border border-app-border",
+            heading || body ? "mt-6" : undefined,
+          )}
+        >
           <iframe src={embedUrl} title={heading || "Map"} className="aspect-[16/9] w-full" loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
         </div>
       )}
@@ -479,39 +488,50 @@ function FormsSection({ content }: { content: FormsContent }) {
   const heading = content.heading?.trim();
   const body = content.body?.trim();
   const email = content.contact_email?.trim();
+  const hasIntro = Boolean(heading || body);
 
-  if (fields.length === 0 && !heading && !body) return null;
+  if (fields.length === 0 && !hasIntro) return null;
 
   return (
-    <SectionShell>
-      <SectionHeading text={heading} format={content.heading_format} />
-      <SectionBody text={body} format={content.body_format} className={heading ? "mt-3" : undefined} />
+    <SectionShell compact>
+      {hasIntro && (
+        <div>
+          <SectionHeading text={heading} format={content.heading_format} />
+          <SectionBody text={body} format={content.body_format} className={heading ? "mt-3" : undefined} />
+        </div>
+      )}
+
       {fields.length > 0 && (
         <form
-          className={cn("space-y-4", heading || body ? "mt-6" : undefined)}
+          className={cn("w-full", hasIntro && "mt-8")}
           action={email ? `mailto:${email}` : undefined}
           method="get"
           encType="multipart/form-data"
         >
-          {fields.map((field, index) => (
-            <FormFieldPreview
-              key={`${field.label}-${index}`}
-              field={field}
-              name={field.label.toLowerCase().replace(/\s+/g, "_")}
-            />
-          ))}
-          <button
-            type="submit"
-            className="inline-flex h-11 items-center justify-center rounded-xl bg-accent px-6 text-sm font-medium text-white transition-colors hover:bg-accent-hover"
-          >
-            {content.submit_label?.trim() || "Send message"}
-          </button>
-          {email && (
-            <p className="flex items-center gap-2 text-xs text-app-muted">
-              <Mail className="h-3.5 w-3.5" />
-              Submissions open your email client to {email}
-            </p>
-          )}
+          <div className="grid gap-4 md:grid-cols-2">
+            {fields.map((field, index) => (
+              <FormFieldPreview
+                key={`${field.label}-${index}`}
+                field={field}
+                name={field.label.toLowerCase().replace(/\s+/g, "_")}
+                className={fieldSpansFullWidth(field.type) ? "md:col-span-2" : undefined}
+              />
+            ))}
+          </div>
+          <div className="mt-6">
+            <button
+              type="submit"
+              className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-accent px-8 text-sm font-medium text-white transition-colors hover:bg-accent-hover sm:w-auto"
+            >
+              {content.submit_label?.trim() || "Send message"}
+            </button>
+            {email && (
+              <p className="mt-3 flex items-center gap-2 text-xs text-app-muted">
+                <Mail className="h-3.5 w-3.5 shrink-0" />
+                Submissions open your email client to {email}
+              </p>
+            )}
+          </div>
         </form>
       )}
     </SectionShell>

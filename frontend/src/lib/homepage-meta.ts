@@ -20,6 +20,23 @@ export interface HomepageSection {
   sort_order: number;
 }
 
+export type MotionArtTheme = "academy" | "sports" | "tours";
+
+export interface MotionChapter {
+  id: string;
+  art_theme: MotionArtTheme;
+  label: string;
+  eyebrow: string;
+  title: string;
+  description: string;
+  href: string;
+  cta: string;
+  tags: string[];
+  start_icon: string;
+  end_icon: string;
+  sort_order?: number;
+}
+
 export interface HomepageMeta {
   stats?: {
     enabled?: boolean;
@@ -30,6 +47,9 @@ export interface HomepageMeta {
     eyebrow?: string;
     heading?: string;
     items?: HomepageFeature[];
+  };
+  motion?: {
+    chapters?: MotionChapter[];
   };
   sections?: HomepageSection[];
 }
@@ -50,6 +70,116 @@ export const defaultHomepageFeatures: HomepageFeature[] = [
   { icon: "award", title: "One Membership", description: "Unified accounts across all three divisions — seamless and simple." },
 ];
 
+export const MOTION_ART_THEMES = [
+  { value: "academy", label: "Academy art" },
+  { value: "sports", label: "Sports art" },
+  { value: "tours", label: "Tours art" },
+] as const;
+
+export const defaultMotionChapters: MotionChapter[] = [
+  {
+    id: "academy",
+    art_theme: "academy",
+    label: "Academy",
+    eyebrow: "EVOKE Academy",
+    title: "Train with purpose",
+    description: "Martial arts, yoga, swimming — structured programs led by coaches who care about progress.",
+    href: "/academy",
+    cta: "Browse courses",
+    tags: ["Karate", "Yoga", "Swimming"],
+    start_icon: "graduation-cap",
+    end_icon: "map-pin",
+    sort_order: 0,
+  },
+  {
+    id: "sports",
+    art_theme: "sports",
+    label: "Sports",
+    eyebrow: "EOKE Sports",
+    title: "Play at your peak",
+    description: "Gear, apparel, and equipment for athletes who show up — from training days to match day.",
+    href: "/shop",
+    cta: "Shop now",
+    tags: ["Equipment", "Apparel", "Accessories"],
+    start_icon: "shopping-bag",
+    end_icon: "map-pin",
+    sort_order: 1,
+  },
+  {
+    id: "tours",
+    art_theme: "tours",
+    label: "Tours",
+    eyebrow: "EVOKE Tours",
+    title: "Travel that moves you",
+    description: "Handpicked domestic and international journeys — adventure, culture, and memories in motion.",
+    href: "/tours",
+    cta: "View packages",
+    tags: ["Domestic", "International", "Adventure"],
+    start_icon: "map-pin",
+    end_icon: "map-pin",
+    sort_order: 2,
+  },
+];
+
+export function createMotionChapter(artTheme: MotionArtTheme = "academy"): MotionChapter {
+  return {
+    id: `chapter-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    art_theme: artTheme,
+    label: "",
+    eyebrow: "",
+    title: "",
+    description: "",
+    href: "/",
+    cta: "Learn more",
+    tags: [],
+    start_icon: "map-pin",
+    end_icon: "map-pin",
+  };
+}
+
+const VALID_MOTION_THEMES = new Set<MotionArtTheme>(["academy", "sports", "tours"]);
+
+function normalizeMotionChapter(raw: Partial<MotionChapter>, index: number): MotionChapter {
+  const defaults = defaultMotionChapters[index] ?? defaultMotionChapters[0];
+  const artTheme = VALID_MOTION_THEMES.has(raw.art_theme as MotionArtTheme)
+    ? (raw.art_theme as MotionArtTheme)
+    : defaults?.art_theme ?? "academy";
+
+  return {
+    id: typeof raw.id === "string" && raw.id.trim() ? raw.id.trim() : createMotionChapter(artTheme).id,
+    art_theme: artTheme,
+    label: raw.label?.trim() || defaults?.label || `Chapter ${index + 1}`,
+    eyebrow: raw.eyebrow?.trim() || defaults?.eyebrow || "",
+    title: raw.title?.trim() || defaults?.title || "",
+    description: raw.description?.trim() || defaults?.description || "",
+    href: raw.href?.trim() || defaults?.href || "/",
+    cta: raw.cta?.trim() || defaults?.cta || "Learn more",
+    tags: Array.isArray(raw.tags) ? raw.tags.filter((t) => typeof t === "string" && t.trim()).map((t) => t.trim()) : defaults?.tags ?? [],
+    start_icon: raw.start_icon?.trim() || defaults?.start_icon || "map-pin",
+    end_icon: raw.end_icon?.trim() || defaults?.end_icon || "map-pin",
+    sort_order: index,
+  };
+}
+
+export function normalizeMotionChapters(chapters: MotionChapter[] | undefined | null): MotionChapter[] {
+  if (!chapters?.length) return defaultMotionChapters;
+  return [...chapters]
+    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+    .map((chapter, index) => normalizeMotionChapter(chapter, index));
+}
+
+export function motionChapterIndexLabel(index: number): string {
+  return String(index + 1).padStart(2, "0");
+}
+
+export function motionChapterPanelClass(theme: MotionArtTheme): string {
+  return `motion-journey__panel--${theme}`;
+}
+
+export function motionChapterAccentClass(theme: MotionArtTheme): string {
+  return `motion-journey__accent--${theme}`;
+}
+
 export function defaultHomepageMeta(): HomepageMeta {
   return {
     stats: { enabled: true, items: defaultHomepageStats },
@@ -59,6 +189,7 @@ export function defaultHomepageMeta(): HomepageMeta {
       heading: "Built for excellence",
       items: defaultHomepageFeatures,
     },
+    motion: { chapters: defaultMotionChapters },
     sections: [],
   };
 }
@@ -69,6 +200,7 @@ export function parseHomepageMeta(meta: Record<string, unknown> | undefined | nu
 
   const stats = meta.stats as HomepageMeta["stats"] | undefined;
   const features = meta.features as HomepageMeta["features"] | undefined;
+  const motion = meta.motion as HomepageMeta["motion"] | undefined;
   const sections = meta.sections as HomepageSection[] | undefined;
 
   return {
@@ -81,6 +213,9 @@ export function parseHomepageMeta(meta: Record<string, unknown> | undefined | nu
       eyebrow: features?.eyebrow ?? defaults.features?.eyebrow,
       heading: features?.heading ?? defaults.features?.heading,
       items: features?.items?.length ? features.items : defaults.features?.items,
+    },
+    motion: {
+      chapters: normalizeMotionChapters(motion?.chapters as MotionChapter[] | undefined),
     },
     sections: Array.isArray(sections) ? sections : [],
   };
