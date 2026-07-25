@@ -13,7 +13,7 @@ class PlatformConfig
             'razorpay_enabled' => false,
             'payment_link_url' => null,
             'payment_link_label' => 'Pay online',
-            'contact_email' => 'evokeacademy@gmail.com',
+            'contact_email' => 'evokegroup2020@gmail.com ',
             'contact_whatsapp' => '917902264073',
         ];
 

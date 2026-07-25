@@ -98,7 +98,7 @@ class CmsDemoSeeder extends Seeder
                     'heading' => 'Get in touch',
                     'body' => 'Questions about academy, shop, or tours? Send us a message.',
                     'submit_label' => 'Send message',
-                    'contact_email' => 'evokeacademy@gmail.com',
+                    'contact_email' => 'evokegroup2020@gmail.com ',
                     'fields' => [
                         ['label' => 'Name', 'type' => 'text', 'required' => true],
                         ['label' => 'Email', 'type' => 'email', 'required' => true],

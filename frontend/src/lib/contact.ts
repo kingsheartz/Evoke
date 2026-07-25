@@ -1,5 +1,5 @@
 export const DEFAULT_WHATSAPP_E164 = "917902264073";
-export const DEFAULT_CONTACT_EMAIL = "evokeacademy@gmail.com";
+export const DEFAULT_CONTACT_EMAIL = "evokegroup2020@gmail.com ";
 
 export interface PublicContactConfig {
   email: string;
