@@ -21,6 +21,10 @@ services:
         value: Asia/Kolkata
       - key: RUN_MIGRATIONS
         value: true
+      - key: RUN_SEED
+        value: true
+      - key: SEED_DEMO
+        value: true
       - key: CACHE_STORE
         value: file
       - key: SESSION_DRIVER

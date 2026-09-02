@@ -32,4 +32,9 @@ if [ "${RUN_MIGRATIONS:-false}" = "true" ]; then
   php artisan migrate --force --no-interaction
 fi
 
+if [ "${RUN_SEED:-false}" = "true" ]; then
+  echo "Running database seeders..."
+  php artisan db:seed --force --no-interaction
+fi
+
 exec "$@"

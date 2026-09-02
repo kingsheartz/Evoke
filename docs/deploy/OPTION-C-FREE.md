@@ -206,13 +206,48 @@ CORS_ALLOWED_ORIGINS=https://your-app.vercel.app
 
 Redeploy the API service.
 
-### Step 5 — Seed demo data (optional)
+### Step 5 — Seed demo data
 
-Render **Shell** tab (or one-off job):
+Render **free tier has no Shell**. Use one of these:
+
+**A — Auto-seed on deploy (recommended)**
+
+In Render env vars (also in root `render.yaml`):
+
+```env
+RUN_MIGRATIONS=true
+RUN_SEED=true
+SEED_DEMO=true
+```
+
+Redeploy the API service. On container start, migrations + seeders run automatically.
+
+After the first successful deploy, set `RUN_SEED=false` so redeploys do not re-run seeders.
+
+**B — Seed from your PC against Neon**
+
+From the repo `backend/` folder with PHP/Composer installed:
 
 ```bash
+export DB_CONNECTION=pgsql
+export DB_HOST=ep-xxxx.neon.tech
+export DB_DATABASE=...
+export DB_USERNAME=...
+export DB_PASSWORD=...
+export APP_KEY=base64:...
 php artisan migrate --seed --force
 ```
+
+Or with Docker (no local PHP):
+
+```bash
+docker compose -f docker-compose.yml run --rm \
+  -e DB_CONNECTION=pgsql -e DB_HOST=... -e DB_DATABASE=... \
+  -e DB_USERNAME=... -e DB_PASSWORD=... -e APP_KEY=... \
+  backend php artisan migrate --seed --force
+```
+
+Use the **Neon connection string** from the Neon dashboard (external / pooled host is fine).
 
 ### Split-deploy limitations
 
