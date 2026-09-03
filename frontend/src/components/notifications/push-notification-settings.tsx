@@ -11,6 +11,7 @@ import {
   unregisterPushToken,
 } from "@/lib/firebase-messaging";
 import { useAuthStore } from "@/stores/app";
+import { apiClient, ApiError } from "@/lib/api";
 
 export function PushNotificationSettings() {
   const token = useAuthStore((state) => state.token);
@@ -77,6 +78,23 @@ export function PushNotificationSettings() {
     }
   };
 
+  const handleTest = async () => {
+    if (!token) {
+      return;
+    }
+
+    setBusy(true);
+    setMessage(null);
+    try {
+      const response = await apiClient.sendTestPushNotification(token);
+      setMessage(response.message);
+    } catch (error) {
+      setMessage(error instanceof ApiError ? error.message : "Could not send test notification.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-start gap-3">
@@ -104,9 +122,14 @@ export function PushNotificationSettings() {
             Enable notifications
           </Button>
         ) : (
-          <Button type="button" variant="outline" onClick={handleDisable} disabled={busy}>
-            Disable on this device
-          </Button>
+          <>
+            <Button type="button" variant="outline" onClick={handleDisable} disabled={busy}>
+              Disable on this device
+            </Button>
+            <Button type="button" variant="ghost" onClick={handleTest} disabled={busy}>
+              Send test notification
+            </Button>
+          </>
         )}
       </div>
 

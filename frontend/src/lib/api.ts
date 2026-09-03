@@ -860,6 +860,12 @@ export const apiClient = {
       token,
       body: JSON.stringify({ token: deviceToken }),
     }),
+
+  sendTestPushNotification: (token: string) =>
+    api<{ message: string; data?: { sent: number; failed: number } }>("/notifications/test-push", {
+      method: "POST",
+      token,
+    }),
 };
 
 export interface HomepageData {

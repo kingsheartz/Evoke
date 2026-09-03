@@ -8,6 +8,7 @@ Route::prefix('notifications')->middleware(['module.enabled:notifications', 'aut
     Route::get('/', [NotificationController::class, 'index']);
     Route::post('/device-tokens', [DeviceTokenController::class, 'store']);
     Route::delete('/device-tokens', [DeviceTokenController::class, 'destroy']);
+    Route::post('/test-push', [DeviceTokenController::class, 'sendTest']);
     Route::post('/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::post('/read-all', [NotificationController::class, 'markAllAsRead']);
 });
