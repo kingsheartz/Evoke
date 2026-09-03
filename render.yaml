@@ -53,3 +53,7 @@ services:
         sync: false
       - key: DB_PASSWORD
         sync: false
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+      - key: FIREBASE_CREDENTIALS_JSON
+        sync: false

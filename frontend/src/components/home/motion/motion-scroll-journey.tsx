@@ -153,17 +153,20 @@ export function MotionScrollJourney({ chapters: chaptersInput }: { chapters?: Mo
 
         <nav className="motion-journey__nav" aria-label="Chapter progress">
           {chapters.map((chapter, i) => (
-            <div key={chapter.id} className={cn("motion-journey__nav-item", motionChapterAccentClass(chapter.art_theme))}>
-              <span className="motion-journey__nav-index">{motionChapterIndexLabel(i)}</span>
-              <span className="motion-journey__nav-label">{chapter.label}</span>
-              <span className="motion-journey__nav-track">
-                <span
-                  ref={(el) => {
-                    dotFillRefs.current[i] = el;
-                  }}
-                  className="motion-journey__nav-fill"
-                />
-              </span>
+            <div key={chapter.id} className="motion-journey__nav-group">
+              {i > 0 ? <span className="motion-journey__nav-connector" aria-hidden /> : null}
+              <div className={cn("motion-journey__nav-item", motionChapterAccentClass(chapter.art_theme))}>
+                <span className="motion-journey__nav-index">{motionChapterIndexLabel(i)}</span>
+                <span className="motion-journey__nav-label">{chapter.label}</span>
+                <span className="motion-journey__nav-track">
+                  <span
+                    ref={(el) => {
+                      dotFillRefs.current[i] = el;
+                    }}
+                    className="motion-journey__nav-fill"
+                  />
+                </span>
+              </div>
             </div>
           ))}
         </nav>

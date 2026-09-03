@@ -12,15 +12,20 @@ class NotificationTemplateSeeder extends Seeder
         $templates = [
             ['event' => 'course.enrollment', 'channel' => 'in_app', 'subject' => null, 'body' => 'Your enrollment for {{course}} is {{status}}.'],
             ['event' => 'course.enrollment', 'channel' => 'email', 'subject' => 'Course Enrollment Update', 'body' => 'Your enrollment for {{course}} is {{status}}.'],
+            ['event' => 'course.enrollment', 'channel' => 'push', 'subject' => 'Enrollment update', 'body' => 'Your enrollment for {{course}} is {{status}}.'],
             ['event' => 'order.placed', 'channel' => 'in_app', 'subject' => null, 'body' => 'Order {{order_number}} placed. Total: ₹{{total}}'],
             ['event' => 'order.placed', 'channel' => 'email', 'subject' => 'Order Confirmation', 'body' => 'Thank you for your order {{order_number}}.'],
+            ['event' => 'order.placed', 'channel' => 'push', 'subject' => 'Order confirmed', 'body' => 'Order {{order_number}} placed. Total: ₹{{total}}'],
             ['event' => 'booking.confirmed', 'channel' => 'in_app', 'subject' => null, 'body' => 'Booking {{booking_number}} for {{package}} received.'],
             ['event' => 'booking.confirmed', 'channel' => 'email', 'subject' => 'Tour Booking Received', 'body' => 'Your booking {{booking_number}} is being processed.'],
+            ['event' => 'booking.confirmed', 'channel' => 'push', 'subject' => 'Tour booking received', 'body' => 'Booking {{booking_number}} for {{package}} is being processed.'],
             ['event' => 'tour.enquiry', 'channel' => 'email', 'subject' => 'New Tour Enquiry', 'body' => 'New enquiry from {{name}} ({{email}}).'],
             ['event' => 'payment.success', 'channel' => 'in_app', 'subject' => null, 'body' => 'Payment of ₹{{amount}} received successfully.'],
+            ['event' => 'payment.success', 'channel' => 'push', 'subject' => 'Payment received', 'body' => 'Payment of ₹{{amount}} received successfully.'],
             ['event' => 'attendance.alert', 'channel' => 'in_app', 'subject' => null, 'body' => 'Attendance marked for {{course}} on {{date}}.'],
             ['event' => 'fee.reminder', 'channel' => 'email', 'subject' => 'Fee Reminder', 'body' => 'Your fee of ₹{{amount}} for {{course}} is due.'],
             ['event' => 'tour.reminder', 'channel' => 'email', 'subject' => 'Upcoming Tour Reminder', 'body' => 'Your tour to {{destination}} starts on {{date}}.'],
+            ['event' => 'tour.reminder', 'channel' => 'push', 'subject' => 'Upcoming tour', 'body' => 'Your tour to {{destination}} starts on {{date}}.'],
         ];
 
         foreach ($templates as $template) {

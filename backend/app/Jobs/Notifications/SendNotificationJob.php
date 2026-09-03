@@ -3,7 +3,9 @@
 namespace App\Jobs\Notifications;
 
 use App\Mail\DomainNotificationMail;
+use App\Models\DeviceToken;
 use App\Models\User;
+use App\Support\FirebaseMessaging;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -116,6 +118,43 @@ class SendNotificationJob implements ShouldQueue
 
     private function sendPush(): void
     {
-        Log::info('Push notification queued via Firebase', ['event' => $this->event]);
+        if (! $this->userId) {
+            return;
+        }
+
+        $messaging = app(FirebaseMessaging::class);
+        if (! $messaging->configured()) {
+            Log::info('Push notification skipped — Firebase not configured', ['event' => $this->event]);
+
+            return;
+        }
+
+        $tokens = DeviceToken::query()
+            ->where('user_id', $this->userId)
+            ->pluck('token');
+
+        if ($tokens->isEmpty()) {
+            Log::info('Push notification skipped — no device tokens', ['event' => $this->event]);
+
+            return;
+        }
+
+        $title = $this->renderTemplate($this->templateSubject ?? 'Evoke');
+        $body = $this->renderTemplate($this->templateBody ?? 'You have a new notification.');
+        $data = [
+            'event' => $this->event,
+            ...collect($this->payload)
+                ->filter(fn ($value) => is_scalar($value))
+                ->mapWithKeys(fn ($value, $key) => [(string) $key => (string) $value])
+                ->all(),
+        ];
+
+        foreach ($tokens as $token) {
+            $result = $messaging->sendToDevice($token, $title, $body, $data);
+
+            if ($result === 'invalid_token') {
+                DeviceToken::query()->where('token', $token)->delete();
+            }
+        }
     }
 }

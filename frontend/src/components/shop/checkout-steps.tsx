@@ -37,7 +37,7 @@ export function CheckoutSteps({ current }: { current: 1 | 2 | 3 }) {
             {index < steps.length - 1 ? (
               <span
                 className={cn(
-                  "mx-1 hidden h-px flex-1 sm:block",
+                  "mx-0.5 h-px min-w-[0.75rem] flex-1",
                   done ? "bg-status-success/60" : "bg-app-border",
                 )}
                 aria-hidden

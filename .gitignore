@@ -10,6 +10,7 @@ vendor/
 deploy.env
 infra/aws/backend.runtime.env
 .env.production
+secrets/
 
 # Build
 .next/

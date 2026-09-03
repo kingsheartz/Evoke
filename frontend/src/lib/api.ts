@@ -843,6 +843,23 @@ export const apiClient = {
     api<{ data: AppNotification[] }>("/notifications", { token }),
   markNotificationRead: (token: string, id: string) =>
     api<{ message: string }>(`/notifications/${id}/read`, { method: "POST", token }),
+
+  registerDeviceToken: (
+    token: string,
+    payload: { token: string; platform: "web" | "android" | "ios" },
+  ) =>
+    api<{ message: string }>("/notifications/device-tokens", {
+      method: "POST",
+      token,
+      body: JSON.stringify(payload),
+    }),
+
+  deleteDeviceToken: (token: string, deviceToken: string) =>
+    api<{ message: string }>("/notifications/device-tokens", {
+      method: "DELETE",
+      token,
+      body: JSON.stringify({ token: deviceToken }),
+    }),
 };
 
 export interface HomepageData {

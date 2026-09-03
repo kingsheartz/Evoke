@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 class NotificationDispatcher
 {
     /** @param array<string> $channels */
-    public function dispatch(string $event, ?User $user, array $payload, array $channels = ['in_app', 'email']): void
+    public function dispatch(string $event, ?User $user, array $payload, array $channels = ['in_app', 'email', 'push']): void
     {
         foreach ($channels as $channel) {
             $template = DB::table('notification_templates')
