@@ -147,7 +147,16 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       const variant = input.variant ?? "info";
       const duration = input.duration ?? prefs.defaultDurationMs ?? VARIANT_STYLES[variant].duration;
       const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-      setItems((prev) => [...prev, { id, message: input.message, variant, duration, remainingMs: duration }]);
+      setItems((prev) => {
+        const duplicate = prev.some(
+          (item) => item.message === input.message && item.variant === variant && item.remainingMs > duration - 1500,
+        );
+        if (duplicate) {
+          return prev;
+        }
+
+        return [...prev, { id, message: input.message, variant, duration, remainingMs: duration }];
+      });
 
       if (!prefs.showProgressBar) {
         window.setTimeout(() => dismiss(id), duration);

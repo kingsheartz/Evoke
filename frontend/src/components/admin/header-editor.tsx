@@ -341,14 +341,14 @@ export function HeaderEditor({
       </div>
 
       <div className="space-y-4">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
+        <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
+          <div className="min-w-0">
             <h3 className="text-sm font-semibold text-app-text">Header components</h3>
             <p className="text-xs text-app-muted">
               Add common header elements — search, CTAs, contact links, social icons, and more.
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex max-w-full flex-wrap gap-2">
             {HEADER_COMPONENT_CATALOG.map((item) => {
               const previewIcon = resolveComponentIcon(createHeaderComponent(item.type));
               return (

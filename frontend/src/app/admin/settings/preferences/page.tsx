@@ -11,6 +11,11 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsPanel, TabsTrigger } from "@/components/ui/tabs";
 import { useUnsavedChangesWarning } from "@/hooks/use-unsaved-changes";
 import { clearPreferencesPreviewState, usePreferencesPreview } from "@/hooks/use-preferences-preview";
+import {
+  clearPreferencesDraft,
+  readPreferencesDraft,
+  savePreferencesDraft,
+} from "@/lib/admin-preferences-draft";
 import { apiClient } from "@/lib/api";
 import { useNotifications } from "@/lib/notifications";
 import {
@@ -112,6 +117,17 @@ export default function PreferencesSettingsPage() {
   const [baseline, setBaseline] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [restoredDraft, setRestoredDraft] = useState(false);
+  const draftRef = useRef<PreferencesDraft | null>(null);
+  const baselineRef = useRef("");
+
+  useEffect(() => {
+    draftRef.current = draft;
+  }, [draft]);
+
+  useEffect(() => {
+    baselineRef.current = baseline;
+  }, [baseline]);
 
   useEffect(() => {
     if (!token) return;
@@ -119,13 +135,36 @@ export default function PreferencesSettingsPage() {
     apiClient
       .getAdminPreferences(token)
       .then((r) => {
-        const next = buildDraft(r.data);
-        setDraft(next);
-        setBaseline(JSON.stringify(next));
+        const fromServer = buildDraft(r.data);
+        const savedDraft = readPreferencesDraft<PreferencesDraft>();
+        const nextDraft = savedDraft ?? fromServer;
+
+        setDraft(nextDraft);
+        setBaseline(JSON.stringify(fromServer));
+        setRestoredDraft(Boolean(savedDraft));
+        mergeFromServer(fromServer);
+        applyThemePreferences(savedDraft?.theme ?? fromServer.theme);
       })
       .catch(() => errorRef.current("Could not load preferences."))
       .finally(() => setLoading(false));
-  }, [token]);
+  }, [token, mergeFromServer]);
+
+  useEffect(() => {
+    return () => {
+      const currentDraft = draftRef.current;
+      const currentBaseline = baselineRef.current;
+      if (!currentDraft || !currentBaseline) {
+        return;
+      }
+
+      if (JSON.stringify(currentDraft) !== currentBaseline) {
+        savePreferencesDraft(currentDraft);
+        return;
+      }
+
+      clearPreferencesDraft();
+    };
+  }, []);
 
   const isDirty = useMemo(
     () => (draft ? JSON.stringify(draft) !== baseline : false),
@@ -152,6 +191,8 @@ export default function PreferencesSettingsPage() {
       mergeFromServer(draft);
       applyThemePreferences(draft.theme);
       clearPreferencesPreviewState();
+      clearPreferencesDraft();
+      setRestoredDraft(false);
       setBaseline(JSON.stringify(draft));
       success("Preferences saved.");
     } catch (e) {
@@ -170,13 +211,15 @@ export default function PreferencesSettingsPage() {
   }
 
   return (
-    <div className="app-page">
+    <div className="app-page min-w-0 max-w-full">
       <PageHeader
         title="Admin Preferences"
         description={
-          isDirty
-            ? "Previewing unsaved changes — save to keep them, or leave to revert."
-            : "Theme, notifications, keyboard shortcuts, and intro tour."
+          restoredDraft
+            ? "Restored unsaved changes from your last visit — save to keep them."
+            : isDirty
+              ? "Previewing unsaved changes — save to keep them, or leave to revert."
+              : "Theme, notifications, keyboard shortcuts, and intro tour."
         }
         actions={
           <ActionButton
@@ -192,7 +235,7 @@ export default function PreferencesSettingsPage() {
       />
 
       <Tabs defaultValue="theme">
-        <TabsList>
+        <TabsList className="max-w-full overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <TabsTrigger value="theme">
             <Palette className="h-4 w-4" />
             Theme

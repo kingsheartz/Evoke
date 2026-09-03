@@ -52,16 +52,16 @@ function PreviewBrand({ form }: { form: BrandConfig }) {
   const brand = useMemo(() => mergeBrand(DEFAULT_BRAND, overrideFromFormState(form)), [form]);
 
   return (
-    <div className="rounded-xl border border-app-border bg-app-surface-muted/30 p-6">
+    <div className="min-w-0 max-w-full overflow-x-auto rounded-xl border border-app-border bg-app-surface-muted/30 p-4 sm:p-6">
       <p className="mb-4 text-xs font-medium uppercase tracking-wider text-app-muted">Live preview</p>
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="space-y-3">
+      <div className="grid min-w-0 gap-6 lg:grid-cols-2">
+        <div className="min-w-0 space-y-3">
           <p className="text-xs text-app-muted">Site header (mobile)</p>
-          <SiteHeaderPreview brand={brand} variant="mobile" />
+          <SiteHeaderPreview brand={brand} variant="mobile" className="mx-auto max-w-full" />
         </div>
-        <div className="space-y-3">
+        <div className="hidden min-w-0 space-y-3 lg:block">
           <p className="text-xs text-app-muted">Site header (desktop)</p>
-          <SiteHeaderPreview brand={brand} variant="desktop" />
+          <SiteHeaderPreview brand={brand} variant="desktop" className="max-w-full" />
         </div>
         <div className="space-y-3">
           <p className="text-xs text-app-muted">Footer</p>
@@ -144,7 +144,7 @@ export default function BrandSettingsPage() {
 
   if (!ALLOW_RUNTIME_BRAND_EDIT) {
     return (
-      <div className="app-page">
+      <div className="app-page min-w-0 max-w-full">
         <PageHeader
           title="Brand & company"
           description="Brand is locked to the build-time configuration for this deployment."
@@ -163,7 +163,7 @@ export default function BrandSettingsPage() {
   }
 
   return (
-    <div className="app-page">
+    <div className="app-page min-w-0 max-w-full">
       <PageHeader
         title="Brand & company"
         description="Edit the live brand for this deployment. Values from company.config.json are pre-filled and can be changed here without rebuilding."

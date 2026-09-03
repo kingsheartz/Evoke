@@ -136,7 +136,7 @@ export async function unregisterPushToken(authToken: string): Promise<void> {
 }
 
 export async function subscribeForegroundMessages(
-  onPayload: (title: string, body: string) => void,
+  onPayload: (title: string, body: string, data: Record<string, string>) => void,
 ): Promise<(() => void) | null> {
   const messaging = await getMessagingInstance();
   if (!messaging) {
@@ -144,7 +144,12 @@ export async function subscribeForegroundMessages(
   }
 
   return onMessage(messaging, (payload) => {
-    onPayload(payload.notification?.title ?? "Evoke", payload.notification?.body ?? "");
+    const data = payload.data ?? {};
+    onPayload(
+      payload.notification?.title ?? "Evoke",
+      payload.notification?.body ?? "",
+      data as Record<string, string>,
+    );
   });
 }
 

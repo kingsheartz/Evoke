@@ -27,7 +27,11 @@ export function PushNotificationProvider({ children }: { children: React.ReactNo
           return;
         }
 
-        unsubscribe = await subscribeForegroundMessages((title, body) => {
+        unsubscribe = await subscribeForegroundMessages((title, body, data) => {
+          if (data?.event === "test.push") {
+            return;
+          }
+
           info(body ? `${title}: ${body}` : title);
         });
       } catch {

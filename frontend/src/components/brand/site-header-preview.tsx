@@ -20,9 +20,9 @@ export function SiteHeaderPreview({
   const isMobile = variant === "mobile";
 
   return (
-    <div className={cn("overflow-hidden rounded-lg border border-app-border", className)}>
+    <div className={cn("min-w-0 max-w-full overflow-x-auto rounded-lg border border-app-border", className)}>
       {/* Dark hero backdrop — header uses on-hero styles (light text) */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-[#0c1524] to-sky-950">
+      <div className="relative min-w-0 overflow-hidden bg-gradient-to-br from-slate-950 via-[#0c1524] to-sky-950">
         <div
           className="pointer-events-none absolute inset-0 opacity-40"
           style={{
@@ -37,11 +37,13 @@ export function SiteHeaderPreview({
           <div className="site-header-bar site-header-bar--on-hero relative">
             <div
               className={cn(
-                "relative z-[1] mx-auto flex h-[4.5rem] items-center justify-between gap-3 px-4",
-                isMobile ? "w-full max-w-[360px]" : "w-full max-w-6xl",
+                "relative z-[1] mx-auto flex h-[4.5rem] min-w-0 items-center justify-between gap-2 px-4 sm:gap-3",
+                isMobile ? "w-full max-w-[360px]" : "min-w-[720px] w-full max-w-6xl",
               )}
             >
-              <SiteHeaderBrand brand={brand} href={null} elevated preview={variant} />
+              <div className="min-w-0 shrink">
+                <SiteHeaderBrand brand={brand} href={null} elevated preview={variant} />
+              </div>
 
               {!isMobile ? (
                 <nav className="flex flex-1 items-center justify-center gap-1">
@@ -59,7 +61,7 @@ export function SiteHeaderPreview({
                 </nav>
               ) : null}
 
-              <div className="flex shrink-0 items-center gap-2">
+              <div className="flex min-w-0 shrink-0 items-center gap-2">
                 <SiteHeaderExtras components={brand.header.components} preview={variant} />
                 {!isMobile ? (
                   <>
@@ -88,7 +90,7 @@ export function SiteHeaderPreview({
         <div
           className={cn(
             "pointer-events-none relative border-t border-white/5 px-4 pb-8 pt-6 text-white/50",
-            isMobile ? "max-w-[360px]" : "max-w-6xl mx-auto",
+            isMobile ? "mx-auto w-full max-w-[360px]" : "mx-auto w-full min-w-[720px] max-w-6xl",
           )}
         >
           <p className="text-[10px] uppercase tracking-[0.2em]">Page content below header</p>
