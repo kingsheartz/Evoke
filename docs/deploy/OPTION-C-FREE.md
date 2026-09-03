@@ -249,6 +249,8 @@ docker compose -f docker-compose.yml run --rm \
 
 Use the **Neon connection string** from the Neon dashboard (external / pooled host is fine).
 
+**Step-by-step split guides:** [docs/deploy/split/README.md](../../docs/deploy/split/README.md)
+
 ### Split-deploy limitations
 
 - Render free **spins down** after ~15 minutes idle — first request is slow.

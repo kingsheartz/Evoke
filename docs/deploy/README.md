@@ -5,6 +5,7 @@ Step-by-step guides to go live with Evoke.
 | Path | Guide | Best for |
 |------|-------|----------|
 | **Option C** | [OPTION-C-FREE.md](OPTION-C-FREE.md) | **Free testing** — Oracle Cloud, Vercel + Render |
+| **Split stack (step-by-step)** | [split/README.md](split/README.md) | **Neon → Render → Vercel → Firebase → Cloudflare** (separate docs) |
 | **Option A** | [OPTION-A-VPS.md](OPTION-A-VPS.md) | Single VPS (~₹450–750/mo), Hostinger / Hetzner |
 | **Option G** | [OPTION-G-AWS.md](OPTION-G-AWS.md) | AWS free tier, ECR + GitHub Actions |
 
