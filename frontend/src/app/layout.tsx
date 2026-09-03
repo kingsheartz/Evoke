@@ -34,6 +34,11 @@ export const metadata: Metadata = {
     locale: "en_IN",
     siteName: DEFAULT_BRAND.name,
   },
+  appleWebApp: {
+    capable: true,
+    title: DEFAULT_BRAND.name,
+    statusBarStyle: "black-translucent",
+  },
 };
 
 export default function RootLayout({

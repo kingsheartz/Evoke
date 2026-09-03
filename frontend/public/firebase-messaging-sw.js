@@ -19,7 +19,7 @@ messaging.onBackgroundMessage((payload) => {
   const title = payload.notification?.title ?? "Evoke";
   const options = {
     body: payload.notification?.body ?? "",
-    icon: "/icon.png",
+    icon: "/icon-192.png",
     data: payload.data ?? {},
   };
 
@@ -28,6 +28,6 @@ messaging.onBackgroundMessage((payload) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const targetUrl = event.notification.data?.url ?? "/account";
+  const targetUrl = event.notification.data?.url ?? "/account/notifications";
   event.waitUntil(clients.openWindow(targetUrl));
 });
