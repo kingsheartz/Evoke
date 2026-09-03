@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1\Academy;
 
+use App\Application\Notifications\Services\AdminUserNotifier;
 use App\Http\Controllers\Controller;
 use App\Models\Academy\Attendance;
 use App\Models\Academy\Enrollment;
@@ -10,6 +11,10 @@ use Illuminate\Http\Request;
 
 class AttendanceController extends Controller
 {
+    public function __construct(
+        private readonly AdminUserNotifier $adminUserNotifier,
+    ) {}
+
     public function adminIndex(Request $request): JsonResponse
     {
         $records = Attendance::query()
@@ -44,7 +49,10 @@ class AttendanceController extends Controller
             ],
         );
 
-        return response()->json(['data' => $record->load(['enrollment.user', 'enrollment.batch.course'])], 201);
+        $record->load(['enrollment.user', 'enrollment.batch.course']);
+        $this->adminUserNotifier->attendanceMarked($record);
+
+        return response()->json(['data' => $record], 201);
     }
 
     public function enrollmentsForMarking(Request $request): JsonResponse

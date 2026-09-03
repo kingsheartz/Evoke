@@ -5,6 +5,7 @@ namespace App\Listeners\Notifications;
 use App\Application\Notifications\Services\NotificationDispatcher;
 use App\Events\Academy\EnrollmentCreated;
 use App\Events\Shop\OrderPlaced;
+use App\Events\Shop\PaymentSucceeded;
 use App\Events\Tours\BookingCreated;
 use App\Events\Tours\EnquiryReceived;
 

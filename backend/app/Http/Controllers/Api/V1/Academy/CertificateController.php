@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1\Academy;
 
+use App\Application\Notifications\Services\AdminUserNotifier;
 use App\Http\Controllers\Controller;
 use App\Models\Academy\Certificate;
 use App\Support\MediaStorage;
@@ -12,6 +13,10 @@ use Illuminate\Support\Str;
 
 class CertificateController extends Controller
 {
+    public function __construct(
+        private readonly AdminUserNotifier $adminUserNotifier,
+    ) {}
+
     public function adminIndex(Request $request): JsonResponse
     {
         $certificates = Certificate::query()
@@ -39,7 +44,10 @@ class CertificateController extends Controller
             'issued_at' => now(),
         ]);
 
-        return response()->json(['data' => $certificate->load(['enrollment.user', 'enrollment.batch.course'])], 201);
+        $certificate->load(['enrollment.user', 'enrollment.batch.course']);
+        $this->adminUserNotifier->certificateIssued($certificate);
+
+        return response()->json(['data' => $certificate], 201);
     }
 
     public function upload(Request $request): JsonResponse

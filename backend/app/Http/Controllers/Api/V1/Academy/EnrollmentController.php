@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1\Academy;
 
 use App\Application\Academy\Services\EnrollmentService;
+use App\Application\Notifications\Services\AdminUserNotifier;
 use App\Events\Academy\EnrollmentCreated;
 use App\Http\Controllers\Controller;
 use App\Models\Academy\Enrollment;
@@ -14,6 +15,7 @@ class EnrollmentController extends Controller
 {
     public function __construct(
         private readonly EnrollmentService $enrollmentService,
+        private readonly AdminUserNotifier $adminUserNotifier,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -56,7 +58,12 @@ class EnrollmentController extends Controller
             'amount_paid' => 'sometimes|numeric|min:0',
         ]);
 
+        $previousStatus = $enrollment->status;
         $enrollment = $this->enrollmentService->update($enrollment, $validated);
+
+        if (array_key_exists('status', $validated)) {
+            $this->adminUserNotifier->enrollmentStatusUpdated($enrollment, $previousStatus);
+        }
 
         return response()->json(['data' => $enrollment]);
     }

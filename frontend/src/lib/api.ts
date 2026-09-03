@@ -839,10 +839,12 @@ export const apiClient = {
       body: JSON.stringify(payload),
     }),
 
-  getNotifications: (token: string) =>
-    api<{ data: AppNotification[] }>("/notifications", { token }),
+  getNotifications: (token: string, page = 1) =>
+    api<Paginated<AppNotification>>(`/notifications?per_page=20&page=${page}`, { token }),
   markNotificationRead: (token: string, id: string) =>
     api<{ message: string }>(`/notifications/${id}/read`, { method: "POST", token }),
+  markAllNotificationsRead: (token: string) =>
+    api<{ message: string }>("/notifications/read-all", { method: "POST", token }),
 
   registerDeviceToken: (
     token: string,

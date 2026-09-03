@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Award,
+  Bell,
   GraduationCap,
   LayoutDashboard,
   Package,
@@ -22,6 +23,7 @@ export const accountNavItems = [
   { href: "/account/bookings", label: "Tour bookings", icon: Plane },
   { href: "/account/enrollments", label: "Enrollments", icon: GraduationCap },
   { href: "/account/certificates", label: "Certificates", icon: Award },
+  { href: "/account/notifications", label: "Notifications", icon: Bell },
   { href: "/account/settings", label: "Theme & display", icon: Palette },
 ] as const;
 

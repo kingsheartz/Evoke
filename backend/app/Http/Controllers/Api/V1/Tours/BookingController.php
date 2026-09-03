@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1\Tours;
 
+use App\Application\Notifications\Services\AdminUserNotifier;
 use App\Application\Tours\Services\BookingService;
 use App\Events\Tours\BookingCreated;
 use App\Http\Controllers\Controller;
@@ -15,6 +16,7 @@ class BookingController extends Controller
 {
     public function __construct(
         private readonly BookingService $bookingService,
+        private readonly AdminUserNotifier $adminUserNotifier,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -68,7 +70,12 @@ class BookingController extends Controller
             'payment_reference' => 'nullable|string|max:255',
         ]);
 
+        $previousStatus = $booking->status;
         $booking = $this->bookingService->update($booking, $validated);
+
+        if (array_key_exists('status', $validated)) {
+            $this->adminUserNotifier->bookingStatusUpdated($booking, $previousStatus);
+        }
 
         return response()->json(['data' => $booking]);
     }

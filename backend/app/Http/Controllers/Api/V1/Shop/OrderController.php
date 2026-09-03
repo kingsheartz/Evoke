@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1\Shop;
 
+use App\Application\Notifications\Services\AdminUserNotifier;
 use App\Application\Shop\Services\OrderService;
 use App\Events\Shop\OrderPlaced;
 use App\Http\Controllers\Controller;
@@ -13,6 +14,7 @@ class OrderController extends Controller
 {
     public function __construct(
         private readonly OrderService $orderService,
+        private readonly AdminUserNotifier $adminUserNotifier,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -72,8 +74,14 @@ class OrderController extends Controller
             'tracking_number' => 'nullable|string|max:255',
         ]);
 
+        $previousStatus = $order->status;
         $order->update($validated);
+        $order = $order->fresh(['user', 'items']);
 
-        return response()->json(['data' => $order->fresh(['user', 'items'])]);
+        if (array_key_exists('status', $validated)) {
+            $this->adminUserNotifier->orderStatusUpdated($order, $previousStatus);
+        }
+
+        return response()->json(['data' => $order]);
     }
 }
