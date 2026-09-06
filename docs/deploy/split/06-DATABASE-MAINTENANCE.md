@@ -32,6 +32,8 @@ docker run --rm `
   -e DB_USERNAME=neondb_owner `
   -e DB_PASSWORD=YOUR_NEON_PASSWORD `
   -e APP_KEY=base64:YOUR_RENDER_APP_KEY `
+  -e CACHE_STORE=file `
+  -e SESSION_DRIVER=file `
   evoke-seed `
   php artisan migrate --force
 ```
@@ -55,8 +57,55 @@ docker run --rm `
   -e DB_USERNAME=neondb_owner `
   -e DB_PASSWORD=YOUR_NEON_PASSWORD `
   -e APP_KEY=base64:YOUR_RENDER_APP_KEY `
+  -e CACHE_STORE=file `
+  -e SESSION_DRIVER=file `
   evoke-seed `
   php artisan db:seed --class=NotificationTemplateSeeder --force
+```
+
+---
+
+## Reseed demo data (keep users)
+
+Clears catalog, CMS, orders, and platform settings, then re-runs demo seeders. **Does not delete** `users`, roles, API tokens, device tokens, or branches.
+
+From repo root (PowerShell), against **Neon**:
+
+```powershell
+docker run --rm -it `
+  -e DB_CONNECTION=pgsql `
+  -e DB_HOST=ep-xxxx.region.aws.neon.tech `
+  -e DB_PORT=5432 `
+  -e DB_DATABASE=evoke-db `
+  -e DB_USERNAME=neondb_owner `
+  -e DB_PASSWORD=YOUR_NEON_PASSWORD `
+  -e APP_KEY=base64:YOUR_RENDER_APP_KEY `
+  -e CACHE_STORE=file `
+  -e SESSION_DRIVER=file `
+  evoke-seed `
+  php artisan db:reseed --force
+```
+
+Do **not** pass `--class` to `db:reseed` — that option belongs to `db:seed` only.
+
+To refresh notification templates without a full reseed:
+
+```powershell
+  php artisan db:seed --class=NotificationTemplateSeeder --force
+```
+
+Fix `APP_KEY` — use a single `base64:` prefix (copy the exact value from Render, not `base64:base64:...`).
+
+Local Docker backend:
+
+```powershell
+docker compose exec backend php artisan db:reseed --force
+```
+
+To wipe **everything** including users (same as fresh install):
+
+```powershell
+php artisan db:reseed --fresh --force
 ```
 
 ---
@@ -72,6 +121,8 @@ docker run --rm `
   -e DB_USERNAME=... `
   -e DB_PASSWORD=... `
   -e APP_KEY=base64:... `
+  -e CACHE_STORE=file `
+  -e SESSION_DRIVER=file `
   -e SEED_DEMO=true `
   evoke-seed `
   php artisan db:seed --force
@@ -116,6 +167,7 @@ SELECT COUNT(*) FROM device_tokens;
 | `could not find driver` | Use `evoke-seed` image, not `composer:latest` |
 | Connection refused | Check Neon host, firewall, password |
 | `APP_KEY` errors | Copy exact key from Render env |
+| `relation "cache" does not exist` | Add `-e CACHE_STORE=file` (matches Render) or rebuild image after pulling latest seed fix |
 
 ---
 

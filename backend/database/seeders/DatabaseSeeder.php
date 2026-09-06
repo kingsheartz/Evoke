@@ -3,28 +3,19 @@
 namespace Database\Seeders;
 
 use App\Models\Branch;
-use App\Models\BusinessModule;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        $this->call([
-            RolePermissionSeeder::class,
-            BusinessModuleSeeder::class,
-            HomepageSeeder::class,
-            DivisionPageSeeder::class,
-            PlatformSettingsSeeder::class,
-            NotificationTemplateSeeder::class,
-            AcademyCategorySeeder::class,
-            ShopCategorySeeder::class,
-            DemoWebsiteSeeder::class,
-        ]);
+        $this->call(DemoDataSeeder::class);
+
+        if (filter_var(env('SEED_SKIP_ADMIN', false), FILTER_VALIDATE_BOOLEAN)) {
+            return;
+        }
 
         $branch = Branch::firstOrCreate(
             ['slug' => 'evoke-hq'],

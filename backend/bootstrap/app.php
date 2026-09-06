@@ -12,6 +12,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
         apiPrefix: 'api/v1',
     )
+    ->withCommands([
+        \App\Console\Commands\ReseedDatabaseCommand::class,
+    ])
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
