@@ -16,14 +16,16 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
-  const title = payload.notification?.title ?? "Evoke";
-  const options = {
-    body: payload.notification?.body ?? "",
-    icon: "/icon-192.png",
-    data: payload.data ?? {},
-  };
+  const data = payload.data ?? {};
+  const title = data.title ?? payload.notification?.title ?? "Evoke";
+  const body = data.body ?? payload.notification?.body ?? "";
 
-  self.registration.showNotification(title, options);
+  // Data-only FCM payloads — show once here (avoids duplicate with browser auto-display).
+  self.registration.showNotification(title, {
+    body,
+    icon: "/icon-192.png",
+    data: { ...data, url: data.url ?? "/account/notifications" },
+  });
 });
 
 self.addEventListener("notificationclick", (event) => {

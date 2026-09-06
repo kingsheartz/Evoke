@@ -38,9 +38,9 @@ class SendDomainNotifications
             'total' => $order->total,
         ];
 
-        // Razorpay: email + inbox on place; push on payment.success (one per channel).
+        // Razorpay: one notification per channel — inbox + email + push on place; inbox + push on payment.
         if ($this->razorpayCheckoutPending($order)) {
-            $this->dispatcher->dispatch('order.placed', $order->user, $payload, channels: ['in_app', 'email']);
+            $this->dispatcher->dispatch('order.placed', $order->user, $payload, channels: ['in_app', 'email', 'push']);
 
             return;
         }

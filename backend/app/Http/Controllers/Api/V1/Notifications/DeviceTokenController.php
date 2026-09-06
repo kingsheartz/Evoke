@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1\Notifications;
 
 use App\Http\Controllers\Controller;
 use App\Models\DeviceToken;
+use App\Support\DeviceTokenSelection;
 use App\Support\FirebaseMessaging;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -58,9 +59,7 @@ class DeviceTokenController extends Controller
             return response()->json(['message' => 'Firebase is not configured on the server.'], 503);
         }
 
-        $tokens = DeviceToken::query()
-            ->where('user_id', $request->user()->id)
-            ->pluck('token');
+        $tokens = DeviceTokenSelection::latestPerPlatform($request->user()->id);
 
         if ($tokens->isEmpty()) {
             return response()->json(['message' => 'No device tokens registered. Enable notifications first.'], 422);

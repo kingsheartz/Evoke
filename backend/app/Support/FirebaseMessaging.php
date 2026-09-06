@@ -102,18 +102,11 @@ class FirebaseMessaging
         $payload = [
             'message' => [
                 'token' => $deviceToken,
-                'notification' => [
+                'data' => collect([
                     'title' => $title,
                     'body' => $body,
-                ],
-                'data' => collect($data)
-                    ->mapWithKeys(fn ($value, $key) => [(string) $key => (string) $value])
-                    ->all(),
-                'webpush' => [
-                    'fcm_options' => [
-                        'link' => (string) config('firebase.web_link'),
-                    ],
-                ],
+                    ...$data,
+                ])->mapWithKeys(fn ($value, $key) => [(string) $key => (string) $value])->all(),
             ],
         ];
 

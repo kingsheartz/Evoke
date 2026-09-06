@@ -144,11 +144,11 @@ export async function subscribeForegroundMessages(
   }
 
   return onMessage(messaging, (payload) => {
-    const data = payload.data ?? {};
+    const data = (payload.data ?? {}) as Record<string, string>;
     onPayload(
-      payload.notification?.title ?? "Evoke",
-      payload.notification?.body ?? "",
-      data as Record<string, string>,
+      data.title ?? payload.notification?.title ?? "Evoke",
+      data.body ?? payload.notification?.body ?? "",
+      data,
     );
   });
 }

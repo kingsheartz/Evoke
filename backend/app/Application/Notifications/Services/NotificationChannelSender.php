@@ -5,6 +5,7 @@ namespace App\Application\Notifications\Services;
 use App\Mail\DomainNotificationMail;
 use App\Models\DeviceToken;
 use App\Models\User;
+use App\Support\DeviceTokenSelection;
 use App\Support\FirebaseMessaging;
 use App\Support\MailDelivery;
 use Illuminate\Support\Facades\Log;
@@ -99,12 +100,7 @@ class NotificationChannelSender
             return NotificationDeliveryResult::skipped('Firebase not configured on server');
         }
 
-        $tokens = DeviceToken::query()
-            ->where('user_id', $userId)
-            ->orderByDesc('last_used_at')
-            ->get()
-            ->unique('platform')
-            ->pluck('token');
+        $tokens = DeviceTokenSelection::latestPerPlatform($userId);
 
         if ($tokens->isEmpty()) {
             return NotificationDeliveryResult::skipped('No device tokens registered for user');

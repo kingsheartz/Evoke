@@ -60,6 +60,19 @@ class PaymentController extends Controller
             abort(422, 'Payment verification failed.');
         }
 
+        $existing = match ($validated['payable_type']) {
+            'shop_order' => Order::where('user_id', $request->user()->id)->findOrFail($validated['payable_id']),
+            'tour_booking' => Booking::where('user_id', $request->user()->id)->findOrFail($validated['payable_id']),
+            'academy_enrollment' => Enrollment::where('user_id', $request->user()->id)->findOrFail($validated['payable_id']),
+        };
+
+        if ($existing->payment_status === 'paid') {
+            return response()->json([
+                'data' => $existing,
+                'message' => 'Payment already recorded.',
+            ]);
+        }
+
         $record = $this->markPaid(
             $request->user()->id,
             $validated['payable_type'],
