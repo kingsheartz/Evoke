@@ -3,12 +3,14 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
+import { PhoneInput, optionalPhoneSchema } from "@/components/ui/phone-input";
 import { Label } from "@/components/ui/label";
 import { apiClient } from "@/lib/api";
 import { useNotifications } from "@/lib/notifications";
@@ -20,7 +22,7 @@ const schema = z
   .object({
     name: z.string().min(2, "Name must be at least 2 characters"),
     email: z.string().email("Enter a valid email"),
-    phone: z.string().optional(),
+    phone: optionalPhoneSchema(),
     password: z.string().min(8, "Password must be at least 8 characters"),
     password_confirmation: z.string().min(8, "Confirm your password"),
   })
@@ -41,6 +43,7 @@ export function RegisterForm() {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -97,18 +100,24 @@ export function RegisterForm() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="phone">Phone (optional)</Label>
-            <Input id="phone" type="tel" autoComplete="tel" {...register("phone")} />
+            <Controller
+              name="phone"
+              control={control}
+              render={({ field }) => (
+                <PhoneInput id="phone" value={field.value ?? ""} onChange={field.onChange} onBlur={field.onBlur} />
+              )}
+            />
+            {errors.phone && <p className="text-xs text-status-error">{errors.phone.message}</p>}
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" autoComplete="new-password" {...register("password")} />
+            <PasswordInput id="password" autoComplete="new-password" {...register("password")} />
             {errors.password && <p className="text-xs text-status-error">{errors.password.message}</p>}
           </div>
           <div className="space-y-2">
             <Label htmlFor="password_confirmation">Confirm password</Label>
-            <Input
+            <PasswordInput
               id="password_confirmation"
-              type="password"
               autoComplete="new-password"
               {...register("password_confirmation")}
             />

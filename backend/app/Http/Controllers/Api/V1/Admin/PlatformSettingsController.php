@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Support\ManagedMedia;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -29,6 +30,12 @@ class PlatformSettingsController extends Controller
         $validated = $request->validate([
             'value' => 'required|array',
         ]);
+
+        if (in_array($key, ['advertisements', 'brand'], true)) {
+            $row = DB::table('platform_settings')->where('key', $key)->first();
+            $previous = $row ? json_decode($row->value, true) : null;
+            ManagedMedia::deleteRemoved($previous, $validated['value']);
+        }
 
         DB::table('platform_settings')->updateOrInsert(
             ['key' => $key],

@@ -7,6 +7,19 @@ import { subscribeForegroundMessages, syncPushTokenIfGranted } from "@/lib/fireb
 import { useNotifications } from "@/lib/notifications";
 import { useAuthStore } from "@/stores/app";
 
+/** Events that already write to the account inbox — skip duplicate foreground toasts. */
+const INBOX_NOTIFICATION_EVENTS = new Set([
+  "order.placed",
+  "payment.success",
+  "order.status_updated",
+  "course.enrollment",
+  "booking.confirmed",
+  "enrollment.status_updated",
+  "booking.status_updated",
+  "certificate.issued",
+  "attendance.alert",
+]);
+
 export function PushNotificationProvider({ children }: { children: React.ReactNode }) {
   const hydrated = useAuthHydrated();
   const token = useAuthStore((state) => state.token);
@@ -28,7 +41,8 @@ export function PushNotificationProvider({ children }: { children: React.ReactNo
         }
 
         unsubscribe = await subscribeForegroundMessages((title, body, data) => {
-          if (data?.event === "test.push") {
+          const event = data?.event;
+          if (event === "test.push" || (event && INBOX_NOTIFICATION_EVENTS.has(event))) {
             return;
           }
 

@@ -9,6 +9,7 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { apiClient, getUserPermissions, getUserRoles, getDefaultAdminPath, hasAdminAccess } from "@/lib/api";
 import { useNotifications } from "@/lib/notifications";
@@ -86,7 +87,7 @@ export function SignInForm() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" autoComplete="current-password" {...register("password")} />
+            <PasswordInput id="password" autoComplete="current-password" {...register("password")} />
             {errors.password && <p className="text-xs text-status-error">{errors.password.message}</p>}
           </div>
           {error && (

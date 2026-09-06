@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1\CMS;
 
 use App\Http\Controllers\Controller;
 use App\Models\CMS\PageSection;
+use App\Support\ManagedMedia;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -41,6 +42,10 @@ class PageSectionController extends Controller
             'is_visible' => 'boolean',
         ]);
 
+        if (isset($validated['content'])) {
+            ManagedMedia::deleteRemoved($section->content, $validated['content']);
+        }
+
         $section->update($validated);
 
         return response()->json(['data' => $section->fresh()]);
@@ -49,6 +54,7 @@ class PageSectionController extends Controller
     public function destroy(int $pageId, PageSection $section): JsonResponse
     {
         abort_unless($section->page_id === $pageId, 404);
+        ManagedMedia::deleteRemoved($section->content, []);
         $section->delete();
 
         return response()->json(['message' => 'Section deleted.']);

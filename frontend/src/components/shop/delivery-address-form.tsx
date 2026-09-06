@@ -1,6 +1,7 @@
 "use client";
 
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Label } from "@/components/ui/label";
 import type { User } from "@/lib/api";
 
@@ -84,7 +85,7 @@ export function DeliveryAddressForm({
       </div>
       <div className="space-y-2">
         <Label htmlFor="checkout-phone">Phone</Label>
-        <Input id="checkout-phone" value={address.phone} onChange={(e) => update("phone", e.target.value)} />
+        <PhoneInput id="checkout-phone" value={address.phone} onChange={(v) => update("phone", v)} />
       </div>
     </div>
   );

@@ -24,15 +24,25 @@ class DomainNotificationMail extends Mailable
         $fromAddress = config('mail.from.address') ?: PlatformConfig::payments()['contact_email'];
 
         return new Envelope(
-            from: new Address($fromAddress, config('mail.from.name', 'EOKE Groups')),
+            from: new Address(trim($fromAddress), config('mail.from.name', 'EOKE Groups')),
             subject: $this->mailSubject,
         );
     }
 
     public function content(): Content
     {
+        $frontendUrl = rtrim((string) env('FRONTEND_URL', config('app.url')), '/');
+        $brandName = config('mail.from.name', config('app.name', 'EOKE Groups'));
+
         return new Content(
-            htmlString: '<div style="font-family:sans-serif;line-height:1.6;color:#111">'.nl2br(e($this->body)).'</div>',
+            view: 'mail.domain-notification',
+            with: [
+                'mailSubject' => $this->mailSubject,
+                'body' => $this->body,
+                'brandName' => $brandName,
+                'siteUrl' => $frontendUrl !== '' ? $frontendUrl : null,
+                'logoUrl' => $frontendUrl !== '' ? $frontendUrl.'/icon-512.png' : null,
+            ],
         );
     }
 }

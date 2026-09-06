@@ -17,6 +17,8 @@ import {
 import { ActionButton } from "@/components/ui/action-button";
 import { ImageCropModal } from "@/components/ui/image-crop-modal";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { useImageCropFlow } from "@/hooks/use-image-crop-flow";
@@ -403,7 +405,7 @@ export function UserDetailPanel({ userId, mode, open, onClose, onSaved, token, r
                     </div>
                   </Section>
                   <Section title="Contact" icon={Phone}>
-                    <Field label="Phone" value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} />
+                    <Field label="Phone" value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} phone />
                     <div className="space-y-2">
                       <Label htmlFor="user-dob">Date of birth</Label>
                       <Input
@@ -548,16 +550,24 @@ function Field({
   value,
   onChange,
   type = "text",
+  phone = false,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   type?: string;
+  phone?: boolean;
 }) {
   return (
     <div className="space-y-2">
       <Label>{label}</Label>
-      <Input type={type} value={value ?? ""} onChange={(e) => onChange(e.target.value)} />
+      {phone ? (
+        <PhoneInput value={value ?? ""} onChange={onChange} />
+      ) : type === "password" ? (
+        <PasswordInput value={value ?? ""} onChange={(e) => onChange(e.target.value)} autoComplete="new-password" />
+      ) : (
+        <Input type={type} value={value ?? ""} onChange={(e) => onChange(e.target.value)} />
+      )}
     </div>
   );
 }

@@ -8,6 +8,7 @@ use App\Events\Shop\OrderPlaced;
 use App\Events\Shop\PaymentSucceeded;
 use App\Events\Tours\BookingCreated;
 use App\Events\Tours\EnquiryReceived;
+use App\Support\PlatformConfig;
 
 class SendDomainNotifications
 {
@@ -25,6 +26,11 @@ class SendDomainNotifications
 
     public function handleOrder(OrderPlaced $event): void
     {
+        // Razorpay checkout sends confirmation after payment.success — avoid duplicate alerts.
+        if (PlatformConfig::razorpayEnabled() && $event->order->payment_status !== 'paid') {
+            return;
+        }
+
         $this->dispatcher->dispatch('order.placed', $event->order->user, [
             'order_number' => $event->order->order_number,
             'total' => $event->order->total,
@@ -53,6 +59,7 @@ class SendDomainNotifications
         $this->dispatcher->dispatch('payment.success', $event->order->user, [
             'amount' => $event->amount,
             'order_number' => $event->order->order_number,
+            'total' => $event->order->total,
         ]);
     }
 }

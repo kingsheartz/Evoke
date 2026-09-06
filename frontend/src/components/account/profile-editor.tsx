@@ -5,6 +5,7 @@ import { Camera, Trash2, User as UserIcon } from "lucide-react";
 import { ImageCropModal } from "@/components/ui/image-crop-modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -205,7 +206,7 @@ export function ProfileEditor({ user, token }: ProfileEditorProps) {
         </div>
         <div className="space-y-2">
           <Label htmlFor="profile-phone">Phone (optional)</Label>
-          <Input id="profile-phone" value={form.phone ?? ""} onChange={(e) => updateField("phone", e.target.value)} autoComplete="tel" />
+          <PhoneInput id="profile-phone" value={form.phone ?? ""} onChange={(v) => updateField("phone", v)} />
         </div>
       </div>
 

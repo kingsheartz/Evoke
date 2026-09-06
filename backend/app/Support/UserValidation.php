@@ -12,9 +12,9 @@ class UserValidation
             return null;
         }
 
-        $trimmed = trim((string) $phone);
+        $digits = preg_replace('/\D+/', '', (string) $phone);
 
-        return $trimmed === '' ? null : $trimmed;
+        return $digits === '' ? null : $digits;
     }
 
     /** @return array<int, mixed> */
@@ -39,6 +39,6 @@ class UserValidation
             $unique->ignore($ignoreUserId);
         }
 
-        return ['nullable', 'string', 'max:20', $unique];
+        return ['nullable', 'string', 'regex:/^\d+$/', 'max:20', $unique];
     }
 }

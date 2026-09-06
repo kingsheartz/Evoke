@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1\CMS;
 
 use App\Http\Controllers\Controller;
+use App\Support\ManagedMedia;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -24,6 +25,22 @@ class HomepageAdminController extends Controller
         ]);
 
         $homepage = DB::table('homepage_settings')->where('is_active', true)->first();
+
+        if ($homepage) {
+            $previous = [
+                'hero_background_url' => $homepage->hero_background_url,
+                'hero_video_url' => $homepage->hero_video_url,
+                'entry_cards' => json_decode($homepage->entry_cards ?? '[]', true),
+                'meta' => json_decode($homepage->meta ?? '[]', true),
+            ];
+            $next = [
+                'hero_background_url' => $validated['hero_background_url'] ?? $homepage->hero_background_url,
+                'hero_video_url' => $validated['hero_video_url'] ?? $homepage->hero_video_url,
+                'entry_cards' => $validated['entry_cards'] ?? json_decode($homepage->entry_cards ?? '[]', true),
+                'meta' => $validated['meta'] ?? json_decode($homepage->meta ?? '[]', true),
+            ];
+            ManagedMedia::deleteRemoved($previous, $next);
+        }
 
         if ($homepage) {
             DB::table('homepage_settings')->where('id', $homepage->id)->update([
