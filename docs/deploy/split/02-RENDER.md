@@ -84,6 +84,21 @@ Render → **evoke-api** → **Environment**:
 | `FIREBASE_PROJECT_ID` | e.g. `evoke-group` |
 | `FIREBASE_CREDENTIALS_JSON` | Full service account JSON on **one line** |
 
+### Email (after [07-EMAIL.md](07-EMAIL.md))
+
+| Key | Value |
+|-----|--------|
+| `MAIL_MAILER` | `failover` |
+| `MAIL_FAILOVER_MAILERS` | `resend,smtp` |
+| `RESEND_API_KEY` | From Resend dashboard |
+| `MAIL_FROM_ADDRESS` | e.g. `notifications@evokegroup.in` |
+| `MAIL_FROM_NAME` | `Evoke` |
+| `MAIL_HOST` | Optional SMTP backup (e.g. `smtp.gmail.com`) |
+| `MAIL_PORT` | `587` |
+| `MAIL_SCHEME` | `smtp` |
+| `MAIL_USERNAME` | SMTP login |
+| `MAIL_PASSWORD` | SMTP password / app password |
+
 ---
 
 ## 5. Deploy

@@ -80,7 +80,7 @@ class SendNotificationJob implements ShouldQueue
         $body = $this->renderTemplate($this->templateBody ?? 'Notification from Evoke.');
         $subject = $this->renderTemplate($this->templateSubject ?? 'Evoke notification');
 
-        Mail::to($recipient)->send(new DomainNotificationMail($subject, $body));
+        Mail::mailer(config('mail.default'))->to($recipient)->send(new DomainNotificationMail($subject, $body));
     }
 
     private function resolveEmailRecipient(): ?string

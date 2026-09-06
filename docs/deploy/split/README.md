@@ -36,6 +36,7 @@ Firebase Cloud Messaging ◄── Render sends push ──► Browser (via Verc
 | 4 | **Firebase** | [04-FIREBASE.md](04-FIREBASE.md) | FCM project, web app, service account, authorized domains |
 | 5 | **Cloudflare** | [05-CLOUDFLARE.md](05-CLOUDFLARE.md) | DNS, SSL, optional R2 / Turnstile / Access |
 | — | **DB maintenance** | [06-DATABASE-MAINTENANCE.md](06-DATABASE-MAINTENANCE.md) | Migrate / seed Neon without Render Shell |
+| — | **Email** | [07-EMAIL.md](07-EMAIL.md) | Resend API, domain verification, Render mail env |
 
 ---
 
@@ -59,6 +60,7 @@ Blueprint for Render:
 | Site loads | `https://YOUR-FRONTEND-URL` |
 | Admin login | `admin@evoke.com` / `password` (if demo seed ran) |
 | Push test | Account → Settings → Enable notifications → Send test notification |
+| Email test | See [07-EMAIL.md](07-EMAIL.md) — place order or admin status change |
 | CORS | Sign-in works from frontend domain without browser CORS errors |
 
 ---
