@@ -54,6 +54,18 @@ class OrderController extends Controller
         return response()->json(['data' => $order->load('items')], 201);
     }
 
+    public function cancel(Request $request, Order $order): JsonResponse
+    {
+        abort_unless($order->user_id === $request->user()->id, 403);
+
+        $order = $this->orderService->cancelByCustomer($request->user(), $order);
+
+        return response()->json([
+            'message' => 'Order cancelled.',
+            'data' => $order,
+        ]);
+    }
+
     public function adminIndex(Request $request): JsonResponse
     {
         $orders = Order::query()

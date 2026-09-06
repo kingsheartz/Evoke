@@ -26,17 +26,20 @@ class SendDomainNotifications
 
     public function handleOrder(OrderPlaced $event): void
     {
-        $channels = ['in_app', 'email', 'push'];
-
-        // Razorpay checkout: email receipt now; in-app + push after payment.success.
-        if (PlatformConfig::razorpayEnabled() && $event->order->payment_status !== 'paid') {
-            $channels = ['email'];
+        $order = $event->order->loadMissing('user');
+        if (! $order->user) {
+            return;
         }
 
-        $this->dispatcher->dispatch('order.placed', $event->order->user, [
-            'order_number' => $event->order->order_number,
-            'total' => $event->order->total,
-        ], channels: $channels);
+        // Razorpay: one confirmation bundle on payment.success (email + inbox + push).
+        if (PlatformConfig::razorpayEnabled() && $order->payment_status !== 'paid') {
+            return;
+        }
+
+        $this->dispatcher->dispatch('order.placed', $order->user, [
+            'order_number' => $order->order_number,
+            'total' => $order->total,
+        ]);
     }
 
     public function handleBooking(BookingCreated $event): void
@@ -58,10 +61,15 @@ class SendDomainNotifications
 
     public function handlePaymentSuccess(PaymentSucceeded $event): void
     {
-        $this->dispatcher->dispatch('payment.success', $event->order->user, [
+        $order = $event->order->loadMissing('user');
+        if (! $order->user) {
+            return;
+        }
+
+        $this->dispatcher->dispatch('payment.success', $order->user, [
             'amount' => $event->amount,
-            'order_number' => $event->order->order_number,
-            'total' => $event->order->total,
-        ], channels: ['in_app', 'push']);
+            'order_number' => $order->order_number,
+            'total' => $order->total,
+        ]);
     }
 }

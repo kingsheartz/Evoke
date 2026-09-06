@@ -21,7 +21,7 @@ class NotificationTemplateSeeder extends Seeder
             ['event' => 'booking.confirmed', 'channel' => 'push', 'subject' => 'Tour booking received', 'body' => 'Booking {{booking_number}} for {{package}} is being processed.'],
             ['event' => 'tour.enquiry', 'channel' => 'email', 'subject' => 'New Tour Enquiry', 'body' => 'New enquiry from {{name}} ({{email}}).'],
             ['event' => 'payment.success', 'channel' => 'in_app', 'subject' => null, 'body' => 'Order {{order_number}} confirmed. Payment of ₹{{amount}} received.'],
-            ['event' => 'payment.success', 'channel' => 'email', 'subject' => 'Order {{order_number}} confirmed', 'body' => "Thank you for your order.\n\nOrder number: {{order_number}}\nAmount paid: ₹{{amount}}\n\nWe'll notify you when your order status changes."],
+            ['event' => 'payment.success', 'channel' => 'email', 'subject' => 'Order {{order_number}} confirmed', 'body' => "Thank you for your order.\n\nOrder number: {{order_number}}\nAmount paid: ₹{{amount}}\n\nWe'll notify you when your order ships."],
             ['event' => 'payment.success', 'channel' => 'push', 'subject' => 'Order confirmed', 'body' => 'Order {{order_number}} confirmed. Payment of ₹{{amount}} received.'],
             ['event' => 'order.status_updated', 'channel' => 'in_app', 'subject' => null, 'body' => 'Order {{order_number}} is now {{status}}.{{tracking_line}}'],
             ['event' => 'order.status_updated', 'channel' => 'email', 'subject' => 'Order {{order_number}} update', 'body' => 'Your order {{order_number}} is now {{status}}.{{tracking_line}}'],

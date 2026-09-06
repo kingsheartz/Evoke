@@ -88,4 +88,26 @@ class OrderService
 
         return $order;
     }
+
+    public function cancelByCustomer(User $user, Order $order): Order
+    {
+        abort_unless($order->user_id === $user->id, 403);
+        abort_if($order->status === 'cancelled', 422, 'This order is already cancelled.');
+        abort_if(in_array($order->status, ['shipped', 'delivered'], true), 422, 'This order can no longer be cancelled.');
+        abort_if($order->status !== 'pending', 422, 'Only pending orders can be cancelled online. Contact support for help.');
+
+        $order->load('items.product', 'items.variant');
+
+        foreach ($order->items as $item) {
+            if ($item->variant_id) {
+                $item->variant?->increment('stock', $item->quantity);
+            } else {
+                $item->product?->increment('stock', $item->quantity);
+            }
+        }
+
+        $order->update(['status' => 'cancelled']);
+
+        return $order->fresh(['items']);
+    }
 }

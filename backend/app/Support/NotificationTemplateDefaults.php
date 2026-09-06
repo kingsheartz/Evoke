@@ -15,7 +15,7 @@ class NotificationTemplateDefaults
             ],
             'payment.success' => [
                 'in_app' => ['subject' => null, 'body' => 'Order {{order_number}} confirmed. Payment of ₹{{amount}} received.'],
-                'email' => ['subject' => 'Payment received — Order {{order_number}}', 'body' => "Payment of ₹{{amount}} received for order {{order_number}}.\n\nThank you for shopping with us."],
+                'email' => ['subject' => 'Order {{order_number}} confirmed', 'body' => "Thank you for your order.\n\nOrder number: {{order_number}}\nAmount paid: ₹{{amount}}\n\nWe'll notify you when your order ships."],
                 'push' => ['subject' => 'Order confirmed', 'body' => 'Order {{order_number}} confirmed. Payment of ₹{{amount}} received.'],
             ],
         ];

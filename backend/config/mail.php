@@ -93,7 +93,7 @@ return [
                         'resend' => filled(env('RESEND_API_KEY')),
                         default => true,
                     };
-                }));
+                })) ?: (filled(env('RESEND_API_KEY')) ? ['resend'] : ['log']);
             })(),
             'retry_after' => (int) env('MAIL_FAILOVER_RETRY_AFTER', 60),
         ],

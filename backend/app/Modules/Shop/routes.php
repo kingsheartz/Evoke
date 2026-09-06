@@ -25,6 +25,7 @@ Route::prefix('shop')->middleware(['module.enabled:shop'])->group(function () {
         Route::post('/orders', [OrderController::class, 'store']);
         Route::get('/orders', [OrderController::class, 'index']);
         Route::get('/orders/{order}', [OrderController::class, 'show']);
+        Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel']);
     });
 
     Route::middleware(['auth:sanctum', 'permission:shop.products.manage'])->group(function () {

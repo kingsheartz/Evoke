@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { formatOfferingPrice } from "@/lib/offerings";
 import { completeCheckoutPayment } from "@/lib/payments";
-import type { ShopOrder } from "@/lib/api";
+import { apiClient, type ShopOrder } from "@/lib/api";
+import { useNotifications } from "@/lib/notifications";
 import { useAuthStore } from "@/stores/app";
 
 function orderTotal(order: ShopOrder): number {
@@ -28,7 +29,9 @@ function formatAddress(address: Record<string, string> | null | undefined): stri
 
 export function OrderDetailView({ order, onRefresh }: { order: ShopOrder; onRefresh: () => void }) {
   const { token, user } = useAuthStore();
+  const { success, error: notifyError } = useNotifications();
   const [paying, setPaying] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
   const subtotal = Number(order.subtotal ?? orderTotal(order));
@@ -37,6 +40,7 @@ export function OrderDetailView({ order, onRefresh }: { order: ShopOrder; onRefr
   const total = orderTotal(order);
   const addressLines = formatAddress(order.shipping_address ?? undefined);
   const unpaid = order.payment_status === "unpaid" || !order.payment_status;
+  const canCancel = order.status === "pending";
 
   const payNow = async () => {
     if (!token || !user) return;
@@ -61,6 +65,29 @@ export function OrderDetailView({ order, onRefresh }: { order: ShopOrder; onRefr
       setMessage(e instanceof Error ? e.message : "Payment failed.");
     } finally {
       setPaying(false);
+    }
+  };
+
+  const cancelOrder = async () => {
+    if (!token || !canCancel) return;
+    const confirmMessage =
+      order.payment_status === "paid"
+        ? "Cancel this order? Our team will process any refund separately if payment was already made."
+        : "Cancel this order? Stock will be released back to the shop.";
+    if (!window.confirm(confirmMessage)) return;
+
+    setCancelling(true);
+    setMessage(null);
+    try {
+      await apiClient.cancelOrder(token, order.id);
+      success("Order cancelled.");
+      onRefresh();
+    } catch (e) {
+      const text = e instanceof Error ? e.message : "Could not cancel order.";
+      setMessage(text);
+      notifyError(text);
+    } finally {
+      setCancelling(false);
     }
   };
 
@@ -149,7 +176,21 @@ export function OrderDetailView({ order, onRefresh }: { order: ShopOrder; onRefr
         </div>
       </div>
 
-      {unpaid ? (
+      {canCancel ? (
+        <div className="flex flex-wrap gap-3">
+          {unpaid ? (
+            <Button type="button" onClick={payNow} disabled={paying || cancelling}>
+              {paying ? "Opening payment…" : "Pay now"}
+            </Button>
+          ) : null}
+          <Button type="button" variant="outline" onClick={cancelOrder} disabled={paying || cancelling}>
+            {cancelling ? "Cancelling…" : "Cancel order"}
+          </Button>
+          <Button asChild variant="ghost">
+            <Link href="/account/orders">Back to orders</Link>
+          </Button>
+        </div>
+      ) : unpaid ? (
         <div className="flex flex-wrap gap-3">
           <Button type="button" onClick={payNow} disabled={paying}>
             {paying ? "Opening payment…" : "Pay now"}

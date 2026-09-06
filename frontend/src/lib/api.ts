@@ -473,6 +473,12 @@ export const apiClient = {
   getOrder: (token: string, id: number) =>
     api<{ data: ShopOrder }>(`/shop/orders/${id}`, { token }),
 
+  cancelOrder: (token: string, id: number) =>
+    api<{ message: string; data: ShopOrder }>(`/shop/orders/${id}/cancel`, {
+      method: "POST",
+      token,
+    }),
+
   getAdminOrders: (token: string, params?: { status?: string; page?: number }) => {
     const query = new URLSearchParams();
     if (params?.status) query.set("status", params.status);
