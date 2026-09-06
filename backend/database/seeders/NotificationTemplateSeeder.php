@@ -43,11 +43,21 @@ class NotificationTemplateSeeder extends Seeder
             ['event' => 'tour.reminder', 'channel' => 'push', 'subject' => 'Upcoming tour', 'body' => 'Your tour to {{destination}} starts on {{date}}.'],
         ];
 
+        $now = now();
+        $rows = [];
+
         foreach ($templates as $template) {
-            DB::table('notification_templates')->updateOrInsert(
-                ['event' => $template['event'], 'channel' => $template['channel']],
-                array_merge($template, ['is_active' => true, 'created_at' => now(), 'updated_at' => now()])
-            );
+            $rows[] = array_merge($template, [
+                'is_active' => true,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
         }
+
+        DB::table('notification_templates')->upsert(
+            $rows,
+            ['event', 'channel'],
+            ['subject', 'body', 'is_active', 'updated_at'],
+        );
     }
 }

@@ -124,7 +124,7 @@ export function createHeaderComponent(type: HeaderComponentType): HeaderComponen
       return {
         ...base,
         social: [
-          { platform: "instagram", url: "https://instagram.com", label: "Instagram", icon: "brand-instagram" },
+          { platform: "instagram", url: "https://www.instagram.com/eokegroup/", label: "Instagram", icon: "brand-instagram" },
           { platform: "facebook", url: "https://facebook.com", label: "Facebook", icon: "brand-facebook" },
         ],
       };
@@ -163,4 +163,32 @@ export function mergeHeaderConfig(
 
 export function headerConfigEquals(a: BrandHeaderConfig, b: BrandHeaderConfig): boolean {
   return JSON.stringify(a) === JSON.stringify(b);
+}
+
+/** Enabled social profile links from brand header components. */
+export function brandSocialLinks(header: BrandHeaderConfig): HeaderSocialLink[] {
+  const links: HeaderSocialLink[] = [];
+
+  for (const component of header.components) {
+    if (!component.enabled || component.type !== "social_links") continue;
+
+    for (const item of component.social ?? []) {
+      if (item.url?.trim()) {
+        links.push(item);
+      }
+    }
+  }
+
+  return links;
+}
+
+export function brandInstagramLink(header: BrandHeaderConfig): HeaderSocialLink | null {
+  return (
+    brandSocialLinks(header).find((link) => link.platform === "instagram") ?? {
+      platform: "instagram",
+      url: "https://www.instagram.com/eokegroup/",
+      label: "Instagram",
+      icon: "brand-instagram",
+    }
+  );
 }

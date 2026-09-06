@@ -35,6 +35,7 @@ class SendDomainNotifications
 
         $payload = [
             'order_number' => $order->order_number,
+            'order_id' => $order->id,
             'total' => $order->total,
         ];
 
@@ -75,6 +76,7 @@ class SendDomainNotifications
         $this->dispatcher->dispatch('payment.success', $order->user, [
             'amount' => $event->amount,
             'order_number' => $order->order_number,
+            'order_id' => $order->id,
             'total' => $order->total,
         ], channels: ['in_app', 'push']);
     }

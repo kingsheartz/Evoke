@@ -12,5 +12,23 @@
   },
   "logoDisplay": {
     "iconBlend": false
+  },
+  "header": {
+    "components": [
+      {
+        "id": "hdr_social_default",
+        "type": "social_links",
+        "enabled": true,
+        "visibility": "all",
+        "social": [
+          {
+            "platform": "instagram",
+            "url": "https://www.instagram.com/eokegroup/",
+            "label": "Instagram",
+            "icon": "brand-instagram"
+          }
+        ]
+      }
+    ]
   }
 }

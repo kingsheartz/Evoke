@@ -51,6 +51,7 @@ class NotificationController extends Controller
                 ->send(new DomainNotificationMail(
                     'Evoke test email',
                     "This is a test message sent to {$user->email}.\n\nIf you received this, transactional email is working.",
+                    'test.email',
                 ));
         } catch (\Throwable $e) {
             return response()->json([

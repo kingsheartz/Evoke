@@ -69,7 +69,7 @@ class NotificationChannelSender
         try {
             Mail::mailer(MailDelivery::defaultMailer())
                 ->to($recipient)
-                ->send(new DomainNotificationMail($subject, $body));
+                ->send(new DomainNotificationMail($subject, $body, $event, $payload));
         } catch (\Throwable $e) {
             Log::error('Email notification failed', [
                 'event' => $event,

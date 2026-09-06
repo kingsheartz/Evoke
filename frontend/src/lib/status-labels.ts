@@ -6,6 +6,8 @@ const STATUS_MAP: Record<string, { label: string; variant: StatusVariant }> = {
   enabled: { label: "Enabled", variant: "success" },
   disabled: { label: "Disabled", variant: "neutral" },
   draft: { label: "Draft", variant: "neutral" },
+  sending: { label: "Sending", variant: "info" },
+  sent: { label: "Sent", variant: "success" },
   published: { label: "Published", variant: "success" },
   archived: { label: "Archived", variant: "neutral" },
   pending: { label: "Pending", variant: "warning" },

@@ -41,6 +41,8 @@ class DatabaseReseed
         'notifications',
         'notification_templates',
         'notification_preferences',
+        'newsletter_campaigns',
+        'newsletter_subscribers',
         'admin_tasks',
         'audit_logs',
         'analytics_events',

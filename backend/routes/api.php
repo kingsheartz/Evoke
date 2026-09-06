@@ -21,6 +21,11 @@ Route::get('/contact', [PlatformSettingsController::class, 'publicContact']);
 Route::get('/modules', [ModuleController::class, 'index']);
 Route::get('/search', [SearchController::class, 'search']);
 
+Route::prefix('newsletter')->group(function () {
+    Route::post('/subscribe', \App\Http\Controllers\Api\V1\Newsletter\SubscribeController::class);
+    Route::post('/unsubscribe', \App\Http\Controllers\Api\V1\Newsletter\UnsubscribeController::class);
+});
+
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);

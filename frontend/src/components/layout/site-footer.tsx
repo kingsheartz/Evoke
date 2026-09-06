@@ -7,10 +7,15 @@ import { useBrand } from "@/components/providers/brand-provider";
 import { PageContainer } from "@/components/layout/app-shell";
 import { SiteThemeToggle } from "@/components/theme/site-theme-toggle";
 import { useDivisionNav } from "@/hooks/use-division-nav";
+import { NewsletterSubscribe } from "@/components/newsletter/newsletter-subscribe";
+import { HeaderIconDisplay } from "@/components/brand/header-icon-display";
+import { brandInstagramLink } from "@/lib/header-config";
+import { resolveSocialIcon } from "@/lib/header-icons";
 
 export function SiteFooter() {
   const { items: divisions } = useDivisionNav();
   const brand = useBrand();
+  const instagram = brandInstagramLink(brand.header);
 
   return (
     <footer className="relative border-t border-app-border bg-app-surface/50">
@@ -77,13 +82,30 @@ export function SiteFooter() {
           </div>
         </div>
 
-        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-app-border pt-8 sm:flex-row">
-          <p className="text-xs text-app-muted">
-            © {new Date().getFullYear()} {brand.name}. All rights reserved.
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            <SiteThemeToggle />
-            <p className="text-xs text-app-muted">Academy · Shop · Tours</p>
+        <div className="mt-12 border-t border-app-border pt-8">
+          <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:items-center lg:gap-4">
+            <div className="w-full lg:max-w-sm lg:justify-self-start">
+              <NewsletterSubscribe inline className="w-full" />
+              <hr className="mt-6 border-app-border lg:hidden" />
+            </div>
+            <p className="text-center text-xs text-app-muted lg:px-4">
+              © {new Date().getFullYear()} {brand.name}. All rights reserved.
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-3 lg:justify-self-end">
+              {instagram ? (
+                <Link
+                  href={instagram.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={instagram.label || "Instagram"}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-app-border text-app-text transition-colors hover:border-accent/40 hover:text-accent-soft"
+                >
+                  <HeaderIconDisplay id={resolveSocialIcon(instagram)} className="h-4 w-4" />
+                </Link>
+              ) : null}
+              <SiteThemeToggle />
+              <p className="text-xs text-app-muted">Academy · Shop · Tours</p>
+            </div>
           </div>
         </div>
       </PageContainer>

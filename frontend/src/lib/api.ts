@@ -874,6 +874,54 @@ export const apiClient = {
       method: "POST",
       token,
     }),
+
+  subscribeNewsletter: (email: string) =>
+    api<{ message: string }>("/newsletter/subscribe", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    }),
+
+  unsubscribeNewsletter: (token: string) =>
+    api<{ message: string; data?: { email: string } }>("/newsletter/unsubscribe", {
+      method: "POST",
+      body: JSON.stringify({ token }),
+    }),
+
+  getNewsletterStats: (token: string) =>
+    api<{ data: NewsletterStats }>("/newsletter/stats", { token }),
+
+  getNewsletterCampaigns: (token: string, page = 1) =>
+    api<Paginated<NewsletterCampaign>>(`/newsletter/campaigns?per_page=20&page=${page}`, { token }),
+
+  createNewsletterCampaign: (token: string, payload: NewsletterCampaignPayload) =>
+    api<{ data: NewsletterCampaign }>("/newsletter/campaigns", {
+      method: "POST",
+      token,
+      body: JSON.stringify(payload),
+    }),
+
+  updateNewsletterCampaign: (token: string, id: number, payload: Partial<NewsletterCampaignPayload>) =>
+    api<{ data: NewsletterCampaign }>(`/newsletter/campaigns/${id}`, {
+      method: "PUT",
+      token,
+      body: JSON.stringify(payload),
+    }),
+
+  deleteNewsletterCampaign: (token: string, id: number) =>
+    api<{ message: string }>(`/newsletter/campaigns/${id}`, { method: "DELETE", token }),
+
+  sendNewsletterCampaign: (token: string, id: number) =>
+    api<{ message: string; data: { campaign: NewsletterCampaign; sent: number; failed: number } }>(
+      `/newsletter/campaigns/${id}/send`,
+      { method: "POST", token },
+    ),
+
+  sendNewsletterCampaignTest: (token: string, id: number, email?: string) =>
+    api<{ message: string; data: { email: string } }>(`/newsletter/campaigns/${id}/test`, {
+      method: "POST",
+      token,
+      body: JSON.stringify(email ? { email } : {}),
+    }),
 };
 
 export interface HomepageData {
@@ -1775,4 +1823,28 @@ export interface AppNotification {
   data: Record<string, unknown>;
   read_at?: string | null;
   created_at: string;
+}
+
+export interface NewsletterStats {
+  active_subscribers: number;
+  total_subscribers: number;
+}
+
+export interface NewsletterCampaign {
+  id: number;
+  subject: string;
+  body: string;
+  status: "draft" | "sending" | "sent" | "failed";
+  sent_count: number;
+  failed_count: number;
+  sent_at?: string | null;
+  created_by?: number | null;
+  created_at: string;
+  updated_at: string;
+  creator?: { id: number; name: string; email: string } | null;
+}
+
+export interface NewsletterCampaignPayload {
+  subject: string;
+  body: string;
 }

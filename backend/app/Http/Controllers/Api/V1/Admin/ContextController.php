@@ -57,6 +57,15 @@ class ContextController extends Controller
             ];
         }
 
+        if ($can('notifications.manage')) {
+            $items[] = [
+                'label' => 'Newsletter',
+                'href' => '/admin/newsletter',
+                'icon' => 'mail',
+                'visible' => true,
+            ];
+        }
+
         if (in_array('cms', $enabled, true) && ($can('cms.homepage.manage') || $can('cms.pages.manage'))) {
             $cmsChildren = [];
             if ($can('cms.homepage.manage') || $can('cms.pages.manage')) {

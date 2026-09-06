@@ -26,31 +26,20 @@
                         @endif
                     </td>
                 </tr>
-                @if(!empty($heroImageUrl))
-                <tr>
-                    <td style="padding:0;background-color:#fafafa;">
-                        <img src="{{ $heroImageUrl }}" alt="" width="560" style="display:block;width:100%;max-width:560px;height:auto;border:0;">
-                    </td>
-                </tr>
-                @endif
                 <tr>
                     <td style="padding:32px;">
+                        @if(!empty($isTest))
+                            <p style="margin:0 0 16px;padding:10px 12px;border-radius:8px;background:#fef3c7;color:#92400e;font-size:13px;line-height:1.5;">
+                                This is a test send. Only you should receive this email.
+                            </p>
+                        @endif
                         <h1 style="margin:0 0 16px;font-size:20px;font-weight:600;color:#18181b;line-height:1.4;">{{ $mailSubject }}</h1>
                         <div style="font-size:15px;line-height:1.7;color:#3f3f46;white-space:pre-line;">{!! nl2br(e($body)) !!}</div>
-                        @if(!empty($actionUrl) && !empty($actionLabel))
-                        <table role="presentation" cellspacing="0" cellpadding="0" style="margin-top:28px;">
-                            <tr>
-                                <td style="border-radius:8px;background:{{ $accentColor ?? '#6366f1' }};">
-                                    <a href="{{ $actionUrl }}" style="display:inline-block;padding:12px 24px;font-size:14px;font-weight:600;color:#ffffff;text-decoration:none;">{{ $actionLabel }}</a>
-                                </td>
-                            </tr>
-                        </table>
-                        @endif
                     </td>
                 </tr>
                 <tr>
                     <td style="padding:20px 32px 28px;border-top:1px solid #f4f4f5;background-color:#fafafa;">
-                        @include('mail.partials.email-footer', ['unsubscribeUrl' => null])
+                        @include('mail.partials.email-footer')
                     </td>
                 </tr>
             </table>
