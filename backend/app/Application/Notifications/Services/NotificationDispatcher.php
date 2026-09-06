@@ -4,6 +4,7 @@ namespace App\Application\Notifications\Services;
 
 use App\Jobs\Notifications\SendNotificationJob;
 use App\Models\User;
+use App\Support\NotificationTemplateDefaults;
 use Illuminate\Support\Facades\DB;
 
 class NotificationDispatcher
@@ -18,11 +19,19 @@ class NotificationDispatcher
                 ->where('is_active', true)
                 ->first();
 
-            if (! $template && $channel !== 'in_app') {
+            $fallback = NotificationTemplateDefaults::for($event, $channel);
+            $body = $template?->body;
+            $subject = $template?->subject;
+            if ($fallback !== null) {
+                $body ??= $fallback['body'];
+                $subject ??= $fallback['subject'];
+            }
+
+            if ($body === null && $channel !== 'in_app') {
                 continue;
             }
 
-            SendNotificationJob::dispatch($event, $channel, $user?->id, $payload, $template?->body, $template?->subject);
+            SendNotificationJob::dispatch($event, $channel, $user?->id, $payload, $body, $subject);
 
             DB::table('notification_logs')->insert([
                 'user_id' => $user?->id,

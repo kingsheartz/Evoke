@@ -131,6 +131,9 @@ class SendNotificationJob implements ShouldQueue
 
         $tokens = DeviceToken::query()
             ->where('user_id', $this->userId)
+            ->orderByDesc('last_used_at')
+            ->get()
+            ->unique('platform')
             ->pluck('token');
 
         if ($tokens->isEmpty()) {

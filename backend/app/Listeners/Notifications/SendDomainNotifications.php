@@ -26,15 +26,17 @@ class SendDomainNotifications
 
     public function handleOrder(OrderPlaced $event): void
     {
-        // Razorpay checkout sends confirmation after payment.success — avoid duplicate alerts.
+        $channels = ['in_app', 'email', 'push'];
+
+        // Razorpay checkout: email receipt now; in-app + push after payment.success.
         if (PlatformConfig::razorpayEnabled() && $event->order->payment_status !== 'paid') {
-            return;
+            $channels = ['email'];
         }
 
         $this->dispatcher->dispatch('order.placed', $event->order->user, [
             'order_number' => $event->order->order_number,
             'total' => $event->order->total,
-        ]);
+        ], channels: $channels);
     }
 
     public function handleBooking(BookingCreated $event): void
@@ -60,6 +62,6 @@ class SendDomainNotifications
             'amount' => $event->amount,
             'order_number' => $event->order->order_number,
             'total' => $event->order->total,
-        ]);
+        ], channels: ['in_app', 'push']);
     }
 }

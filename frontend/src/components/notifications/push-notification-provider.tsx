@@ -1,26 +1,16 @@
 "use client";
 
 import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { useAuthHydrated } from "@/hooks/use-auth-hydration";
 import { isFirebaseConfigured } from "@/lib/firebase-config";
 import { subscribeForegroundMessages, syncPushTokenIfGranted } from "@/lib/firebase-messaging";
 import { useNotifications } from "@/lib/notifications";
 import { useAuthStore } from "@/stores/app";
 
-/** Events that already write to the account inbox — skip duplicate foreground toasts. */
-const INBOX_NOTIFICATION_EVENTS = new Set([
-  "order.placed",
-  "payment.success",
-  "order.status_updated",
-  "course.enrollment",
-  "booking.confirmed",
-  "enrollment.status_updated",
-  "booking.status_updated",
-  "certificate.issued",
-  "attendance.alert",
-]);
-
 export function PushNotificationProvider({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const isAdminRoute = pathname?.startsWith("/admin") ?? false;
   const hydrated = useAuthHydrated();
   const token = useAuthStore((state) => state.token);
   const { info } = useNotifications();
@@ -36,13 +26,13 @@ export function PushNotificationProvider({ children }: { children: React.ReactNo
     (async () => {
       try {
         await syncPushTokenIfGranted(token);
-        if (cancelled) {
+        if (cancelled || !isAdminRoute) {
           return;
         }
 
+        // Customer site: no in-app push toasts — OS notifications + account inbox only.
         unsubscribe = await subscribeForegroundMessages((title, body, data) => {
-          const event = data?.event;
-          if (event === "test.push" || (event && INBOX_NOTIFICATION_EVENTS.has(event))) {
+          if (data?.event === "test.push") {
             return;
           }
 
@@ -57,7 +47,7 @@ export function PushNotificationProvider({ children }: { children: React.ReactNo
       cancelled = true;
       unsubscribe?.();
     };
-  }, [hydrated, token, info]);
+  }, [hydrated, token, info, isAdminRoute]);
 
   return <>{children}</>;
 }

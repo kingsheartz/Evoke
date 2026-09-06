@@ -11,9 +11,23 @@ import {
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
+import { usePathname } from "next/navigation";
 import { AlertCircle, CheckCircle2, Info, X, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useAdminPreferencesStore, selectEffectiveNotifications, type NotificationPosition } from "@/stores/admin-preferences";
+import {
+  useAdminPreferencesStore,
+  selectEffectiveNotifications,
+  type NotificationPosition,
+} from "@/stores/admin-preferences";
+
+/** Customer-facing pages — separate from admin toast prefs (admin defaults to top-center). */
+export const SITE_NOTIFICATION_DEFAULTS = {
+  enabled: true,
+  position: "top-right" as NotificationPosition,
+  defaultDurationMs: 4000,
+  showProgressBar: true,
+  showCountdown: false,
+};
 
 export type NotificationVariant = "success" | "error" | "warning" | "info";
 
@@ -130,7 +144,10 @@ function ToastItem({
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<NotificationItem[]>([]);
   const [mounted, setMounted] = useState(false);
-  const notifications = useAdminPreferencesStore(selectEffectiveNotifications);
+  const pathname = usePathname();
+  const isAdminRoute = pathname?.startsWith("/admin") ?? false;
+  const adminNotifications = useAdminPreferencesStore(selectEffectiveNotifications);
+  const notifications = isAdminRoute ? adminNotifications : SITE_NOTIFICATION_DEFAULTS;
   const notificationsRef = useRef(notifications);
   notificationsRef.current = notifications;
 
@@ -177,7 +194,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     [notify],
   );
 
-  const position = notifications.position ?? "top-center";
+  const position = notifications.position ?? (isAdminRoute ? "top-center" : "top-right");
 
   return (
     <NotificationContext.Provider value={value}>

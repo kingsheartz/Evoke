@@ -28,6 +28,13 @@ class DeviceTokenController extends Controller
             ],
         );
 
+        // One active token per platform — avoids duplicate push from old PWA installs / domains.
+        DeviceToken::query()
+            ->where('user_id', $request->user()->id)
+            ->where('platform', $validated['platform'])
+            ->where('token', '!=', $validated['token'])
+            ->delete();
+
         return response()->json(['message' => 'Device token registered.']);
     }
 
