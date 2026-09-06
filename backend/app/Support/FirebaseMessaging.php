@@ -2,12 +2,15 @@
 
 namespace App\Support;
 
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class FirebaseMessaging
 {
+    private static ?string $accessToken = null;
+
+    private static int $accessTokenExpiresAt = 0;
+
     public function configured(): bool
     {
         return filled(config('firebase.project_id')) && $this->credentials() !== null;
@@ -35,49 +38,54 @@ class FirebaseMessaging
 
     private function accessToken(): string
     {
-        return Cache::remember('firebase_messaging_access_token', 3300, function () {
-            $credentials = $this->credentials();
-            if ($credentials === null) {
-                throw new \RuntimeException('Firebase credentials not configured.');
-            }
+        if (self::$accessToken !== null && time() < self::$accessTokenExpiresAt - 60) {
+            return self::$accessToken;
+        }
 
-            $now = time();
-            $header = $this->base64UrlEncode(json_encode(['alg' => 'RS256', 'typ' => 'JWT'], JSON_THROW_ON_ERROR));
-            $claim = $this->base64UrlEncode(json_encode([
-                'iss' => $credentials['client_email'],
-                'scope' => 'https://www.googleapis.com/auth/firebase.messaging',
-                'aud' => 'https://oauth2.googleapis.com/token',
-                'iat' => $now,
-                'exp' => $now + 3600,
-            ], JSON_THROW_ON_ERROR));
+        $credentials = $this->credentials();
+        if ($credentials === null) {
+            throw new \RuntimeException('Firebase credentials not configured.');
+        }
 
-            $unsigned = "{$header}.{$claim}";
-            $privateKey = openssl_pkey_get_private($credentials['private_key']);
-            if ($privateKey === false) {
-                throw new \RuntimeException('Invalid Firebase private key.');
-            }
+        $now = time();
+        $header = $this->base64UrlEncode(json_encode(['alg' => 'RS256', 'typ' => 'JWT'], JSON_THROW_ON_ERROR));
+        $claim = $this->base64UrlEncode(json_encode([
+            'iss' => $credentials['client_email'],
+            'scope' => 'https://www.googleapis.com/auth/firebase.messaging',
+            'aud' => 'https://oauth2.googleapis.com/token',
+            'iat' => $now,
+            'exp' => $now + 3600,
+        ], JSON_THROW_ON_ERROR));
 
-            $signature = '';
-            if (! openssl_sign($unsigned, $signature, $privateKey, OPENSSL_ALGO_SHA256)) {
-                throw new \RuntimeException('Unable to sign Firebase JWT.');
-            }
+        $unsigned = "{$header}.{$claim}";
+        $privateKey = openssl_pkey_get_private($credentials['private_key']);
+        if ($privateKey === false) {
+            throw new \RuntimeException('Invalid Firebase private key.');
+        }
 
-            $jwt = $unsigned.'.'.$this->base64UrlEncode($signature);
+        $signature = '';
+        if (! openssl_sign($unsigned, $signature, $privateKey, OPENSSL_ALGO_SHA256)) {
+            throw new \RuntimeException('Unable to sign Firebase JWT.');
+        }
 
-            $response = Http::asForm()->post('https://oauth2.googleapis.com/token', [
-                'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-                'assertion' => $jwt,
-            ]);
+        $jwt = $unsigned.'.'.$this->base64UrlEncode($signature);
 
-            $response->throw();
+        $response = Http::asForm()->post('https://oauth2.googleapis.com/token', [
+            'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+            'assertion' => $jwt,
+        ]);
 
-            $token = $response->json('access_token');
-            if (! is_string($token) || $token === '') {
-                throw new \RuntimeException('Firebase OAuth token response missing access_token.');
-            }
+        $response->throw();
 
-            return $token;
-        });
+        $token = $response->json('access_token');
+        if (! is_string($token) || $token === '') {
+            throw new \RuntimeException('Firebase OAuth token response missing access_token.');
+        }
+
+        self::$accessToken = $token;
+        self::$accessTokenExpiresAt = $now + 3300;
+
+        return $token;
     }
 
     /**

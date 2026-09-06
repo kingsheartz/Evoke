@@ -27,6 +27,9 @@ fi
 php artisan package:discover --ansi 2>/dev/null || true
 php artisan storage:link --force 2>/dev/null || true
 
+mkdir -p storage/framework/cache/data storage/framework/views storage/framework/sessions storage/logs bootstrap/cache
+chmod -R 775 storage bootstrap/cache 2>/dev/null || true
+
 if [ "${RUN_MIGRATIONS:-false}" = "true" ]; then
   echo "Running migrations..."
   php artisan migrate --force --no-interaction

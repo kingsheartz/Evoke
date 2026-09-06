@@ -6,25 +6,37 @@ class MailDelivery
 {
     public static function defaultMailer(): string
     {
-        $configured = config('mail.default', 'failover');
+        $mailer = (string) config('mail.default', 'failover');
 
-        if ($configured !== 'failover') {
-            return $configured;
+        return $mailer !== '' ? $mailer : 'failover';
+    }
+
+    public static function isDeliverable(): bool
+    {
+        $mailer = self::defaultMailer();
+
+        if (in_array($mailer, ['log', 'array'], true)) {
+            return false;
         }
 
-        $chain = config('mail.mailers.failover.mailers', []);
-        if (is_array($chain) && $chain !== []) {
-            return 'failover';
+        if ($mailer === 'failover') {
+            $chain = config('mail.mailers.failover.mailers', []);
+
+            if (! is_array($chain) || $chain === []) {
+                return false;
+            }
+
+            return ! (count($chain) === 1 && $chain[0] === 'log');
         }
 
-        if (filled(config('services.resend.key')) || filled(env('RESEND_API_KEY'))) {
-            return 'resend';
+        if ($mailer === 'resend') {
+            return filled(config('services.resend.key'));
         }
 
-        if (filled(env('MAIL_HOST')) && filled(env('MAIL_USERNAME')) && filled(env('MAIL_PASSWORD'))) {
-            return 'smtp';
+        if ($mailer === 'smtp') {
+            return filled(env('MAIL_HOST')) && filled(env('MAIL_USERNAME')) && filled(env('MAIL_PASSWORD'));
         }
 
-        return 'log';
+        return true;
     }
 }

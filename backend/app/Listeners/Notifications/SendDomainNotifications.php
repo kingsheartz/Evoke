@@ -3,17 +3,19 @@
 namespace App\Listeners\Notifications;
 
 use App\Application\Notifications\Services\NotificationDispatcher;
+use App\Application\Payments\Services\PaymentService;
 use App\Events\Academy\EnrollmentCreated;
 use App\Events\Shop\OrderPlaced;
 use App\Events\Shop\PaymentSucceeded;
 use App\Events\Tours\BookingCreated;
 use App\Events\Tours\EnquiryReceived;
-use App\Support\PlatformConfig;
+use App\Models\Shop\Order;
 
 class SendDomainNotifications
 {
     public function __construct(
         private readonly NotificationDispatcher $dispatcher,
+        private readonly PaymentService $payments,
     ) {}
 
     public function handleEnrollment(EnrollmentCreated $event): void
@@ -31,15 +33,19 @@ class SendDomainNotifications
             return;
         }
 
-        // Razorpay: one confirmation bundle on payment.success (email + inbox + push).
-        if (PlatformConfig::razorpayEnabled() && $order->payment_status !== 'paid') {
+        $payload = [
+            'order_number' => $order->order_number,
+            'total' => $order->total,
+        ];
+
+        // Razorpay: email + inbox on place; push on payment.success (one per channel).
+        if ($this->razorpayCheckoutPending($order)) {
+            $this->dispatcher->dispatch('order.placed', $order->user, $payload, channels: ['in_app', 'email']);
+
             return;
         }
 
-        $this->dispatcher->dispatch('order.placed', $order->user, [
-            'order_number' => $order->order_number,
-            'total' => $order->total,
-        ]);
+        $this->dispatcher->dispatch('order.placed', $order->user, $payload);
     }
 
     public function handleBooking(BookingCreated $event): void
@@ -70,6 +76,11 @@ class SendDomainNotifications
             'amount' => $event->amount,
             'order_number' => $order->order_number,
             'total' => $order->total,
-        ]);
+        ], channels: ['in_app', 'push']);
+    }
+
+    private function razorpayCheckoutPending(Order $order): bool
+    {
+        return $order->payment_status !== 'paid' && $this->payments->isConfigured();
     }
 }

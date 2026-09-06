@@ -13,7 +13,7 @@ Evoke sends transactional email through **Laravel Mail** with automatic **failov
 Customer action or admin update
         │
         ▼
-NotificationDispatcher → SendNotificationJob (email channel)
+NotificationDispatcher → NotificationChannelSender (email channel)
         │
         ▼
 DomainNotificationMail → Laravel failover mailer
@@ -167,7 +167,9 @@ Mail::raw('Evoke test email', fn ($m) => $m->to('you@example.com')->subject('Evo
 | Resend quota exceeded | SMTP backup sends if configured; check Resend dashboard usage |
 | SMTP backup not used | Confirm `MAIL_HOST`, `MAIL_USERNAME`, `MAIL_PASSWORD` on Render |
 
-| Package error on deploy | Ensure `resend/resend-php` is in `composer.lock` (committed in repo) |
+| No email in inbox | Check Neon `notification_logs` — `failed` shows Resend/SMTP error; `skipped` means mail not configured |
+| `Please provide a valid cache path` | Fixed in latest API: creates `storage/framework/cache/data` on boot; redeploy after pulling |
+| Push not received | `skipped` + "No device tokens" → enable notifications in account; "Firebase not configured" → set Render Firebase env |
 
 Resend dashboard → **Logs** shows delivery, bounces, and API errors.
 
@@ -183,7 +185,9 @@ Set `MAIL_MAILER=resend` instead of `failover` if you do not want SMTP fallback.
 
 | Event | Email |
 |-------|-------|
-| Order placed | Yes |
+| Order placed (Razorpay pending) | Yes (receipt on place) |
+| Order placed (no Razorpay) | Yes |
+| Payment success (Razorpay) | No (in-app + push; email already sent on place) |
 | Order status updated (admin) | Yes |
 | Enrollment created / status updated | Yes |
 | Booking created / status updated | Yes |

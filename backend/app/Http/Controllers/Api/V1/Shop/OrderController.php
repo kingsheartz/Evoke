@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1\Shop;
 use App\Application\Notifications\Services\AdminUserNotifier;
 use App\Application\Shop\Services\OrderService;
 use App\Events\Shop\OrderPlaced;
+use App\Events\Shop\PaymentSucceeded;
 use App\Http\Controllers\Controller;
 use App\Models\Shop\Order;
 use Illuminate\Http\JsonResponse;
@@ -87,8 +88,17 @@ class OrderController extends Controller
         ]);
 
         $previousStatus = $order->status;
+        $previousPaymentStatus = $order->payment_status;
         $order->update($validated);
         $order = $order->fresh(['user', 'items']);
+
+        if (
+            array_key_exists('payment_status', $validated)
+            && $validated['payment_status'] === 'paid'
+            && $previousPaymentStatus !== 'paid'
+        ) {
+            PaymentSucceeded::dispatch($order, (float) $order->total);
+        }
 
         if (array_key_exists('status', $validated)) {
             $this->adminUserNotifier->orderStatusUpdated($order, $previousStatus);

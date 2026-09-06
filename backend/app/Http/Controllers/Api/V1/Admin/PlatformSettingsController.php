@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1\Admin;
 
+use App\Application\Payments\Services\PaymentService;
 use App\Http\Controllers\Controller;
 use App\Support\ManagedMedia;
 use Illuminate\Http\JsonResponse;
@@ -61,18 +62,18 @@ class PlatformSettingsController extends Controller
     }
 
     /** Public contact + payment defaults for site CTAs. */
-    public function publicContact(): JsonResponse
+    public function publicContact(PaymentService $payments): JsonResponse
     {
-        $payments = \App\Support\PlatformConfig::payments();
+        $settings = \App\Support\PlatformConfig::payments();
 
         return response()->json([
             'data' => [
-                'email' => $payments['contact_email'],
-                'whatsapp' => $payments['contact_whatsapp'],
-                'whatsapp_url' => 'https://wa.me/'.$payments['contact_whatsapp'],
-                'payment_link_url' => $payments['payment_link_url'],
-                'payment_link_label' => $payments['payment_link_label'],
-                'razorpay_enabled' => (bool) ($payments['razorpay_enabled'] ?? false),
+                'email' => $settings['contact_email'],
+                'whatsapp' => $settings['contact_whatsapp'],
+                'whatsapp_url' => 'https://wa.me/'.$settings['contact_whatsapp'],
+                'payment_link_url' => $settings['payment_link_url'],
+                'payment_link_label' => $settings['payment_link_label'],
+                'razorpay_enabled' => $payments->isConfigured(),
             ],
         ]);
     }

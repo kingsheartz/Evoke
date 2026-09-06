@@ -22,6 +22,7 @@ import { MobileCheckoutBar } from "@/components/shop/mobile-checkout-bar";
 import { Button } from "@/components/ui/button";
 import { apiClient, type Cart } from "@/lib/api";
 import { completeCheckoutPayment } from "@/lib/payments";
+import { useNotifications } from "@/lib/notifications";
 import { revalidateShopPublicCache } from "@/lib/revalidate-cms";
 import { useAuthStore } from "@/stores/app";
 import { cn } from "@/lib/utils";
@@ -31,6 +32,7 @@ const COUPON_STORAGE_KEY = "evoke_cart_coupon";
 function CheckoutContent() {
   const router = useRouter();
   const { token, user, setAuth } = useAuthStore();
+  const { success, info } = useNotifications();
   const [cart, setCart] = useState<Cart | null>(null);
   const [loading, setLoading] = useState(true);
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -124,7 +126,7 @@ function CheckoutContent() {
       sessionStorage.removeItem(COUPON_STORAGE_KEY);
       setStep(3);
 
-      await completeCheckoutPayment({
+      const payment = await completeCheckoutPayment({
         token,
         payableType: "shop_order",
         payableId: response.data.id,
@@ -132,6 +134,14 @@ function CheckoutContent() {
         userEmail: user.email,
         userPhone: user.phone ?? undefined,
       });
+
+      if (payment.paid) {
+        success(`Order ${response.data.order_number} confirmed. Payment received.`);
+      } else if (payment.method === "payment_link") {
+        info(`Order ${response.data.order_number} placed. Complete payment in the tab that opened.`);
+      } else {
+        info(`Order ${response.data.order_number} placed. Check your email for the receipt.`);
+      }
 
       router.push(
         `/confirmation?type=order&ref=${encodeURIComponent(response.data.order_number)}&id=${response.data.id}`,

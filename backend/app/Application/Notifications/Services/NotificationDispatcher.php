@@ -47,13 +47,23 @@ class NotificationDispatcher
             ]);
 
             try {
-                $this->sender->send($event, $channel, $user?->id, $payload, $body, $subject);
+                $result = $this->sender->send($event, $channel, $user?->id, $payload, $body, $subject);
 
                 DB::table('notification_logs')->where('id', $logId)->update([
-                    'status' => 'sent',
-                    'sent_at' => now(),
+                    'status' => $result->status,
+                    'sent_at' => $result->status === 'sent' ? now() : null,
+                    'error_message' => $result->errorMessage,
                     'updated_at' => now(),
                 ]);
+
+                if ($result->status === 'failed') {
+                    Log::error('Notification delivery failed', [
+                        'event' => $event,
+                        'channel' => $channel,
+                        'user_id' => $user?->id,
+                        'error' => $result->errorMessage,
+                    ]);
+                }
             } catch (\Throwable $e) {
                 Log::error('Notification delivery failed', [
                     'event' => $event,

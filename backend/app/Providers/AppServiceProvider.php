@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Domain\Shared\Contracts\ModuleRepositoryInterface;
 use App\Infrastructure\Persistence\Repositories\ModuleRepository;
 use App\Support\DatabaseCompatibility;
+use App\Support\StoragePaths;
 use Dedoc\Scramble\Scramble;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Query\Builder as QueryBuilder;
@@ -21,6 +22,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        StoragePaths::ensureFrameworkDirectories();
+
         $likeMacro = function (string $column, string $value, string $boolean = 'and') {
             return $this->where($column, DatabaseCompatibility::likeOperator(), $value, $boolean);
         };

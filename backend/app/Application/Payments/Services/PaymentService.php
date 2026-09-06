@@ -44,13 +44,17 @@ class PaymentService
             return false;
         }
 
-        $api = new Api(config('services.razorpay.key'), config('services.razorpay.secret'));
-        $api->utility->verifyPaymentSignature([
-            'razorpay_order_id' => $orderId,
-            'razorpay_payment_id' => $paymentId,
-            'razorpay_signature' => $signature,
-        ]);
+        try {
+            $api = new Api(config('services.razorpay.key'), config('services.razorpay.secret'));
+            $api->utility->verifyPaymentSignature([
+                'razorpay_order_id' => $orderId,
+                'razorpay_payment_id' => $paymentId,
+                'razorpay_signature' => $signature,
+            ]);
 
-        return true;
+            return true;
+        } catch (\Throwable) {
+            return false;
+        }
     }
 }
