@@ -16,17 +16,23 @@ class FirebaseAdminAuth
         return filled(config('firebase.project_id')) && $this->credentials() !== null;
     }
 
-    /** Resolve Firebase UID by email, or null when no Auth user exists. */
+    /**
+     * Resolve Firebase UID by email.
+     *
+     * @return string|null UID when a Firebase Auth user exists
+     *
+     * @throws \RuntimeException When Admin SDK is not configured or lookup fails
+     */
     public function findUserUidByEmail(string $email): ?string
     {
         $projectId = config('firebase.project_id');
         $normalized = strtolower(trim($email));
         if (! is_string($projectId) || $projectId === '' || $normalized === '') {
-            return null;
+            throw new \RuntimeException('Firebase project ID is not configured.');
         }
 
         if (! $this->configured()) {
-            return null;
+            throw new \RuntimeException('Firebase Admin credentials are not configured.');
         }
 
         $response = Http::withToken($this->accessToken())
@@ -35,13 +41,13 @@ class FirebaseAdminAuth
             ]);
 
         if (! $response->successful()) {
-            Log::warning('Firebase Auth user lookup failed', [
+            Log::error('Firebase Auth user lookup failed', [
                 'email' => $normalized,
                 'status' => $response->status(),
                 'body' => $response->json(),
             ]);
 
-            return null;
+            throw new \RuntimeException('Firebase Auth user lookup failed (HTTP '.$response->status().').');
         }
 
         $users = $response->json('users');
@@ -54,15 +60,28 @@ class FirebaseAdminAuth
         return is_string($localId) && $localId !== '' ? $localId : null;
     }
 
-    /** Delete Firebase Auth user by email when Laravel has no firebase_uid stored. */
-    public function deleteUserByEmail(string $email): bool
+    /** Remove Firebase Auth user by stored UID, then confirm by email lookup. */
+    public function removeUserForAccount(string $email, ?string $firebaseUid = null): void
     {
-        $uid = $this->findUserUidByEmail($email);
-        if ($uid === null) {
-            return true;
+        if (! $this->configured()) {
+            throw new \RuntimeException('Firebase Admin is not configured.');
         }
 
-        return $this->deleteUser($uid);
+        $normalizedEmail = strtolower(trim($email));
+
+        if (filled($firebaseUid)) {
+            $this->deleteUser((string) $firebaseUid);
+        }
+
+        // Stored UID may be stale (404 treated as success) — always sweep by email.
+        $remainingUid = $this->findUserUidByEmail($normalizedEmail);
+        if ($remainingUid !== null && ! $this->deleteUser($remainingUid)) {
+            throw new \RuntimeException('Firebase Auth user delete failed.');
+        }
+
+        if ($this->findUserUidByEmail($normalizedEmail) !== null) {
+            throw new \RuntimeException('Firebase Auth user still exists after delete.');
+        }
     }
 
     /** Delete a Firebase Auth user by UID (Google, email/password, email link). */

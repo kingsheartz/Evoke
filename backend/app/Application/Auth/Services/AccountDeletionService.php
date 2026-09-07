@@ -5,6 +5,7 @@ namespace App\Application\Auth\Services;
 use App\Models\User;
 use App\Support\FirebaseAdminAuth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class AccountDeletionService
@@ -41,30 +42,52 @@ class AccountDeletionService
             }
         }
 
-        $firebaseUid = filled($user->firebase_uid) ? (string) $user->firebase_uid : null;
-
-        if ($this->firebaseAdminAuth->configured()) {
-            if ($firebaseUid === null) {
-                $firebaseUid = $this->firebaseAdminAuth->findUserUidByEmail($user->email);
-            }
-
-            if ($firebaseUid !== null && $firebaseUid !== '') {
-                if (! $this->firebaseAdminAuth->deleteUser($firebaseUid)) {
-                    throw ValidationException::withMessages([
-                        'email' => ['Could not remove your Firebase sign-in. Try again or contact support.'],
-                    ]);
-                }
-            }
-        } elseif ($firebaseUid !== null) {
-            throw ValidationException::withMessages([
-                'email' => ['Account deletion is temporarily unavailable. Try again later.'],
-            ]);
-        }
+        $this->removeFirebaseAuthUser($user);
 
         $user->tokens()->delete();
         $user->deviceTokens()->delete();
+        // Clear before soft-delete so firebase_uid unique index does not block re-registration.
         $user->firebase_uid = null;
         $user->saveQuietly();
+        // Soft-delete: row kept with deleted_at for order/enrollment records; email scrubbed in User::deleting.
         $user->delete();
+    }
+
+    private function removeFirebaseAuthUser(User $user): void
+    {
+        if (! $this->firebaseAdminAuth->configured()) {
+            if (app()->environment('production')) {
+                throw ValidationException::withMessages([
+                    'email' => [
+                        'Account deletion is unavailable: Firebase Admin is not configured on the server (FIREBASE_PROJECT_ID / FIREBASE_CREDENTIALS_JSON on Render).',
+                    ],
+                ]);
+            }
+
+            Log::warning('Skipping Firebase Auth removal — Admin SDK not configured', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+            ]);
+
+            return;
+        }
+
+        try {
+            $this->firebaseAdminAuth->removeUserForAccount(
+                $user->email,
+                filled($user->firebase_uid) ? (string) $user->firebase_uid : null,
+            );
+        } catch (\Throwable $e) {
+            Log::error('Firebase Auth user removal failed', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'firebase_uid' => $user->firebase_uid,
+                'error' => $e->getMessage(),
+            ]);
+
+            throw ValidationException::withMessages([
+                'email' => ['Could not remove your Firebase sign-in. Try again or contact support.'],
+            ]);
+        }
     }
 }
