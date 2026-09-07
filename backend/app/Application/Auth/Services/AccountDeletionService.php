@@ -86,8 +86,27 @@ class AccountDeletionService
             ]);
 
             throw ValidationException::withMessages([
-                'email' => ['Could not remove your Firebase sign-in. Try again or contact support.'],
+                'email' => [$this->firebaseDeletionErrorMessage($e)],
             ]);
         }
+    }
+
+    private function firebaseDeletionErrorMessage(\Throwable $e): string
+    {
+        $message = $e->getMessage();
+
+        if (str_contains($message, '403') || stripos($message, 'permission') !== false) {
+            return 'Could not remove Firebase sign-in: the server service account lacks permission. In Google Cloud, enable Identity Toolkit API and grant Firebase Authentication Admin to the service account used on Render.';
+        }
+
+        if (str_contains($message, '401') || stripos($message, 'credentials') !== false) {
+            return 'Could not remove Firebase sign-in: invalid Firebase Admin credentials on the server (check FIREBASE_CREDENTIALS_JSON on Render).';
+        }
+
+        if (str_contains($message, 'still exists after delete')) {
+            return 'Could not remove Firebase sign-in: the Firebase account still exists after delete was attempted. Try again in a minute or remove the user in Firebase Console → Authentication.';
+        }
+
+        return 'Could not remove your Firebase sign-in. Try again or contact support.';
     }
 }

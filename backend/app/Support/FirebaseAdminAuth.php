@@ -70,7 +70,9 @@ class FirebaseAdminAuth
         $normalizedEmail = strtolower(trim($email));
 
         if (filled($firebaseUid)) {
-            $this->deleteUser((string) $firebaseUid);
+            if (! $this->deleteUser((string) $firebaseUid)) {
+                throw new \RuntimeException('Firebase Auth user delete failed for stored UID.');
+            }
         }
 
         // Stored UID may be stale (404 treated as success) — always sweep by email.
@@ -88,18 +90,27 @@ class FirebaseAdminAuth
     public function deleteUser(string $firebaseUid): bool
     {
         $projectId = config('firebase.project_id');
-        if (! is_string($projectId) || $projectId === '') {
-            return false;
-        }
-
-        if ($firebaseUid === '') {
+        if (! is_string($projectId) || $projectId === '' || $firebaseUid === '') {
             return false;
         }
 
         $response = Http::withToken($this->accessToken())
-            ->delete("https://identitytoolkit.googleapis.com/v1/projects/{$projectId}/accounts/{$firebaseUid}");
+            ->post("https://identitytoolkit.googleapis.com/v1/projects/{$projectId}/accounts:batchDelete", [
+                'localIds' => [$firebaseUid],
+                'force' => true,
+            ]);
 
-        if ($response->successful() || $response->status() === 404) {
+        if ($response->successful()) {
+            $errors = $response->json('errors');
+            if (is_array($errors) && $errors !== []) {
+                Log::warning('Firebase Auth batchDelete returned errors', [
+                    'firebase_uid' => $firebaseUid,
+                    'errors' => $errors,
+                ]);
+
+                return false;
+            }
+
             return true;
         }
 
@@ -147,7 +158,7 @@ class FirebaseAdminAuth
         $header = $this->base64UrlEncode(json_encode(['alg' => 'RS256', 'typ' => 'JWT'], JSON_THROW_ON_ERROR));
         $claim = $this->base64UrlEncode(json_encode([
             'iss' => $credentials['client_email'],
-            'scope' => 'https://www.googleapis.com/auth/identitytoolkit',
+            'scope' => 'https://www.googleapis.com/auth/cloud-platform',
             'aud' => 'https://oauth2.googleapis.com/token',
             'iat' => $now,
             'exp' => $now + 3600,

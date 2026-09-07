@@ -270,7 +270,7 @@ Migration `device_tokens` must exist (`RUN_MIGRATIONS=true` on Render).
 | Google sign-in cancelled after OAuth redirect | `authDomain` must match the hostname in the address bar (`www` vs apex). Use `www.evokegroup.in` on Vercel or redeploy with runtime host resolution |
 | Google sign-in fails on custom domain | Add domain to Firebase authorized domains; add `/__/auth/handler` to OAuth redirect URIs |
 | `auth/unauthorized-domain` | Host not listed under Firebase **Authorized domains** |
-| Account delete fails (Firebase) | Render needs `FIREBASE_PROJECT_ID` + `FIREBASE_CREDENTIALS_JSON`; enable **Identity Toolkit API** |
+| Account delete fails (Firebase) | Render needs `FIREBASE_PROJECT_ID` + `FIREBASE_CREDENTIALS_JSON`; enable **Identity Toolkit API**; grant service account **Firebase Authentication Admin** |
 | Laravel deleted but Firebase user remains | Render was missing Firebase Admin env — deletion skipped silently (fixed in app); delete manually in Firebase Console or run `php artisan firebase:delete-auth-user email@example.com` on Render |
 | `firebase_uid` always null in DB | User signed in via Laravel `/auth/login` or `/auth/register`, not `/auth/firebase`; set `FIREBASE_PROJECT_ID` on Render and sign in with Google once |
 
