@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Api\V1\Auth;
 
+use App\Application\Auth\Services\FirebaseAuthService;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\FirebaseLoginRequest;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Models\User;
@@ -40,7 +42,11 @@ class AuthController extends Controller
     {
         $user = User::where('email', $request->validated('email'))->first();
 
-        if (! $user || ! Hash::check($request->validated('password'), $user->password)) {
+        if (! $user || ! is_string($user->password) || $user->password === '' || ! Hash::check($request->validated('password'), $user->password)) {
+            if ($user && (! is_string($user->password) || $user->password === '')) {
+                return response()->json(['message' => 'This account uses Google sign-in.'], 422);
+            }
+
             return response()->json(['message' => 'Invalid credentials.'], 401);
         }
 
@@ -51,6 +57,20 @@ class AuthController extends Controller
                 'user' => $user->forAuthResponse(),
                 'token' => $token,
             ],
+        ]);
+    }
+
+    /** Exchange a verified Firebase ID token for a Sanctum bearer token. */
+    public function firebase(FirebaseLoginRequest $request, FirebaseAuthService $firebaseAuth): JsonResponse
+    {
+        try {
+            $result = $firebaseAuth->authenticate($request->validated('id_token'));
+        } catch (\RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 401);
+        }
+
+        return response()->json([
+            'data' => $result,
         ]);
     }
 

@@ -17,6 +17,16 @@ export function isFirebaseConfigured(): boolean {
   );
 }
 
+/** Firebase Auth (Google sign-in) — does not require VAPID. */
+export function isFirebaseAuthConfigured(): boolean {
+  return Boolean(
+    process.env.NEXT_PUBLIC_FIREBASE_API_KEY &&
+      process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN &&
+      process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID &&
+      process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  );
+}
+
 export function getFirebaseWebConfig(): FirebaseWebConfig | null {
   if (!isFirebaseConfigured()) {
     return null;

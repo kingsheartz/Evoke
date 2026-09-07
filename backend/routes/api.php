@@ -29,6 +29,7 @@ Route::prefix('newsletter')->group(function () {
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/firebase', [AuthController::class, 'firebase']);
     Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 });
 

@@ -96,6 +96,12 @@ export const apiClient = {
       body: JSON.stringify({ email, password }),
     }),
 
+  loginWithFirebase: (idToken: string) =>
+    api<{ data: AuthResponse }>("/auth/firebase", {
+      method: "POST",
+      body: JSON.stringify({ id_token: idToken }),
+    }),
+
   register: (payload: RegisterPayload) =>
     api<{ data: AuthResponse }>("/auth/register", {
       method: "POST",

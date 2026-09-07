@@ -16,6 +16,10 @@ import { apiClient } from "@/lib/api";
 import { useNotifications } from "@/lib/notifications";
 import { useClientMounted } from "@/hooks/use-client-mounted";
 import { AuthFormSkeleton } from "@/components/auth/auth-form-skeleton";
+import { AuthDivider, FirebaseGoogleSignInButton } from "@/components/auth/firebase-google-sign-in-button";
+import { useCompleteCustomerAuthHandlers } from "@/hooks/use-complete-customer-auth";
+import { isFirebaseAuthConfigured } from "@/lib/firebase-config";
+import { mapFirebaseAuthError, registerWithEmailPasswordIdToken } from "@/lib/firebase-auth";
 import { useAuthStore } from "@/stores/app";
 
 const schema = z
@@ -56,9 +60,20 @@ export function RegisterForm() {
     },
   });
 
+  const { handleFirebaseToken } = useCompleteCustomerAuthHandlers();
+
   const onSubmit = async (data: FormData) => {
     setError(null);
     try {
+      if (isFirebaseAuthConfigured()) {
+        const idToken = await registerWithEmailPasswordIdToken(data.name, data.email, data.password);
+        await handleFirebaseToken(idToken, {
+          phone: data.phone || undefined,
+          verificationSent: true,
+        });
+        return;
+      }
+
       const { data: auth } = await apiClient.register({
         name: data.name,
         email: data.email,
@@ -70,7 +85,11 @@ export function RegisterForm() {
       notifySuccess("Account created successfully!");
       router.push("/account");
     } catch (e) {
-      const message = e instanceof Error ? e.message : "Registration failed";
+      const message = isFirebaseAuthConfigured()
+        ? mapFirebaseAuthError(e, "Registration failed")
+        : e instanceof Error
+          ? e.message
+          : "Registration failed";
       setError(message);
       notifyError(message);
     }
@@ -88,6 +107,16 @@ export function RegisterForm() {
           <AuthFormSkeleton />
         ) : (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <FirebaseGoogleSignInButton
+            label="Sign up with Google"
+            onToken={handleFirebaseToken}
+            onError={(message) => {
+              setError(message);
+              notifyError(message);
+            }}
+            disabled={isSubmitting}
+          />
+          <AuthDivider />
           <div className="space-y-2">
             <Label htmlFor="name">Full name</Label>
             <Input id="name" autoComplete="name" {...register("name")} />

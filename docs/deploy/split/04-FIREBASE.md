@@ -26,6 +26,16 @@ Firebase **Cloud Messaging (FCM)** sends free web push notifications. Evoke uses
 3. Skip Firebase Hosting (you use Vercel).
 4. Copy the **firebaseConfig** object fields — you need them for Vercel.
 
+### Enable Google sign-in (customer auth)
+
+1. **Build → Authentication → Get started** (if not already enabled).
+2. **Sign-in method** tab:
+   - **Google** → **Enable** → save.
+   - **Email/Password** → **Enable** → turn on **Email link (passwordless sign-in)**.
+3. Add your support email when prompted.
+
+Evoke uses Firebase only to prove identity; Laravel still issues Sanctum tokens and owns roles.
+
 ---
 
 ## 3. Enable Cloud Messaging
