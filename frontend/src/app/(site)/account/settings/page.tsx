@@ -16,23 +16,25 @@ export default function AccountSettingsPage() {
       title="Settings"
       description="Notifications, theme, and how Evoke looks on your device."
     >
-      <Card variant="glass">
-        <CardContent className="space-y-6 pt-6">
-          <PushNotificationSettings />
-        </CardContent>
-      </Card>
+      <div className="flex flex-col gap-4">
+        <Card variant="glass">
+          <CardContent className="space-y-6 pt-6">
+            <PushNotificationSettings />
+          </CardContent>
+        </Card>
 
-      <Card variant="glass">
-        <CardContent className="pt-6">
-          <ThemeSettings />
-        </CardContent>
-      </Card>
+        <Card variant="glass">
+          <CardContent className="pt-6">
+            <ThemeSettings />
+          </CardContent>
+        </Card>
 
-      <Card variant="glass">
-        <CardContent className="pt-6">
-          <AccountDeleteSettings email={user.email} />
-        </CardContent>
-      </Card>
+        <Card variant="glass">
+          <CardContent className="pt-6">
+            <AccountDeleteSettings email={user.email} />
+          </CardContent>
+        </Card>
+      </div>
     </AccountShell>
   );
 }

@@ -26,6 +26,7 @@ const nextConfig: NextConfig = {
     }
 
     // Proxy Firebase OAuth handler so authDomain can be your custom domain (e.g. evokegroup.in).
+    // Setup: docs/deploy/split/04-FIREBASE.md §5
     return [
       {
         source: "/__/auth/:path*",

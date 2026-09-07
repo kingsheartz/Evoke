@@ -16,6 +16,55 @@ class FirebaseAdminAuth
         return filled(config('firebase.project_id')) && $this->credentials() !== null;
     }
 
+    /** Resolve Firebase UID by email, or null when no Auth user exists. */
+    public function findUserUidByEmail(string $email): ?string
+    {
+        $projectId = config('firebase.project_id');
+        $normalized = strtolower(trim($email));
+        if (! is_string($projectId) || $projectId === '' || $normalized === '') {
+            return null;
+        }
+
+        if (! $this->configured()) {
+            return null;
+        }
+
+        $response = Http::withToken($this->accessToken())
+            ->post("https://identitytoolkit.googleapis.com/v1/projects/{$projectId}/accounts:lookup", [
+                'email' => [$normalized],
+            ]);
+
+        if (! $response->successful()) {
+            Log::warning('Firebase Auth user lookup failed', [
+                'email' => $normalized,
+                'status' => $response->status(),
+                'body' => $response->json(),
+            ]);
+
+            return null;
+        }
+
+        $users = $response->json('users');
+        if (! is_array($users) || $users === []) {
+            return null;
+        }
+
+        $localId = $users[0]['localId'] ?? null;
+
+        return is_string($localId) && $localId !== '' ? $localId : null;
+    }
+
+    /** Delete Firebase Auth user by email when Laravel has no firebase_uid stored. */
+    public function deleteUserByEmail(string $email): bool
+    {
+        $uid = $this->findUserUidByEmail($email);
+        if ($uid === null) {
+            return true;
+        }
+
+        return $this->deleteUser($uid);
+    }
+
     /** Delete a Firebase Auth user by UID (Google, email/password, email link). */
     public function deleteUser(string $firebaseUid): bool
     {

@@ -41,20 +41,24 @@ class AccountDeletionService
             }
         }
 
-        $firebaseUid = $user->firebase_uid;
+        $firebaseUid = filled($user->firebase_uid) ? (string) $user->firebase_uid : null;
 
-        if (filled($firebaseUid)) {
-            if (! $this->firebaseAdminAuth->configured()) {
-                throw ValidationException::withMessages([
-                    'email' => ['Account deletion is temporarily unavailable. Try again later.'],
-                ]);
+        if ($this->firebaseAdminAuth->configured()) {
+            if ($firebaseUid === null) {
+                $firebaseUid = $this->firebaseAdminAuth->findUserUidByEmail($user->email);
             }
 
-            if (! $this->firebaseAdminAuth->deleteUser((string) $firebaseUid)) {
-                throw ValidationException::withMessages([
-                    'email' => ['Could not remove your Firebase sign-in. Try again or contact support.'],
-                ]);
+            if ($firebaseUid !== null && $firebaseUid !== '') {
+                if (! $this->firebaseAdminAuth->deleteUser($firebaseUid)) {
+                    throw ValidationException::withMessages([
+                        'email' => ['Could not remove your Firebase sign-in. Try again or contact support.'],
+                    ]);
+                }
             }
+        } elseif ($firebaseUid !== null) {
+            throw ValidationException::withMessages([
+                'email' => ['Account deletion is temporarily unavailable. Try again later.'],
+            ]);
         }
 
         $user->tokens()->delete();

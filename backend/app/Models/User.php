@@ -92,6 +92,13 @@ class User extends Authenticatable
         );
     }
 
+    protected function email(): Attribute
+    {
+        return Attribute::make(
+            set: fn (?string $value) => $value !== null ? strtolower(trim($value)) : null,
+        );
+    }
+
     private static function scrubUniqueValue(string $value, int $userId): string
     {
         $suffix = ".deleted.{$userId}";

@@ -31,13 +31,13 @@ Apply to **Production** (and Preview if you want push on preview URLs).
 
 Must end with **`/api/v1`** — no trailing slash after `v1`.
 
-### Firebase web push (after [04-FIREBASE.md](04-FIREBASE.md))
+### Firebase (auth + push — after [04-FIREBASE.md](04-FIREBASE.md))
 
 | Key | Source |
 |-----|--------|
 | `NEXT_PUBLIC_FIREBASE_API_KEY` | Firebase web app config |
-| `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | Firebase web app config |
-| `NEXT_PUBLIC_FIREBASE_PROJECT_ID` | Firebase web app config |
+| `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | **Production:** `evokegroup.in` (custom domain). **Local dev:** `[project-id].firebaseapp.com`. See [04-FIREBASE.md §5](04-FIREBASE.md#5-custom-auth-domain-evokegroupin-on-vercel). |
+| `NEXT_PUBLIC_FIREBASE_PROJECT_ID` | Firebase web app config (e.g. `eoke-group`) |
 | `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` | Firebase web app config |
 | `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | Firebase web app config |
 | `NEXT_PUBLIC_FIREBASE_APP_ID` | Firebase web app config |

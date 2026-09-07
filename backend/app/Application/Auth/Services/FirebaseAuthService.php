@@ -42,7 +42,7 @@ class FirebaseAuthService
             return $this->tokenResponse($user);
         }
 
-        $existing = User::query()->where('email', $email)->first();
+        $existing = User::query()->whereRaw('LOWER(email) = ?', [$email])->first();
         if ($existing !== null) {
             if ($existing->firebase_uid !== null && $existing->firebase_uid !== $firebaseUid) {
                 throw ValidationException::withMessages([

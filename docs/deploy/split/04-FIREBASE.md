@@ -1,10 +1,15 @@
-# Step 4 — Firebase (push notifications)
+# Step 4 — Firebase (auth + push)
 
-Firebase **Cloud Messaging (FCM)** sends free web push notifications. Evoke uses:
+Evoke uses Firebase for:
 
-- **Vercel** — browser registers FCM tokens
-- **Render** — Laravel sends pushes via FCM HTTP v1
-- **Neon** — stores `device_tokens`
+- **Customer sign-in** — Google, email/password, passwordless email link (Firebase proves identity; Laravel issues Sanctum tokens)
+- **Web push (FCM)** — order/enrollment notifications
+
+Hosting split:
+
+- **Vercel** — Firebase web SDK, OAuth handler proxy, FCM token registration
+- **Render** — verify Firebase ID tokens, delete Firebase users, send FCM via HTTP v1
+- **Neon** — `users.firebase_uid`, `device_tokens`
 
 **Prerequisites:** [02-RENDER.md](02-RENDER.md), [03-VERCEL.md](03-VERCEL.md)  
 **Optional next:** [05-CLOUDFLARE.md](05-CLOUDFLARE.md)
@@ -49,33 +54,147 @@ Evoke uses Firebase only to prove identity; Laravel still issues Sanctum tokens 
 
 ---
 
-## 4. Authorized domains
+## 4. Authorized domains (push + auth)
 
-Still in Firebase / Google Cloud context:
+Firebase Console → **Authentication → Settings → Authorized domains**.
 
-1. Ensure these domains can request push permission:
-   - `localhost` (dev)
-   - Your Vercel URL: `evoke-five.vercel.app`
-   - Custom domain if added later
+Add every hostname where users open the site:
 
-Firebase Console → **Authentication → Settings → Authorized domains** (or project settings for web app).
-
-### Custom auth domain (e.g. `evokegroup.in`)
-
-By default Google sign-in shows `[project-id].firebaseapp.com`. To use your production domain:
-
-1. **Firebase → Authentication → Authorized domains** — add `evokegroup.in` (and `www` if used).
-2. **Google Cloud → Credentials → OAuth 2.0 Web client** (Firebase auto-created):
-   - **Authorized JavaScript origins:** `https://evokegroup.in`
-   - **Authorized redirect URIs:** `https://evokegroup.in/__/auth/handler`
-3. **Vercel env:** set `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=evokegroup.in` (must match the URL users open).
-4. **Redeploy Vercel** — `frontend/next.config.ts` rewrites `/__/auth/*` to Firebase; env vars are baked at build time.
-
-Use `eoke-group.firebaseapp.com` for `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` on **localhost** only. Custom domain + rewrite applies on production.
+| Domain | When |
+|--------|------|
+| `localhost` | Local dev |
+| `evoke-five.vercel.app` (or your Vercel URL) | Preview/production before custom domain |
+| `evokegroup.in` | Production custom domain |
+| `www.evokegroup.in` | Only if you serve the app on `www` |
 
 ---
 
-## 5. Service account (Render backend)
+## 5. Custom auth domain (`evokegroup.in` on Vercel)
+
+### Why you may see `eoke-group.firebaseapp.com`
+
+Every Firebase project gets a default auth domain:
+
+```text
+https://[project-id].firebaseapp.com
+```
+
+For this project: `https://eoke-group.firebaseapp.com`.
+
+If `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` is unset or still set to that value, Google sign-in and **Google security alert emails** will name `eoke-group.firebaseapp.com` — even when users sign in from `evokegroup.in`.
+
+That alert is from **Google**, not Evoke. To show your brand domain, point Firebase Auth at your custom domain and proxy the OAuth handler on Vercel.
+
+Evoke hosts the frontend on **Vercel**, not Firebase Hosting. The repo already includes a Next.js rewrite in `frontend/next.config.ts` that forwards `/__/auth/*` to Firebase when `NEXT_PUBLIC_FIREBASE_PROJECT_ID` is set at build time.
+
+### Production setup checklist
+
+#### 1. Firebase — authorized domains
+
+**Authentication → Settings → Authorized domains** → add:
+
+- `evokegroup.in`
+- `www.evokegroup.in` (only if you use `www`)
+
+#### 2. Google Cloud — OAuth 2.0 Web client
+
+**APIs & Services → Credentials → OAuth 2.0 Client IDs** → open the **Web client** Firebase created (name often includes “Web client” or your Firebase project).
+
+**Authorized JavaScript origins:**
+
+```text
+https://evokegroup.in
+https://www.evokegroup.in
+```
+
+**Authorized redirect URIs:**
+
+```text
+https://evokegroup.in/__/auth/handler
+https://www.evokegroup.in/__/auth/handler
+```
+
+Add only the host(s) you actually use. The path `/__/auth/handler` is required.
+
+#### 3. Vercel — environment variable
+
+Set the domain users type in the browser (no `https://`):
+
+```env
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=evokegroup.in
+```
+
+Use `www.evokegroup.in` instead if that is your canonical URL. It **must match** how people open the site.
+
+For **evokegroup.in**, Vercel redirects the apex to `www.evokegroup.in`. Either set `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=www.evokegroup.in`, or keep `evokegroup.in` — the frontend resolves `www` vs apex automatically at runtime (redeploy after pulling that change).
+
+Keep other Firebase vars set (`NEXT_PUBLIC_FIREBASE_PROJECT_ID`, `NEXT_PUBLIC_FIREBASE_API_KEY`, etc.) — see [03-VERCEL.md](03-VERCEL.md).
+
+#### 4. Vercel — redeploy
+
+`NEXT_PUBLIC_*` variables are embedded at **build time**. Redeploy after changing them.
+
+The rewrite in `frontend/next.config.ts` (already in repo):
+
+```typescript
+async rewrites() {
+  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+  if (!projectId) {
+    return [];
+  }
+
+  return [
+    {
+      source: "/__/auth/:path*",
+      destination: `https://${projectId}.firebaseapp.com/__/auth/:path*`,
+    },
+  ];
+},
+```
+
+With `NEXT_PUBLIC_FIREBASE_PROJECT_ID=eoke-group`, requests to `https://evokegroup.in/__/auth/...` are proxied to `https://eoke-group.firebaseapp.com/__/auth/...`.
+
+#### 5. Optional — OAuth consent screen branding
+
+**Google Cloud → OAuth consent screen:**
+
+- App name: **Evoke Group**
+- User support email: your address
+- App logo (optional)
+
+This improves the Google account picker. It does **not** replace setting `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` for security-alert domain text.
+
+### Local development
+
+Custom auth domain + rewrite is intended for **production** on your real domain.
+
+For **localhost**, keep:
+
+```env
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=eoke-group.firebaseapp.com
+```
+
+Ensure `localhost` remains in Firebase **Authorized domains**. Google popup sign-in works locally with the default Firebase subdomain.
+
+### One canonical host
+
+Pick **`evokegroup.in`** or **`www.evokegroup.in`** and redirect the other (DNS or Vercel) so auth config, OAuth URIs, and `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` stay aligned.
+
+### Before vs after
+
+| Before | After |
+|--------|--------|
+| Google alert: “signed in to **eoke-group.firebaseapp.com**” | “signed in to **evokegroup.in**” |
+| OAuth helper on Firebase subdomain | OAuth helper on your domain via `/__/auth/handler` |
+
+### Limits
+
+- You **cannot** fully edit Google’s security alert email template — only the app/domain name shown.
+- **Firebase Hosting custom domain** is an alternative if the whole app were on Firebase Hosting; with Vercel, use the rewrite above.
+
+---
+
+## 6. Service account (Render backend)
 
 1. **Project settings → Service accounts**.
 2. **Generate new private key** → download JSON.
@@ -95,7 +214,7 @@ Tips:
 
 ---
 
-## 6. Enable FCM API (Google Cloud)
+## 7. Enable FCM API (Google Cloud)
 
 1. [console.cloud.google.com](https://console.cloud.google.com) → same project as Firebase.
 2. **APIs & Services → Library**.
@@ -103,18 +222,18 @@ Tips:
 
 ---
 
-## 7. Set env vars (summary)
+## 8. Set env vars (summary)
 
 | Platform | Variables |
 |----------|-----------|
-| **Vercel** | All `NEXT_PUBLIC_FIREBASE_*` (see [03-VERCEL.md](03-VERCEL.md)) |
-| **Render** | `FIREBASE_PROJECT_ID`, `FIREBASE_CREDENTIALS_JSON` |
+| **Vercel** | All `NEXT_PUBLIC_FIREBASE_*` (see [03-VERCEL.md](03-VERCEL.md)). Production: `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=evokegroup.in` |
+| **Render** | `FIREBASE_PROJECT_ID`, `FIREBASE_CREDENTIALS_JSON` (required for `/auth/firebase` and account delete) |
 
 Redeploy **both** after setting vars.
 
 ---
 
-## 8. Database templates
+## 9. Database templates
 
 Push uses rows in `notification_templates` (channel = `push`).
 
@@ -127,7 +246,7 @@ Migration `device_tokens` must exist (`RUN_MIGRATIONS=true` on Render).
 
 ---
 
-## 9. Test push
+## 10. Test push
 
 1. Sign in on the live site.
 2. **Account → Settings → Enable notifications** (allow browser prompt).
@@ -148,6 +267,11 @@ Migration `device_tokens` must exist (`RUN_MIGRATIONS=true` on Render).
 | No notification after enable | Check Render logs for FCM errors; verify authorized domain |
 | iOS Safari | Must allow notifications for the site; HTTPS required |
 | Invalid token | Re-enable notifications in Settings |
+| Google sign-in cancelled after OAuth redirect | `authDomain` must match the hostname in the address bar (`www` vs apex). Use `www.evokegroup.in` on Vercel or redeploy with runtime host resolution |
+| Google sign-in fails on custom domain | Add domain to Firebase authorized domains; add `/__/auth/handler` to OAuth redirect URIs |
+| `auth/unauthorized-domain` | Host not listed under Firebase **Authorized domains** |
+| Account delete fails (Firebase) | Render needs `FIREBASE_CREDENTIALS_JSON`; enable Identity Toolkit API |
+| `firebase_uid` always null in DB | User signed in via Laravel `/auth/login` or `/auth/register`, not `/auth/firebase`; set `FIREBASE_PROJECT_ID` on Render and sign in with Google once |
 
 ---
 
@@ -155,8 +279,13 @@ Migration `device_tokens` must exist (`RUN_MIGRATIONS=true` on Render).
 
 - [ ] Firebase project (Spark)
 - [ ] Web app + VAPID key
-- [ ] Authorized domains include Vercel URL
+- [ ] Google + Email/Password + Email link enabled in Authentication
+- [ ] Authorized domains: localhost, Vercel URL, `evokegroup.in`
+- [ ] OAuth client: origins + `/__/auth/handler` redirect URIs for production domain
+- [ ] Vercel: `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=evokegroup.in` (production)
+- [ ] Vercel redeployed after Firebase env changes
 - [ ] Service account JSON on Render (not in git)
 - [ ] FCM API enabled in Google Cloud
-- [ ] Vercel + Render env vars set and redeployed
-- [ ] Test notification received
+- [ ] Render env vars set and redeployed
+- [ ] Test Google sign-in on production domain
+- [ ] Test push notification received

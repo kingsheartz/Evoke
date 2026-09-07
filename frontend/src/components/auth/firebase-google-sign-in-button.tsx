@@ -29,13 +29,7 @@ export function FirebaseGoogleSignInButton({
       const idToken = await signInWithGoogleIdToken();
       await onToken(idToken);
     } catch (error) {
-      const message =
-        error instanceof FirebaseError && error.code === "auth/popup-closed-by-user"
-          ? "Google sign-in was cancelled."
-          : error instanceof Error
-            ? error.message
-            : "Google sign-in failed.";
-      onError(message);
+      onError(mapGoogleSignInError(error));
     } finally {
       setBusy(false);
     }
@@ -60,6 +54,23 @@ export function AuthDivider() {
       </div>
     </div>
   );
+}
+
+function mapGoogleSignInError(error: unknown): string {
+  if (!(error instanceof FirebaseError)) {
+    return error instanceof Error ? error.message : "Google sign-in failed.";
+  }
+
+  switch (error.code) {
+    case "auth/popup-closed-by-user":
+      return "Google sign-in was cancelled.";
+    case "auth/unauthorized-domain":
+      return "This domain is not authorized for Google sign-in. Add it in Firebase → Authentication → Authorized domains.";
+    case "auth/operation-not-allowed":
+      return "Google sign-in is not enabled in Firebase Authentication.";
+    default:
+      return error.message || "Google sign-in failed.";
+  }
 }
 
 function GoogleIcon() {
