@@ -6,6 +6,7 @@ import { Columns3 } from "lucide-react";
 import { ColumnHeaderMenu, type SortDir } from "@/components/ui/column-header-menu";
 import { ManageColumnsPanel } from "@/components/ui/manage-columns-panel";
 import { TableSearch } from "@/components/ui/table-search";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -105,6 +106,9 @@ function resolveColumnWidths<T>(
   return widths;
 }
 
+const DEFAULT_PAGE_SIZE = 20;
+const DEFAULT_PAGE_SIZE_OPTIONS = [10, 15, 20, 50, 100];
+
 export function ConfigurableDataTable<T extends object>(props: {
   tableId: string;
   columns: TableColumn<T>[];
@@ -120,6 +124,8 @@ export function ConfigurableDataTable<T extends object>(props: {
   inset?: boolean;
   className?: string;
   rowClassName?: (row: T) => string | undefined;
+  /** Slice rows client-side with page controls when no server pagination is used. */
+  clientPagination?: boolean | { pageSize?: number; pageSizeOptions?: number[] };
 }) {
   return <ConfigurableDataTableBody key={props.tableId} {...props} />;
 }
@@ -138,6 +144,7 @@ function ConfigurableDataTableBody<T extends object>({
   inset,
   className,
   rowClassName,
+  clientPagination,
 }: {
   tableId: string;
   columns: TableColumn<T>[];
@@ -152,7 +159,18 @@ function ConfigurableDataTableBody<T extends object>({
   inset?: boolean;
   className?: string;
   rowClassName?: (row: T) => string | undefined;
+  clientPagination?: boolean | { pageSize?: number; pageSizeOptions?: number[] };
 }) {
+  const paginationConfig =
+    clientPagination === true
+      ? {}
+      : clientPagination && typeof clientPagination === "object"
+        ? clientPagination
+        : null;
+  const useClientPagination = paginationConfig !== null;
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(paginationConfig?.pageSize ?? DEFAULT_PAGE_SIZE);
+  const pageSizeOptions = paginationConfig?.pageSizeOptions ?? DEFAULT_PAGE_SIZE_OPTIONS;
   const manageColumns = columnManagement ?? Boolean(tableId);
   const initialPrefs = loadTableColumnPrefs(tableId);
 
@@ -246,7 +264,18 @@ function ConfigurableDataTableBody<T extends object>({
     });
   }, [data, searchable, search, searchText]);
 
-  const pageData = filteredData;
+  useEffect(() => {
+    setPage(1);
+  }, [search, data.length, pageSize]);
+
+  const lastPage = useClientPagination
+    ? Math.max(1, Math.ceil(filteredData.length / pageSize))
+    : 1;
+  const safePage = Math.min(page, lastPage);
+
+  const pageData = useClientPagination
+    ? filteredData.slice((safePage - 1) * pageSize, safePage * pageSize)
+    : filteredData;
 
   const visibleColumnsRef = useRef(visibleColumns);
 
@@ -564,6 +593,21 @@ function ConfigurableDataTableBody<T extends object>({
             </tbody>
           </table>
         </div>
+      )}
+
+      {useClientPagination && filteredData.length > 0 && (
+        <TablePagination
+          page={safePage}
+          lastPage={lastPage}
+          total={filteredData.length}
+          pageSize={pageSize}
+          pageSizeOptions={pageSizeOptions}
+          onPageChange={setPage}
+          onPageSizeChange={(next) => {
+            setPageSize(next);
+            setPage(1);
+          }}
+        />
       )}
 
       {manageColumns && (

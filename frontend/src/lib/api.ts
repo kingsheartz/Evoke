@@ -890,8 +890,24 @@ export const apiClient = {
   getNewsletterStats: (token: string) =>
     api<{ data: NewsletterStats }>("/newsletter/stats", { token }),
 
-  getNewsletterCampaigns: (token: string, page = 1) =>
-    api<Paginated<NewsletterCampaign>>(`/newsletter/campaigns?per_page=20&page=${page}`, { token }),
+  getNewsletterSubscribers: (
+    token: string,
+    params?: { page?: number; per_page?: number; status?: string; search?: string },
+  ) => {
+    const query = new URLSearchParams();
+    query.set("page", String(params?.page ?? 1));
+    query.set("per_page", String(params?.per_page ?? 20));
+    if (params?.status) query.set("status", params.status);
+    if (params?.search) query.set("search", params.search);
+    return api<Paginated<NewsletterSubscriber>>(`/newsletter/subscribers?${query}`, { token });
+  },
+
+  getNewsletterCampaigns: (token: string, params?: { page?: number; per_page?: number }) => {
+    const query = new URLSearchParams();
+    query.set("page", String(params?.page ?? 1));
+    query.set("per_page", String(params?.per_page ?? 20));
+    return api<Paginated<NewsletterCampaign>>(`/newsletter/campaigns?${query}`, { token });
+  },
 
   createNewsletterCampaign: (token: string, payload: NewsletterCampaignPayload) =>
     api<{ data: NewsletterCampaign }>("/newsletter/campaigns", {
@@ -1828,6 +1844,14 @@ export interface AppNotification {
 export interface NewsletterStats {
   active_subscribers: number;
   total_subscribers: number;
+}
+
+export interface NewsletterSubscriber {
+  id: number;
+  email: string;
+  status: "active" | "unsubscribed";
+  subscribed_at: string;
+  unsubscribed_at?: string | null;
 }
 
 export interface NewsletterCampaign {

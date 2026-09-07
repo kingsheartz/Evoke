@@ -6,6 +6,7 @@ import { PermissionGate } from "@/components/admin/permission-gate";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfigurableDataTable, TableEmpty, TableLoading } from "@/components/ui/data-table";
 import { PageHeader } from "@/components/ui/page-header";
+import { TableExportActions } from "@/components/ui/table-export-actions";
 import { TableIconAction, TableRowActions, tableIconPrimaryClassName } from "@/components/ui/table-row-actions";
 import { Select } from "@/components/ui/select";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -49,8 +50,24 @@ export default function TourEnquiriesAdminPage() {
         <PageHeader title="Tour enquiries" description="Follow up on customer travel enquiries" />
         <Card>
           <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
-            <CardTitle>All enquiries</CardTitle>
-            <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-40">
+            <CardTitle>All enquiries ({enquiries.length})</CardTitle>
+            <div className="flex flex-wrap items-center gap-2">
+              <TableExportActions
+                filename="tour-enquiries"
+                title="Tour enquiries"
+                columns={[
+                  { header: "Name", value: (e) => e.name },
+                  { header: "Email", value: (e) => e.email },
+                  { header: "Phone", value: (e) => e.phone ?? "" },
+                  { header: "Package", value: (e) => e.package?.title ?? "" },
+                  { header: "Travelers", value: (e) => e.travelers_count },
+                  { header: "Preferred date", value: (e) => e.preferred_date ?? "" },
+                  { header: "Status", value: (e) => e.status },
+                ]}
+                rows={enquiries}
+                disabled={loading}
+              />
+              <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-40">
               <option value="">All statuses</option>
               <option value="new">New</option>
               <option value="contacted">Contacted</option>
@@ -58,6 +75,7 @@ export default function TourEnquiriesAdminPage() {
               <option value="converted">Converted</option>
               <option value="closed">Closed</option>
             </Select>
+            </div>
           </CardHeader>
           <CardContent flush>
             {loading ? (
@@ -68,6 +86,7 @@ export default function TourEnquiriesAdminPage() {
               <ConfigurableDataTable
                 tableId="admin-tours-enquiries"
                 inset
+                clientPagination
                 data={enquiries}
                 keyField="id"
                 searchPlaceholder="Search enquiries…"

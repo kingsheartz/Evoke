@@ -5,8 +5,6 @@ import {
   ArrowDown,
   ArrowUp,
   ArrowUpDown,
-  ChevronLeft,
-  ChevronRight,
   Eye,
   Search,
   UserPlus,
@@ -27,6 +25,8 @@ import { useNotifications } from "@/lib/notifications";
 import { useConfirm } from "@/lib/process-modal";
 import { useAuthStore } from "@/stores/app";
 import { cn } from "@/lib/utils";
+import { TableExportActions } from "@/components/ui/table-export-actions";
+import { TablePagination } from "@/components/ui/table-pagination";
 
 type SortField = NonNullable<UserListParams["sort"]>;
 type SortDir = NonNullable<UserListParams["dir"]>;
@@ -75,6 +75,7 @@ export default function UsersSettingsPage() {
   const [sort, setSort] = useState<SortField>("created_at");
   const [dir, setDir] = useState<SortDir>("desc");
   const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(15);
   const [lastPage, setLastPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -92,7 +93,7 @@ export default function UsersSettingsPage() {
         sort,
         dir,
         page,
-        per_page: 15,
+        per_page: perPage,
       });
       setUsers(r.data);
       setLastPage(r.last_page);
@@ -103,7 +104,7 @@ export default function UsersSettingsPage() {
     } finally {
       setLoading(false);
     }
-  }, [token, search, roleFilter, sort, dir, page, error]);
+  }, [token, search, roleFilter, sort, dir, page, perPage, error]);
 
   useEffect(() => {
     if (!token) return;
@@ -194,7 +195,21 @@ export default function UsersSettingsPage() {
         <CardHeader>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle>All Users ({total})</CardTitle>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <TableExportActions
+                filename="users"
+                title="Users"
+                columns={[
+                  { header: "Name", value: (u) => u.name },
+                  { header: "Email", value: (u) => u.email },
+                  { header: "Phone", value: (u) => u.phone ?? "" },
+                  { header: "Role", value: (u) => u.roles?.[0]?.name ?? "" },
+                  { header: "Branch", value: (u) => u.branch?.name ?? "" },
+                  { header: "Joined", value: (u) => formatDate(u.created_at) },
+                ]}
+                rows={users}
+                disabled={loading}
+              />
               <div className="relative min-w-[200px] flex-1">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-app-muted" />
                 <Input
@@ -331,18 +346,18 @@ export default function UsersSettingsPage() {
                   },
                 ]}
               />
-              {lastPage > 1 && (
-                <div className="flex items-center justify-between border-t border-app-border px-4 py-3">
-                  <p className="text-xs text-app-muted">Page {page} of {lastPage}</p>
-                  <div className="flex gap-2">
-                    <ActionButton variant="outline" size="sm" icon={ChevronLeft} disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
-                      Prev
-                    </ActionButton>
-                    <ActionButton variant="outline" size="sm" icon={ChevronRight} disabled={page >= lastPage} onClick={() => setPage((p) => p + 1)}>
-                      Next
-                    </ActionButton>
-                  </div>
-                </div>
+              {lastPage >= 1 && (
+                <TablePagination
+                  page={page}
+                  lastPage={lastPage}
+                  total={total}
+                  pageSize={perPage}
+                  onPageChange={setPage}
+                  onPageSizeChange={(size) => {
+                    setPerPage(size);
+                    setPage(1);
+                  }}
+                />
               )}
             </>
           )}

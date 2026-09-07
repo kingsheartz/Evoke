@@ -12,7 +12,7 @@ class SubscribeController extends Controller
     public function __invoke(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'email' => 'required|email:rfc,dns|max:255',
+            'email' => 'required|email:rfc|max:255',
         ]);
 
         NewsletterSubscriber::subscribeEmail($validated['email']);

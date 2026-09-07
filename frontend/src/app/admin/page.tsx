@@ -27,16 +27,17 @@ const statCards: {
   key: keyof DashboardData["stats"];
   label: string;
   icon: typeof Users;
+  href: string;
   format?: (v: number) => string;
   span?: string;
   accent?: string;
 }[] = [
-  { key: "revenue", label: "Total Revenue", icon: IndianRupee, format: (v) => `₹${v.toLocaleString("en-IN")}`, span: "lg:col-span-2", accent: "from-accent/20 to-violet-500/10" },
-  { key: "users", label: "Users", icon: Users, accent: "from-blue-500/15 to-transparent" },
-  { key: "orders", label: "Orders", icon: ShoppingCart, accent: "from-emerald-500/15 to-transparent" },
-  { key: "enrollments", label: "Enrollments", icon: BookOpen, accent: "from-violet-500/15 to-transparent" },
-  { key: "bookings", label: "Bookings", icon: Package, accent: "from-orange-500/15 to-transparent" },
-  { key: "enquiries", label: "New Enquiries", icon: TrendingUp, accent: "from-rose-500/15 to-transparent" },
+  { key: "revenue", label: "Total Revenue", icon: IndianRupee, href: "/admin/shop/orders", format: (v) => `₹${v.toLocaleString("en-IN")}`, span: "lg:col-span-2", accent: "from-accent/20 to-violet-500/10" },
+  { key: "users", label: "Users", icon: Users, href: "/admin/settings/users", accent: "from-blue-500/15 to-transparent" },
+  { key: "orders", label: "Orders", icon: ShoppingCart, href: "/admin/shop/orders", accent: "from-emerald-500/15 to-transparent" },
+  { key: "enrollments", label: "Enrollments", icon: BookOpen, href: "/admin/academy/enrollments", accent: "from-violet-500/15 to-transparent" },
+  { key: "bookings", label: "Bookings", icon: Package, href: "/admin/tours/bookings", accent: "from-orange-500/15 to-transparent" },
+  { key: "enquiries", label: "New Enquiries", icon: TrendingUp, href: "/admin/tours/enquiries", accent: "from-rose-500/15 to-transparent" },
 ];
 
 export default function AdminDashboardPage() {
@@ -90,29 +91,31 @@ export default function AdminDashboardPage() {
         description="Platform metrics and recent activity"
       />
 
-      <div className="dashboard-bento">        {statCards.map(({ key, label, icon: Icon, format, span, accent }) => (
-          <Card
-            key={key}
-            variant="glass"
-            className={cn("relative overflow-hidden", span)}
-          >
-            <div className={cn("absolute inset-0 bg-gradient-to-br opacity-50", accent)} />
-            <CardHeader className="relative flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-app-muted">{label}</CardTitle>
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/[0.05] ring-1 ring-white/10">
-                <Icon className="h-4 w-4 text-accent-soft" />
-              </div>
-            </CardHeader>
-            <CardContent className="relative">
-              {loading ? (
-                <Skeleton className="h-8 w-24" />
-              ) : (
-                <p className="font-display text-3xl font-bold tracking-tight text-app-text">
-                  {dashboard ? (format ? format(dashboard.stats[key]) : dashboard.stats[key]) : "—"}
-                </p>
-              )}
-            </CardContent>
-          </Card>
+      <div className="dashboard-bento">
+        {statCards.map(({ key, label, icon: Icon, href, format, span, accent }) => (
+          <Link key={key} href={href} className={cn("block", span)}>
+            <Card
+              variant="glass"
+              className="relative h-full overflow-hidden transition-colors hover:border-accent/30"
+            >
+              <div className={cn("absolute inset-0 bg-gradient-to-br opacity-50", accent)} />
+              <CardHeader className="relative flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-app-muted">{label}</CardTitle>
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/[0.05] ring-1 ring-white/10">
+                  <Icon className="h-4 w-4 text-accent-soft" />
+                </div>
+              </CardHeader>
+              <CardContent className="relative">
+                {loading ? (
+                  <Skeleton className="h-8 w-24" />
+                ) : (
+                  <p className="font-display text-3xl font-bold tracking-tight text-app-text">
+                    {dashboard ? (format ? format(dashboard.stats[key]) : dashboard.stats[key]) : "—"}
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </Link>
         ))}
       </div>
 

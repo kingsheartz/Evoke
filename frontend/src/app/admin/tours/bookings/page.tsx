@@ -6,6 +6,7 @@ import { PermissionGate } from "@/components/admin/permission-gate";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfigurableDataTable, TableEmpty, TableLoading } from "@/components/ui/data-table";
 import { PageHeader } from "@/components/ui/page-header";
+import { TableExportActions } from "@/components/ui/table-export-actions";
 import { TableIconAction, TableRowActions, tableIconPrimaryClassName } from "@/components/ui/table-row-actions";
 import { Select } from "@/components/ui/select";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -64,14 +65,30 @@ export default function TourBookingsAdminPage() {
         <PageHeader title="Tour bookings" description="Manage customer travel bookings" />
         <Card>
           <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
-            <CardTitle>All bookings</CardTitle>
-            <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-40">
+            <CardTitle>All bookings ({bookings.length})</CardTitle>
+            <div className="flex flex-wrap items-center gap-2">
+              <TableExportActions
+                filename="tour-bookings"
+                title="Tour bookings"
+                columns={[
+                  { header: "Booking", value: (b) => b.booking_number },
+                  { header: "Customer", value: (b) => b.user?.name ?? "" },
+                  { header: "Package", value: (b) => b.package?.title ?? "" },
+                  { header: "Travel date", value: (b) => b.travel_date ?? "" },
+                  { header: "Status", value: (b) => b.status },
+                  { header: "Payment", value: (b) => b.payment_status ?? "" },
+                ]}
+                rows={bookings}
+                disabled={loading}
+              />
+              <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-40">
               <option value="">All statuses</option>
               <option value="pending">Pending</option>
               <option value="confirmed">Confirmed</option>
               <option value="completed">Completed</option>
               <option value="cancelled">Cancelled</option>
             </Select>
+            </div>
           </CardHeader>
           <CardContent flush>
             {loading ? (
@@ -82,6 +99,7 @@ export default function TourBookingsAdminPage() {
               <ConfigurableDataTable
                 tableId="admin-tours-bookings"
                 inset
+                clientPagination
                 data={bookings}
                 keyField="id"
                 searchPlaceholder="Search bookings…"

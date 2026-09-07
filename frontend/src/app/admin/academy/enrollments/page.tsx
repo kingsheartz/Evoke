@@ -6,6 +6,7 @@ import { PermissionGate } from "@/components/admin/permission-gate";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfigurableDataTable, TableEmpty } from "@/components/ui/data-table";
 import { PageHeader } from "@/components/ui/page-header";
+import { TableExportActions } from "@/components/ui/table-export-actions";
 import { TableIconAction, TableRowActions, tableIconPrimaryClassName } from "@/components/ui/table-row-actions";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { apiClient, type Enrollment } from "@/lib/api";
@@ -57,7 +58,21 @@ export default function EnrollmentsPage() {
         <PageHeader title="Enrollments" description="Student course enrollments across the academy" />
         <Card>
           <CardHeader>
-            <CardTitle>All enrollments</CardTitle>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <CardTitle>All enrollments ({enrollments.length})</CardTitle>
+              <TableExportActions
+                filename="enrollments"
+                title="Enrollments"
+                columns={[
+                  { header: "Student", value: (e) => e.user?.name ?? "" },
+                  { header: "Course", value: (e) => e.batch?.course?.title ?? "" },
+                  { header: "Batch", value: (e) => e.batch?.name ?? "" },
+                  { header: "Status", value: (e) => e.status },
+                  { header: "Payment", value: (e) => e.payment_status },
+                ]}
+                rows={enrollments}
+              />
+            </div>
           </CardHeader>
           <CardContent flush>
             {enrollments.length === 0 ? (
@@ -66,6 +81,7 @@ export default function EnrollmentsPage() {
               <ConfigurableDataTable
                 tableId="admin-academy-enrollments"
                 inset
+                clientPagination
                 data={enrollments}
                 keyField="id"
                 searchPlaceholder="Search enrollments…"

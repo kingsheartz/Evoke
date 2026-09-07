@@ -6,6 +6,7 @@ import { PermissionGate } from "@/components/admin/permission-gate";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfigurableDataTable, TableEmpty, TableLoading } from "@/components/ui/data-table";
 import { PageHeader } from "@/components/ui/page-header";
+import { TableExportActions } from "@/components/ui/table-export-actions";
 import { TableIconAction, TableRowActions, tableIconPrimaryClassName } from "@/components/ui/table-row-actions";
 import { Select } from "@/components/ui/select";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -72,8 +73,22 @@ export default function ShopOrdersAdminPage() {
         <PageHeader title="Shop orders" description="Manage customer product orders" />
         <Card>
           <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
-            <CardTitle>All orders</CardTitle>
-            <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-40">
+            <CardTitle>All orders ({orders.length})</CardTitle>
+            <div className="flex flex-wrap items-center gap-2">
+              <TableExportActions
+                filename="shop-orders"
+                title="Shop orders"
+                columns={[
+                  { header: "Order", value: (o) => o.order_number },
+                  { header: "Customer", value: (o) => o.user?.name ?? "" },
+                  { header: "Status", value: (o) => o.status },
+                  { header: "Payment", value: (o) => o.payment_status ?? "" },
+                  { header: "Total", value: (o) => orderTotal(o) },
+                ]}
+                rows={orders}
+                disabled={loading}
+              />
+              <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-40">
               <option value="">All statuses</option>
               <option value="pending">Pending</option>
               <option value="processing">Processing</option>
@@ -81,6 +96,7 @@ export default function ShopOrdersAdminPage() {
               <option value="delivered">Delivered</option>
               <option value="cancelled">Cancelled</option>
             </Select>
+            </div>
           </CardHeader>
           <CardContent flush>
             {loading ? (
@@ -91,6 +107,7 @@ export default function ShopOrdersAdminPage() {
               <ConfigurableDataTable
                 tableId="admin-shop-orders"
                 inset
+                clientPagination
                 data={orders}
                 keyField="id"
                 searchPlaceholder="Search orders…"

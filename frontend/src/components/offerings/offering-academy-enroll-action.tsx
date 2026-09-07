@@ -41,10 +41,7 @@ export function AcademyEnrollAction({
       router.push(signInHref);
       return;
     }
-    if (profileMessage) {
-      setMessage(profileMessage);
-      return;
-    }
+    if (profileMessage) return;
     if (batchId === "") {
       setMessage("Choose a batch.");
       return;
@@ -119,7 +116,9 @@ export function AcademyEnrollAction({
           to enroll in a batch.
         </p>
       )}
-      {message && <p className="text-sm text-status-error">{message}</p>}
+      {message && message !== profileMessage && (
+        <p className="text-sm text-status-error">{message}</p>
+      )}
     </div>
   );
 }

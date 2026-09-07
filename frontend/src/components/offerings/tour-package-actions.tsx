@@ -77,10 +77,7 @@ export function TourPackageActions({
       router.push(signInHref);
       return;
     }
-    if (profileMessage) {
-      setBookingMessage(profileMessage);
-      return;
-    }
+    if (profileMessage) return;
     if (!travelDate) {
       setBookingMessage("Choose a travel date.");
       return;
@@ -220,7 +217,9 @@ export function TourPackageActions({
                 Cancel
               </Button>
             </div>
-            {bookingMessage && <p className="text-sm text-status-error">{bookingMessage}</p>}
+            {bookingMessage && bookingMessage !== profileMessage && (
+              <p className="text-sm text-status-error">{bookingMessage}</p>
+            )}
           </div>
         </div>
       )}
