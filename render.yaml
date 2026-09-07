@@ -77,3 +77,7 @@ services:
         sync: false
       - key: MAIL_PASSWORD
         sync: false
+      - key: NEWSLETTER_MAILER
+        value: resend
+      - key: MAIL_TIMEOUT
+        value: "15"

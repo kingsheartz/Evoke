@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Loader2, Mail, Search, Send, Trash2, Users } from "lucide-react";
+import { Loader2, Mail, Eye, Pencil, Search, Send, Trash2, Users } from "lucide-react";
 import { PermissionGate } from "@/components/admin/permission-gate";
+import { NewsletterCampaignViewModal } from "@/components/newsletter/newsletter-campaign-view-modal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfigurableDataTable, TableEmpty, TableLoading, type TableColumn } from "@/components/ui/data-table";
@@ -84,6 +85,7 @@ export default function NewsletterAdminPage() {
   const [testingId, setTestingId] = useState<number | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [viewingCampaign, setViewingCampaign] = useState<NewsletterCampaign | null>(null);
 
   const loadStats = useCallback(() => {
     if (!token) return;
@@ -167,8 +169,14 @@ export default function NewsletterAdminPage() {
 
   const editCampaign = (campaign: NewsletterCampaign) => {
     if (campaign.status !== "draft" && campaign.status !== "failed") return;
+    setViewingCampaign(null);
     setEditingId(campaign.id);
     setForm({ subject: campaign.subject, body: campaign.body });
+    document.getElementById("newsletter-draft-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const viewCampaign = (campaign: NewsletterCampaign) => {
+    setViewingCampaign(campaign);
   };
 
   const remove = async (campaign: NewsletterCampaign) => {
@@ -203,6 +211,14 @@ export default function NewsletterAdminPage() {
     setSendingId(campaign.id);
     try {
       const response = await apiClient.sendNewsletterCampaign(token, campaign.id);
+      loadCampaigns();
+
+      if (response.data.processing) {
+        success("Send started. Status will update when delivery finishes.");
+        await pollCampaignStatus(campaign.id);
+        return;
+      }
+
       success(
         `Sent to ${response.data.sent} subscribers${response.data.failed ? ` (${response.data.failed} failed)` : ""}.`,
       );
@@ -210,9 +226,39 @@ export default function NewsletterAdminPage() {
       loadStats();
     } catch (err) {
       notifyError(err instanceof Error ? err.message : "Send failed.");
+      loadCampaigns();
     } finally {
       setSendingId(null);
     }
+  };
+
+  const pollCampaignStatus = async (campaignId: number) => {
+    if (!token) return;
+
+    for (let attempt = 0; attempt < 45; attempt++) {
+      await new Promise((resolve) => window.setTimeout(resolve, 2000));
+      try {
+        const response = await apiClient.getNewsletterCampaign(token, campaignId);
+        const status = response.data.status;
+        if (status !== "sending") {
+          loadCampaigns();
+          loadStats();
+          if (status === "sent") {
+            success(
+              `Sent to ${response.data.sent_count} subscribers${response.data.failed_count ? ` (${response.data.failed_count} failed)` : ""}.`,
+            );
+          } else if (status === "failed") {
+            notifyError("Newsletter send failed. Check SMTP settings and backend logs.");
+          }
+          return;
+        }
+      } catch {
+        // Keep polling until timeout.
+      }
+    }
+
+    loadCampaigns();
+    notifyError("Send is taking longer than expected. Refresh the page to check status.");
   };
 
   const sendTest = async (campaign: NewsletterCampaign) => {
@@ -220,7 +266,11 @@ export default function NewsletterAdminPage() {
     setTestingId(campaign.id);
     try {
       const response = await apiClient.sendNewsletterCampaignTest(token, campaign.id);
-      success(`Test email sent to ${response.data.email}.`);
+      if (response.data.processing) {
+        success(`Test email queued for ${response.data.email}. Check your inbox in a minute.`);
+      } else {
+        success(`Test email sent to ${response.data.email}.`);
+      }
     } catch (err) {
       notifyError(err instanceof Error ? err.message : "Test send failed.");
     } finally {
@@ -272,7 +322,7 @@ export default function NewsletterAdminPage() {
           <button
             type="button"
             className="text-left text-sm font-medium hover:text-accent-soft"
-            onClick={() => editCampaign(campaign)}
+            onClick={() => viewCampaign(campaign)}
           >
             {campaign.subject}
           </button>
@@ -304,11 +354,15 @@ export default function NewsletterAdminPage() {
       {
         key: "actions",
         header: "Actions",
-        width: 140,
+        width: 200,
         hideable: false,
         pinnable: false,
         render: (campaign) => (
           <TableRowActions>
+            <TableIconAction icon={Eye} label="View campaign" onClick={() => viewCampaign(campaign)} />
+            {(campaign.status === "draft" || campaign.status === "failed") && (
+              <TableIconAction icon={Pencil} label="Edit draft" onClick={() => editCampaign(campaign)} />
+            )}
             <TableIconAction
               icon={Mail}
               label="Send test email"
@@ -441,13 +495,13 @@ export default function NewsletterAdminPage() {
           </CardContent>
         </Card>
 
-        <Card className="mb-6">
+        <Card className="mb-6" id="newsletter-draft-form">
           <CardHeader>
             <CardTitle>{editingId ? "Edit draft" : "New draft"}</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={saveDraft} className="space-y-4">
-              <div>
+              <div className="form-field">
                 <Label htmlFor="newsletter-subject">Subject</Label>
                 <Input
                   id="newsletter-subject"
@@ -457,7 +511,7 @@ export default function NewsletterAdminPage() {
                   required
                 />
               </div>
-              <div>
+              <div className="form-field">
                 <Label htmlFor="newsletter-body">Message</Label>
                 <Textarea
                   id="newsletter-body"
@@ -534,6 +588,12 @@ export default function NewsletterAdminPage() {
             )}
           </CardContent>
         </Card>
+
+        <NewsletterCampaignViewModal
+          campaign={viewingCampaign}
+          onClose={() => setViewingCampaign(null)}
+          onEdit={editCampaign}
+        />
       </div>
     </PermissionGate>
   );

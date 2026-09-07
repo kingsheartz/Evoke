@@ -909,6 +909,9 @@ export const apiClient = {
     return api<Paginated<NewsletterCampaign>>(`/newsletter/campaigns?${query}`, { token });
   },
 
+  getNewsletterCampaign: (token: string, id: number) =>
+    api<{ data: NewsletterCampaign }>(`/newsletter/campaigns/${id}`, { token }),
+
   createNewsletterCampaign: (token: string, payload: NewsletterCampaignPayload) =>
     api<{ data: NewsletterCampaign }>("/newsletter/campaigns", {
       method: "POST",
@@ -927,17 +930,25 @@ export const apiClient = {
     api<{ message: string }>(`/newsletter/campaigns/${id}`, { method: "DELETE", token }),
 
   sendNewsletterCampaign: (token: string, id: number) =>
-    api<{ message: string; data: { campaign: NewsletterCampaign; sent: number; failed: number } }>(
-      `/newsletter/campaigns/${id}/send`,
-      { method: "POST", token },
-    ),
+    api<{
+      message: string;
+      data: {
+        campaign: NewsletterCampaign;
+        sent: number;
+        failed: number;
+        processing?: boolean;
+      };
+    }>(`/newsletter/campaigns/${id}/send`, { method: "POST", token }),
 
   sendNewsletterCampaignTest: (token: string, id: number, email?: string) =>
-    api<{ message: string; data: { email: string } }>(`/newsletter/campaigns/${id}/test`, {
-      method: "POST",
-      token,
-      body: JSON.stringify(email ? { email } : {}),
-    }),
+    api<{ message: string; data: { email: string; processing?: boolean } }>(
+      `/newsletter/campaigns/${id}/test`,
+      {
+        method: "POST",
+        token,
+        body: JSON.stringify(email ? { email } : {}),
+      },
+    ),
 };
 
 export interface HomepageData {

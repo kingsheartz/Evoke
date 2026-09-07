@@ -1168,6 +1168,24 @@ body.admin-tour-active .admin-main-column {
   background-color: color-mix(in srgb, var(--input-fill) 88%, var(--surface));
 }
 
+.admin-route .form-field input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="file"]),
+.admin-route .form-field textarea {
+  padding: 0.625rem 1rem;
+}
+
+.admin-route .form-field textarea {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  line-height: 1.5;
+}
+
+.admin-route .table-search input {
+  border: none;
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
+}
+
 .admin-route select {
   cursor: pointer;
 }

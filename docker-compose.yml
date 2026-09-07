@@ -67,6 +67,17 @@ services:
       - QUEUE_CONNECTION=redis
       - SESSION_DRIVER=redis
       - AI_SERVICE_URL=http://ai-service:8001
+      - MAIL_MAILER=${MAIL_MAILER:-failover}
+      - MAIL_FAILOVER_MAILERS=${MAIL_FAILOVER_MAILERS:-resend,smtp}
+      - MAIL_HOST=${MAIL_HOST:-}
+      - MAIL_PORT=${MAIL_PORT:-587}
+      - MAIL_USERNAME=${MAIL_USERNAME:-}
+      - MAIL_PASSWORD=${MAIL_PASSWORD:-}
+      - MAIL_ENCRYPTION=${MAIL_ENCRYPTION:-tls}
+      - MAIL_FROM_ADDRESS=${MAIL_FROM_ADDRESS:-}
+      - MAIL_FROM_NAME=${MAIL_FROM_NAME:-Evoke}
+      - NEWSLETTER_MAILER=${NEWSLETTER_MAILER:-smtp}
+      - RESEND_API_KEY=${RESEND_API_KEY:-}
     volumes:
       - ./backend:/var/www/html
       - /var/www/html/vendor

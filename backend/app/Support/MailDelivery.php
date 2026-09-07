@@ -22,7 +22,7 @@ class MailDelivery
         return self::isMailerDeliverable($mailer);
     }
 
-    /** Newsletter campaigns prefer SMTP so bulk updates stay separate from transactional Resend. */
+    /** Newsletter bulk sends use SMTP only; transactional mail uses MAIL_MAILER (failover). */
     public static function newsletterMailer(): string
     {
         $configured = trim((string) env('NEWSLETTER_MAILER', 'smtp'));
@@ -41,6 +41,40 @@ class MailDelivery
     public static function isNewsletterDeliverable(): bool
     {
         return self::isMailerDeliverable(self::newsletterMailer());
+    }
+
+    /**
+     * Fail fast when SMTP ports are blocked (e.g. Render free tier) instead of hanging until 502.
+     *
+     * @throws \RuntimeException
+     */
+    public static function assertNewsletterTransportReady(): void
+    {
+        $mailer = self::newsletterMailer();
+
+        if ($mailer !== 'smtp') {
+            return;
+        }
+
+        $host = trim((string) env('MAIL_HOST', ''));
+        $port = (int) env('MAIL_PORT', 587);
+
+        if ($host === '') {
+            throw new \RuntimeException('MAIL_HOST is not configured for newsletter SMTP.');
+        }
+
+        $errno = 0;
+        $errstr = '';
+        $socket = @fsockopen($host, $port, $errno, $errstr, 5);
+
+        if ($socket === false) {
+            throw new \RuntimeException(
+                "Cannot connect to SMTP {$host}:{$port}".($errstr !== '' ? " ({$errstr})" : '').
+                '. Render free tier blocks SMTP ports 587/465/25 — set NEWSLETTER_MAILER=resend (HTTP API) or upgrade Render to a paid instance.'
+            );
+        }
+
+        fclose($socket);
     }
 
     public static function isMailerDeliverable(string $mailer): bool

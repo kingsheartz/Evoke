@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Api\V1\Newsletter;
 
-use App\Application\Newsletter\Services\NewsletterSender;
 use App\Http\Controllers\Controller;
+use App\Jobs\SendNewsletterCampaignJob;
+use App\Jobs\SendNewsletterTestJob;
 use App\Models\Newsletter\NewsletterCampaign;
 use App\Models\Newsletter\NewsletterSubscriber;
+use App\Support\MailDelivery;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -78,8 +80,13 @@ class NewsletterCampaignController extends Controller
         return response()->json(['message' => 'Campaign deleted.']);
     }
 
-    public function send(Request $request, NewsletterCampaign $campaign, NewsletterSender $sender): JsonResponse
+    public function send(Request $request, NewsletterCampaign $campaign): JsonResponse
     {
+        if ($campaign->status === 'sending' && $campaign->updated_at?->lt(now()->subMinutes(10))) {
+            $campaign->update(['status' => 'failed']);
+            $campaign->refresh();
+        }
+
         abort_if($campaign->status === 'sending', 422, 'This campaign is already being sent.');
         abort_if($campaign->status === 'sent', 422, 'This campaign has already been sent.');
 
@@ -87,32 +94,59 @@ class NewsletterCampaignController extends Controller
             abort(422, 'This campaign cannot be sent.');
         }
 
-        $result = $sender->sendCampaign($campaign);
+        abort_unless(
+            MailDelivery::isNewsletterDeliverable(),
+            422,
+            'Newsletter mail is not configured. Set SMTP credentials in the backend environment.',
+        );
+
+        try {
+            MailDelivery::assertNewsletterTransportReady();
+        } catch (\RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
+        $campaign->update(['status' => 'sending']);
+
+        SendNewsletterCampaignJob::dispatch($campaign)->afterResponse();
 
         return response()->json([
-            'message' => 'Newsletter sent.',
+            'message' => 'Newsletter send started.',
             'data' => [
                 'campaign' => $campaign->fresh()->load('creator:id,name,email'),
-                'sent' => $result['sent'],
-                'failed' => $result['failed'],
+                'sent' => 0,
+                'failed' => 0,
+                'processing' => true,
             ],
-        ]);
+        ], 202);
     }
 
-    public function sendTest(Request $request, NewsletterCampaign $campaign, NewsletterSender $sender): JsonResponse
+    public function sendTest(Request $request, NewsletterCampaign $campaign): JsonResponse
     {
         $validated = $request->validate([
-            'email' => 'nullable|email:rfc,dns|max:255',
+            'email' => 'nullable|email:rfc|max:255',
         ]);
 
         $email = $validated['email'] ?? $request->user()->email;
         abort_if($email === null || $email === '', 422, 'No email address available for test send.');
 
-        $sender->sendTest($campaign, $email);
+        abort_unless(
+            MailDelivery::isNewsletterDeliverable(),
+            422,
+            'Newsletter mail is not configured. Set MAIL_HOST, MAIL_USERNAME, and MAIL_PASSWORD on the API service.',
+        );
+
+        try {
+            MailDelivery::assertNewsletterTransportReady();
+        } catch (\RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
+        SendNewsletterTestJob::dispatch($campaign, $email)->afterResponse();
 
         return response()->json([
-            'message' => 'Test email sent.',
-            'data' => ['email' => $email],
-        ]);
+            'message' => 'Test email queued.',
+            'data' => ['email' => $email, 'processing' => true],
+        ], 202);
     }
 }
