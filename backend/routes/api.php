@@ -41,6 +41,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/profile', [ProfileController::class, 'update']);
         Route::post('/avatar', [ProfileController::class, 'uploadAvatar']);
         Route::delete('/avatar', [ProfileController::class, 'removeAvatar']);
+        Route::delete('/account', [AuthController::class, 'destroyAccount']);
     });
 
     Route::prefix('payments')->group(function () {

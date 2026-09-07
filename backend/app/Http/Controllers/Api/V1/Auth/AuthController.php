@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Api\V1\Auth;
 
+use App\Application\Auth\Services\AccountDeletionService;
 use App\Application\Auth\Services\FirebaseAuthService;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\DeleteAccountRequest;
 use App\Http\Requests\Auth\FirebaseLoginRequest;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
@@ -95,5 +97,20 @@ class AuthController extends Controller
         Password::sendResetLink($request->only('email'));
 
         return response()->json(['message' => 'Password reset link sent if account exists.']);
+    }
+
+    /** Soft-delete the signed-in customer account and remove linked Firebase Auth user. */
+    public function destroyAccount(DeleteAccountRequest $request, AccountDeletionService $accountDeletion): JsonResponse
+    {
+        $user = $request->user();
+        abort_if($user === null, 401);
+
+        $accountDeletion->deleteAccount(
+            $user,
+            $request->validated('email'),
+            $request->validated('password'),
+        );
+
+        return response()->json(['message' => 'Your account has been deleted.']);
     }
 }

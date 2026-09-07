@@ -36,6 +36,8 @@ Firebase **Cloud Messaging (FCM)** sends free web push notifications. Evoke uses
 
 Evoke uses Firebase only to prove identity; Laravel still issues Sanctum tokens and owns roles.
 
+**Delete account:** Account → Settings → Delete account removes the Firebase Auth user (Google/email) via the Admin API, then soft-deletes the Laravel user.
+
 ---
 
 ## 3. Enable Cloud Messaging

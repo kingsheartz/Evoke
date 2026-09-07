@@ -1,5 +1,6 @@
 "use client";
 
+import { AccountDeleteSettings } from "@/components/account/account-delete-settings";
 import { AccountShell } from "@/components/account/account-shell";
 import { PushNotificationSettings } from "@/components/notifications/push-notification-settings";
 import { ThemeSettings } from "@/components/theme/theme-settings";
@@ -24,6 +25,12 @@ export default function AccountSettingsPage() {
       <Card variant="glass">
         <CardContent className="pt-6">
           <ThemeSettings />
+        </CardContent>
+      </Card>
+
+      <Card variant="glass">
+        <CardContent className="pt-6">
+          <AccountDeleteSettings email={user.email} />
         </CardContent>
       </Card>
     </AccountShell>

@@ -86,6 +86,17 @@ export function isFirebaseAuthCredentialError(error: unknown): boolean {
   );
 }
 
+/** Clear local Firebase session after the server deleted the Auth user. */
+export async function signOutFirebaseUser(): Promise<void> {
+  try {
+    const { signOut } = await import("firebase/auth");
+    const auth = getFirebaseAuth();
+    await signOut(auth);
+  } catch {
+    // Firebase may not be configured or user already signed out.
+  }
+}
+
 export function mapFirebaseAuthError(error: unknown, fallback: string): string {
   if (!(error instanceof FirebaseError)) {
     return error instanceof Error ? error.message : fallback;

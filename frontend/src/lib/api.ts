@@ -120,6 +120,13 @@ export const apiClient = {
   logout: (token: string) =>
     api<{ message: string }>("/auth/logout", { method: "POST", token }),
 
+  deleteAccount: (token: string, payload: { email: string; password?: string }) =>
+    api<{ message: string }>("/auth/account", {
+      method: "DELETE",
+      token,
+      body: JSON.stringify(payload),
+    }),
+
   updateProfile: (token: string, payload: ProfilePayload) =>
     api<{ data: User }>("/auth/profile", {
       method: "PUT",
