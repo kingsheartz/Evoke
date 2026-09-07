@@ -28,7 +28,7 @@ export function isFirebaseAuthConfigured(): boolean {
 }
 
 export function getFirebaseWebConfig(): FirebaseWebConfig | null {
-  if (!isFirebaseConfigured()) {
+  if (!isFirebaseAuthConfigured() && !isFirebaseConfigured()) {
     return null;
   }
 

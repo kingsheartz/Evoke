@@ -58,6 +58,19 @@ Still in Firebase / Google Cloud context:
 
 Firebase Console → **Authentication → Settings → Authorized domains** (or project settings for web app).
 
+### Custom auth domain (e.g. `evokegroup.in`)
+
+By default Google sign-in shows `[project-id].firebaseapp.com`. To use your production domain:
+
+1. **Firebase → Authentication → Authorized domains** — add `evokegroup.in` (and `www` if used).
+2. **Google Cloud → Credentials → OAuth 2.0 Web client** (Firebase auto-created):
+   - **Authorized JavaScript origins:** `https://evokegroup.in`
+   - **Authorized redirect URIs:** `https://evokegroup.in/__/auth/handler`
+3. **Vercel env:** set `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=evokegroup.in` (must match the URL users open).
+4. **Redeploy Vercel** — `frontend/next.config.ts` rewrites `/__/auth/*` to Firebase; env vars are baked at build time.
+
+Use `eoke-group.firebaseapp.com` for `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` on **localhost** only. Custom domain + rewrite applies on production.
+
 ---
 
 ## 5. Service account (Render backend)
